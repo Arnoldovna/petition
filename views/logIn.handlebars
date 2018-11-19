@@ -1,0 +1,43 @@
+{{>menu}}
+<div class="background">
+
+
+
+
+
+<div class="squareSignup">
+
+
+<form method="post" autocomplete="off">
+    <p>LOGIN</p>
+
+    <div class="error">
+        {{#if error}}
+        UH,OH... something went wrong here. Perhaps a typo? Try again!
+        {{/if}}
+    </div>
+
+<input type="email"  name="email" placeholder="E-MAIL" value="" required><br>
+<input type="password" name="password" placeholder="PASSWORD" value="" required><br>
+ <input type="hidden" name="_csrf" value="{{csrfToken}}">
+<button type="submit">LET'S GO!</button>
+</form>
+
+
+
+
+</div>
+
+<div class="registered">
+    You 're  not a member yet?
+    <a href="/register">Click here to register.</a> <img src="./click.png" alt="click">
+
+</div>
+
+<div class="space">
+</div>
+
+{{>script}}
+
+{{>footer}}
+</div>

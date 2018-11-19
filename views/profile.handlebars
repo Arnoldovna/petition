@@ -1,0 +1,30 @@
+{{>signatureNav}}
+<div class="background">
+
+
+
+
+<div class="squareProfile">
+
+<form method="post">
+    <p>ADDITIONAL INFO:<br>
+        <br>
+
+        We would love to hear a bit more about you.
+        </p>
+
+    <input type="text" name="age" pattern="[0-9.]+" placeholder="AGE (OPTIONAL)" value=""> <br>
+    <input type="text" name="city" placeholder="CITY (OPTIONAL)" value=""> <br>
+    <input type="text" name="homepage" placeholder="HOMEPAGE (OPTIONAL)" value=""><br>
+    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    <button type="submit">CONTINUE</button>
+</form>
+</div>
+
+
+</div>
+<div class="spaceProfile">
+
+</div>
+
+{{>footer}}

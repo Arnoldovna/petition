@@ -1,0 +1,35 @@
+{{>signatureNav}}
+
+
+<div class="background">
+
+
+<div class="squareSignature">
+
+
+
+<form method="post">
+
+<p>Hey {{result.first}},<br>
+here you can sign with your mouse.</p>
+
+<input id = "signature" name="signature" type="hidden"  value="">
+ <input type="hidden" name="_csrf" value="{{csrfToken}}">
+
+<br>
+
+<canvas id="canvas" width="456px" height="167"></canvas>
+<!-- <label for="last">LAST NAME</label> -->
+<br>
+
+<button type="submit" name="button">SUBMIT</button>
+
+</form>
+
+</div>
+
+
+</div>
+
+{{>footer}}
+{{>canvas}}

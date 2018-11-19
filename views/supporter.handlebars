@@ -1,0 +1,36 @@
+{{>fullnav}}
+
+
+<div class="background">
+
+
+
+
+<div class="squareSupporter">
+    HERE ARE ALL SUPPORTER:
+</div>
+
+<div class="cursor">Click on a<br>name or city!</div>
+
+
+<div class="supporter-list">
+
+    {{#each result}}
+                <p>
+                    {{{renderUser url first last}}}
+                    {{{renderProfile city age}}}
+                </p>
+    {{/each}}
+
+
+
+</div>
+
+
+{{>deleteSignature}}
+
+</div>
+
+{{>footer}}
+
+<script src="plus.js" charset="utf-8"></script>

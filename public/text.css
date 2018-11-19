@@ -1,0 +1,78 @@
+.home {
+    padding-top: 104px;
+    padding-left: 30px;
+    padding-right: 30px;
+    font-family: "Archivo Black", sans-serif;
+    font-size: 69px;
+}
+.home a {
+    text-decoration: none;
+    color: rgb(38, 38, 7);
+}
+
+.home a:hover {
+    color: rgb(118, 149, 12);
+}
+
+.profile img {
+    width: 71px;
+    display: inline-block;
+}
+
+.profile img:hover {
+    transform: scale(1.1);
+}
+.signature:hover {
+    transform: scale(1.1);
+}
+.eye:hover {
+    transform: scale(1.1);
+}
+.delete:hover {
+    transform: scale(1.1);
+}
+
+/*
+#profile img {
+    /* position: absolute;
+    z-index: -1; */
+/* transform: translate(-125%);
+    width: 71px;
+    margin-right: -4px;
+}  */
+
+/* #profileg {
+    display: none;
+    position: absolute;
+
+    transform: translate(-125%);
+    width: 71px;
+    margin-right: -4px;
+} */
+/* .home #profileg img {
+    width: 71px;
+    padding-left: 6px;
+    margin-right: -4px;
+} */
+
+/* #profile:hover .profileg {
+    z-index: 10;
+    background: green;
+} */
+
+.home .eye {
+    width: 110px;
+    /* padding-left: 7px; */
+    padding-right: 7px;
+}
+
+.home .delete {
+    width: 60px;
+    margin-bottom: -2px;
+    padding-right: 12px;
+}
+
+.home .signature {
+    margin-bottom: -10px;
+    width: 152px;
+}

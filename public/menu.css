@@ -1,0 +1,60 @@
+/* The navigation bar */
+body {
+    margin-left: 0;
+}
+.menu {
+    border-top: 4px solid black;
+    margin-left: 0;
+    overflow: hidden;
+    width: 100vw;
+    position: fixed; /* Set the navbar to fixed position */
+    top: 0; /* Position the navbar at the top of the page */
+    background: white;
+}
+
+/* Links inside the navbar */
+.menu a {
+    font-family: "Archivo Black", sans-serif;
+    float: left;
+    display: block;
+    color: black;
+    text-align: center;
+    padding: 20px 50px;
+    text-decoration: none;
+    font-size: 11px;
+    /* mix-blend-mode: difference; */
+}
+
+.menu .right {
+    float: right;
+    padding-right: 50px;
+}
+
+.menu a:hover {
+    color: rgba(255, 153, 0, 0.87);
+}
+.footer {
+    display: flex;
+    justify-content: space-between;
+    padding-left: 50px;
+    background: rgb(255, 244, 218);
+
+    border-bottom: 2px solid black;
+    padding-top: 12px;
+    margin-top: 101px;
+    margin-left: 0;
+    overflow: hidden;
+
+    height: 75px;
+    bottom: 0; /* Position the navbar at the top of the page */
+    font-family: "Archivo Black", sans-serif;
+    font-size: 11px;
+}
+
+.footer .left {
+}
+.footer .right {
+    float: right;
+    margin-bottom: 30px;
+    margin-right: 50px;
+}

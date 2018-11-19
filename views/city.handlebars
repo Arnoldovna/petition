@@ -1,0 +1,66 @@
+{{>fullnav}}
+
+
+
+<!-- <div class="cursor1">Click on a <br> name!</div> -->
+
+<div class="background">
+
+
+<div class="squareSupporter">
+    HERE ARE ALL SUPPORTER FROM <span>{{result.0.city}}</span>:
+</div>
+
+
+
+<div class="supporter-list">
+
+    {{#each result}}
+                <p>
+                    {{{renderUser url first last}}}
+                    {{{renderProfile city age}}}
+                </p>
+    {{/each}}
+
+
+
+</div>
+
+
+<a class="back" href="/supporter">SEE ALL SUPPORTER</a>
+</div>
+
+
+<div class="spacemore">
+</div>
+
+{{>footer}}
+
+<script src="plus.js"></script>
+
+
+
+
+<!--
+<div class="supporter-city">
+    HERE ARE ALL SUPPORTER FROM
+    <span>{{result.0.city}}</span>
+
+    FOR A SMELLFREE U-BAHN ENVIRONMENT:
+</div>
+
+
+<div class="supporter-list">
+
+    {{#each result}}
+                <p>
+                    {{{renderUser url first last}}}
+                    {{{renderProfile city age}}}
+                </p>
+    {{/each}}
+
+
+
+</div>
+
+<a href="/supporter">SEE ALL SUPPORTER</a><br> -->

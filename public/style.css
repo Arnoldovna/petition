@@ -1,0 +1,404 @@
+.background {
+    margin-top: 126px;
+}
+
+.square {
+    padding: 11px;
+    margin-left: 50px;
+    height: 320px;
+    width: 39%;
+    background: black;
+}
+
+.registerForm {
+    font-family: "Lato", sans-serif;
+    font-weight: 900;
+}
+.registerForm button:hover {
+    color: rgba(255, 197, 110, 0.93);
+}
+input {
+    font-family: "Lato", sans-serif;
+    font-weight: 900;
+    color: white;
+    width: 91%;
+    border-bottom: 1px solid white;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    background: none;
+    margin-top: 15px;
+    margin-left: 20px;
+    font-size: 13px;
+    padding-top: 20px;
+}
+input::placeholder {
+    color: rgb(163, 163, 163);
+    font-size: 10px;
+}
+button,
+textarea,
+select,
+input {
+    outline: none;
+}
+
+form p {
+    padding-left: 22px;
+    color: white;
+    font-size: 12px;
+}
+button {
+    padding-left: 22px;
+    padding-top: 42px;
+    border: none;
+    background: none;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+}
+button:active {
+    color: rgba(255, 197, 110, 0.93);
+}
+
+.registered {
+    margin-left: 64px;
+    font-family: "Lato", sans-serif;
+    font-weight: 900;
+    font-size: 12px;
+    padding: 17px;
+}
+.registered img {
+    width: 11px;
+}
+.registered a {
+    text-decoration: none;
+}
+.registered a:hover {
+    /* color: rgba(255, 197, 110, 0.93); */
+    color: #76950c;
+}
+
+.squareSignup {
+    padding: 11px;
+    margin-left: 50px;
+
+    width: 39%;
+    background: black;
+}
+.squareSignup .error {
+    font-family: "Lato", sans-serif;
+    font-weight: 400;
+    padding-top: 20px;
+    font-size: 12px;
+    color: white;
+    padding-left: 22px;
+}
+
+.squareSignup p {
+    font-family: "Lato", sans-serif;
+    font-weight: 900;
+    padding-left: 22px;
+    color: white;
+    font-size: 12px;
+}
+.squareSignup form button {
+    margin-bottom: 20px;
+}
+.squareSignup form button:hover {
+    color: rgba(255, 197, 110, 0.93);
+}
+.space {
+    height: 94px;
+}
+
+.about {
+    /* font-family: "Archivo Black", sans-serif; */
+    font-family: "Lato", sans-serif;
+    font-weight: bold;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.about p {
+    margin-top: 0;
+    margin-left: 50px;
+    padding-left: 10px;
+    padding-top: 11px;
+    padding-bottom: 11px;
+    width: 88.75%;
+    border: 1px solid black;
+}
+.about ul {
+    padding-left: 60px;
+    font-size: 30px;
+    list-style: none;
+    font-family: "Archivo Black", sans-serif;
+}
+.about li {
+    padding-top: 10px;
+}
+
+section {
+    height: 290px;
+}
+
+.squareAbout {
+    padding-left: 25px;
+    padding: 11px;
+    margin-left: 50px;
+    display: flex;
+    flex-direction: column;
+    width: 88%;
+    background: black;
+    color: white;
+    font-family: "Lato", sans-serif;
+    font-size: 11px;
+}
+.squareProfile {
+    padding: 11px;
+    margin-left: 50px;
+    height: 315px;
+    width: 39%;
+    background: black;
+}
+.squareProfile p {
+    font-family: "Lato", sans-serif;
+    font-weight: 900;
+    padding-left: 22px;
+    color: white;
+    font-size: 12px;
+    /* text-transform: uppercase; */
+}
+
+.spaceProfile {
+    height: 50px;
+}
+
+.squareSignature {
+    padding: 11px;
+    margin-left: 50px;
+    height: 315px;
+    width: 489px;
+    background: black;
+    padding-right: 20px;
+}
+
+.squareSignature p {
+    font-family: "Lato", sans-serif;
+    font-weight: 900;
+    padding-left: 22px;
+    color: white;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+.squareSignature canvas {
+    /* background: #d6a160; */
+    background: white;
+    height: 167px;
+    width: 456px;
+    margin-left: 21px;
+}
+
+.squareSignature button:hover {
+    color: rgba(255, 197, 110, 0.93);
+}
+.squareThankyou {
+    padding-left: 25px;
+    padding: 11px;
+    margin-left: 50px;
+    display: flex;
+    flex-direction: column;
+    width: 88%;
+
+    background: black;
+    color: white;
+    font-family: "Lato", sans-serif;
+    font-size: 11px;
+}
+
+#sig {
+    flex-grow: 1;
+    padding: 11px;
+    margin-left: 50px;
+    margin-top: 20px;
+    padding-top: 20px;
+    width: 457px;
+    background: black;
+    color: white;
+    font-family: "Lato", sans-serif;
+    font-size: 11px;
+}
+#sig img {
+    margin-right: 20px;
+    margin-top: 20px;
+    background-color: white;
+    margin-bottom: 20px;
+}
+
+.number {
+    color: black;
+    text-decoration: none;
+    font-size: 100px;
+    float: right;
+    transform: translate(45%);
+}
+
+.groß {
+    float: right;
+}
+.number a {
+    text-decoration: none;
+}
+
+.middle {
+    position: absolute;
+    top: 300px;
+    left: 700px;
+}
+
+.flex {
+    display: flex;
+    flex-direction: column;
+}
+
+.squareSupporter {
+    padding: 11px;
+    margin-left: 50px;
+    /* heigth: auto; */
+    width: 87%;
+    background: black;
+    color: white;
+    font-family: "Lato", sans-serif;
+    font-size: 11px;
+}
+
+.supporter-list {
+    text-decoration: none;
+    padding: 11px;
+    margin-left: 50px;
+    font-size: 12px;
+    font-family: "Lato", sans-serif;
+}
+.supporter-list a {
+    text-decoration: none;
+    color: black;
+}
+
+.supporter-list a:hover {
+    color: rgb(118, 149, 12);
+}
+
+.squareSupporter span {
+    text-transform: uppercase;
+}
+
+.back {
+    padding: 11px;
+    margin-left: 50px;
+
+    width: 100px;
+    background: black;
+    color: white;
+    font-family: "Lato", sans-serif;
+    font-size: 11px;
+    text-decoration: none;
+}
+.back:hover {
+    color: rgba(255, 197, 110, 0.93);
+}
+.spacemore {
+    height: 200px;
+}
+.squareEdit {
+    padding: 11px;
+    margin-left: 50px;
+    width: 44%;
+    background: black;
+    color: white;
+    font-family: "Lato", sans-serif;
+    font-size: 11px;
+    text-decoration: none;
+}
+.squareEdit label {
+    color: rgb(163, 163, 163);
+    font-size: 10px;
+    padding-left: 20px;
+}
+.squareEdit button {
+    padding-bottom: 20px;
+}
+
+.squareEdit button:hover {
+    color: rgba(255, 197, 110, 0.93);
+}
+
+.partial button {
+    padding: 11px;
+    margin-left: 50px;
+    margin-top: 20px;
+    width: 150px;
+    background: black;
+    color: white;
+    font-family: "Lato", sans-serif;
+    font-size: 11px;
+}
+#allSupporter a {
+    padding: 11px;
+    margin-top: 20px;
+    margin-left: 50px;
+    margin-top: 20px;
+
+    background: black;
+    color: white;
+    font-family: "Lato", sans-serif;
+    font-size: 11px;
+    text-decoration: none;
+    padding-left: 19px;
+    padding-right: 18px;
+}
+#allSupporter {
+    margin-top: 20px;
+}
+
+#allSupporter a:hover {
+    color: rgba(255, 197, 110, 0.93);
+}
+
+.partial button:hover {
+    color: rgba(255, 197, 110, 0.93);
+}
+
+.about li {
+    display: flex;
+    justify-content: center;
+    padding: 11px;
+    margin-left: 60px;
+    margin-top: 50px;
+
+    width: 100px;
+    background: black;
+    color: white;
+    font-family: "Lato", sans-serif;
+    font-size: 11px;
+    text-decoration: none;
+}
+
+.about ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+}
+
+.cursor {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(30%, 30%);
+    font-family: "Lato", sans-serif;
+    font-size: 11px;
+}
+
+.squareProfile button:hover {
+    color: rgba(255, 197, 110, 0.93);
+}

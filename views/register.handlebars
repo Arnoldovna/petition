@@ -1,0 +1,41 @@
+
+
+
+{{>menu}}
+<div class="background">
+
+
+
+<div class="square">
+
+
+
+<form class="registerForm" method="post"autocomplete="off">
+    <p>REGISTER</p>
+    <div class="error">
+        {{#if error}}
+        UH,OH... THIS EMAIL IS ALREADY TAKEN! PLEASE LOG IN OR TRY AGAIN WITH A DIFFRENT EMAIL ADRESS.
+        {{/if}}
+    </div>
+    <input type="text" name="first"placeholder="FIRST NAME" value=""required> <br>
+    <input type="text" name="last" placeholder="LAST NAME" value=""required><br>
+    <input type="email" name="email" placeholder="E-MAIL"value="" required><br>
+    <input type="password" name="password" placeholder="PASSWORD" value=""required><br>
+     <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    <button type="submit">SUBMIT</button>
+
+</form>
+</div>
+
+
+<div class="registered">
+    You are already a member? <a href="/login">Click here to log in.</a> <img src="./click.png" alt="login">
+</div>
+
+
+
+
+    {{>footer}}
+
+
+</div>
