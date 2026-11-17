@@ -1,0 +1,24 @@
+{
+  // knip runs in `pnpm lint` and reports unused files, exports and dependencies (B-41, ADR 0015).
+  // Entries per OVERVIEW.md section 6. Test files, the Vitest setup files and the tool configs are added by knip's
+  // plugins (vitest, eslint, stylelint, drizzle, lefthook, commitlint, lint-staged).
+  // `ignoreDependencies` only for a dependency knip reports although it is used, each with a comment naming the user
+  // (ADR 0019 section 3). Every other finding is fixed, never ignored.
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  // src/server.ts and src/db/migrate.ts are entries through the package.json scripts that run them.
+  "entry": ["src/tools/*.ts", "src/client/*.ts", "scripts/*.mjs"],
+  "project": ["src/**/*.{ts,css}", "test/**/*.ts", "e2e/**/*.ts", "scripts/**/*.mjs"],
+  "playwright": {
+    // playwright.config.ts throws without E2E_BASE_URL (conventions §6), so knip must not load it; the specs are
+    // listed here instead.
+    "config": [],
+    "entry": ["e2e/**/*.spec.ts"],
+  },
+  "ignoreDependencies": [
+    // src/shared/logging/logger.ts loads it by name as the pino transport in development
+    // (`transport: { target: 'pino-pretty' }`); knip cannot see a module named in a string.
+    "pino-pretty",
+  ],
+  // System tool from Phase 0 (BUILD-ORDER), called by `secrets:scan` and lefthook, not an npm package.
+  "ignoreBinaries": ["gitleaks"],
+}

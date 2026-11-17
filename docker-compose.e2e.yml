@@ -1,0 +1,20 @@
+# Override for the isolated e2e stack. Only scripts/run-e2e.mjs uses it, always as compose project `petition-e2e`:
+#   docker compose -p petition-e2e -f docker-compose.yml -f docker-compose.e2e.yml --profile e2e ...
+# Compose concatenates `ports` across files, so the base mappings are reset or overridden here; otherwise the e2e
+# stack would also claim the dev ports and could not run next to `pnpm dev` or `pnpm demo` (conventions §6,
+# ADR 0017, ADR 0019 section 6). `!reset` and `!override` need Compose 2.24.4 or later.
+services:
+  postgres:
+    ports: !reset []
+    volumes: !reset [] # every run starts from an empty database plus the seed
+    tmpfs: ['/var/lib/postgresql']
+
+  redis:
+    ports: !reset []
+
+  app:
+    ports: !override ['127.0.0.1:${E2E_PORT:-8182}:3000']
+    environment:
+      # E2E never proves the production limits (integration tests do, ADR 0012); parallel workers share one IP.
+      RATE_LIMIT_GLOBAL_MAX: '100000'
+      RATE_LIMIT_AUTH_MAX: '100000'

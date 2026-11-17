@@ -26,8 +26,8 @@ URLs and up to 100 KB of text were accepted. Base64 inflates storage by a third 
       submitting" (F-41).
    6. **Re-encode** the decoded pixels to a new PNG. Only these canonical bytes are stored, which strips text chunks
       and any polyglot payload. The re-encoded size must also be at most 64 KiB.
-   Any failure returns a `SignatureImageError` with a user-facing message; the controller re-renders the page with
-   HTTP 422 (F-42).
+      Any failure returns a `SignatureImageError` with a user-facing message; the controller re-renders the page with
+      HTTP 422 (F-42).
 4. **Storage.** `signatures.image bytea NOT NULL` with `CHECK (octet_length(image) BETWEEN 67 AND 65536)` and
    `signatures.method` (`drawn` or `typed`). Drizzle 0.45 has no `bytea` builder, so `src/db/schema/types.ts` defines it
    with `customType<{ data: Buffer; driverData: Buffer }>`.

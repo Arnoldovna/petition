@@ -1,0 +1,16 @@
+# Default gitleaks rules plus path allow-list for generated or vendored files.
+# Never allow-list real findings: rotate the secret and rewrite history instead.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Generated, vendored and build output"
+paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)dist/''',
+  '''(^|/)\.dev/''',
+  '''(^|/)coverage/''',
+  '''(^|/)playwright-report/''',
+  '''(^|/)test-results/''',
+  '''pnpm-lock\.yaml$''',
+]

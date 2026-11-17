@@ -45,8 +45,8 @@ while adding a second password-checking endpoint.
   - `hashNewPassword(password): Promise<string>` (call **before** opening a transaction),
   - `apply(tx, userId, { email?, passwordHash? })`: one `UPDATE users` inside the caller's transaction; a new hash
     increments `session_version`; 23505 on the email index returns `{ ok: false, reason: 'email-taken' }`.
-  Account deletion (auth) and profile edit (profile, injected through `app.ts`) both use it, so the
-  current-password rule and the session-version bump exist once.
+    Account deletion (auth) and profile edit (profile, injected through `app.ts`) both use it, so the
+    current-password rule and the session-version bump exist once.
 - **Re-authentication** with the current password for: changing email, changing password (F-63) and deleting the
   account (F-67). These POSTs share the per-user `reauth` limiter (ADR 0012) to stop password guessing through a
   hijacked session.

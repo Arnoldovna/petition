@@ -1,0 +1,29 @@
+/*
+ * Project-wide helper classes. Keep this file tiny.
+ * These are BEM blocks (used in markup), not Tailwind utilities.
+ */
+@layer components {
+  .visually-hidden {
+    position: absolute;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    inline-size: var(--rule-width);
+    block-size: var(--rule-width);
+    margin: calc(var(--rule-width) * -1);
+  }
+
+  .skip-link {
+    @apply bg-paper text-ink text-meta pbs-2 pbe-2 ps-4 pe-4;
+
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    z-index: var(--layer-toast);
+    translate: 0 -100%;
+  }
+
+  .skip-link:focus-visible {
+    translate: 0 0;
+  }
+}

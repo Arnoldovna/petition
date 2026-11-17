@@ -7,6 +7,7 @@ This document lists every user-facing feature of the legacy app (`_legacy/src/pe
 - No marker: behaviour the legacy app had (or tried to have). It must work correctly in the rebuild.
 - **(new)**: an expectation the legacy app did not meet. It is required in the rebuild.
 - **(changed)**: deliberate change of legacy behaviour; the reason is given.
+- **(amended)**: criterion changed in the architecture review; the reason is in OVERVIEW.md section 2.2 and the ADR named.
 
 **Product summary.** "Nonsense Petition" is a tongue-in-cheek petition "for absolutely nothing". A visitor registers, optionally adds profile details (age, city, homepage), signs with a hand-drawn signature on a canvas, sees a thank-you page with their signature and the supporter count, can browse all supporters (filterable by city), edit their profile, delete their signature, and delete their account.
 
@@ -16,11 +17,11 @@ This document lists every user-facing feature of the legacy app (`_legacy/src/pe
 
 ### 1.1 Legacy schema (for reference)
 
-| Table | Columns | Constraints |
-|---|---|---|
-| `registered_users` | `id SERIAL`, `first VARCHAR(255)`, `last VARCHAR(255)`, `email VARCHAR(255)`, `password VARCHAR(255)` (bcrypt hash), `created_at TIMESTAMP` | PK `id`; `email` UNIQUE (case-sensitive); all NOT NULL except `created_at` |
-| `save` (signatures) | `id SERIAL`, `signature TEXT` (PNG data URL), `user_id INT`, `created_at TIMESTAMP` | PK `id`; `user_id` UNIQUE, FK → `registered_users(id)` (no cascade) |
-| `user_profiles` | `id SERIAL`, `age INT`, `city VARCHAR(100)`, `url VARCHAR(300)`, `user_id INT` | PK `id`; `user_id` UNIQUE NOT NULL, FK → `registered_users(id)` (no cascade) |
+| Table               | Columns                                                                                                                                     | Constraints                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `registered_users`  | `id SERIAL`, `first VARCHAR(255)`, `last VARCHAR(255)`, `email VARCHAR(255)`, `password VARCHAR(255)` (bcrypt hash), `created_at TIMESTAMP` | PK `id`; `email` UNIQUE (case-sensitive); all NOT NULL except `created_at`   |
+| `save` (signatures) | `id SERIAL`, `signature TEXT` (PNG data URL), `user_id INT`, `created_at TIMESTAMP`                                                         | PK `id`; `user_id` UNIQUE, FK → `registered_users(id)` (no cascade)          |
+| `user_profiles`     | `id SERIAL`, `age INT`, `city VARCHAR(100)`, `url VARCHAR(300)`, `user_id INT`                                                              | PK `id`; `user_id` UNIQUE NOT NULL, FK → `registered_users(id)` (no cascade) |
 
 ### 1.2 Rebuild schema (Drizzle migrations)
 
@@ -35,47 +36,50 @@ This document lists every user-facing feature of the legacy app (`_legacy/src/pe
 
 ### 2.1 Legacy routes (for reference)
 
-| Method | Path | Guard | Behaviour |
-|---|---|---|---|
-| GET | `/home` | none | Intro page |
-| GET | `/about` | none | Tech-stack page |
-| GET | `/register` | guest only | Registration form |
-| POST | `/register` | none | Create user, set session, redirect `/profile` |
-| GET | `/login` | guest only | Login form |
-| POST | `/login` | none | Check password, redirect `/thankyou` or `/signature` |
-| GET | `/logout` | none | Clear session, redirect `/register` |
-| GET | `/profile` | logged in | Optional profile form (onboarding) |
-| POST | `/profile` | **none** | Insert profile, redirect `/signature` |
-| GET | `/profile/edit` | logged in | Edit form |
-| POST | `/profile/edit` | **none** | Update user + profile, redirect `/supporter` |
-| GET | `/signature` | logged in, not signed | Canvas signature page |
-| POST | `/signature` | **none** | Insert signature, redirect `/thankyou` |
-| POST | `/signature/delete` | logged in | Delete own signature, redirect `/signature` |
-| GET | `/thankyou` | logged in | Thank-you page, own signature, count |
-| GET | `/supporter` | logged in | List of all supporters |
-| GET | `/supporter/:city` | logged in | Supporters from one city |
-| POST | `/delete` | logged in | Delete account, redirect `/home` |
-| GET | `*` | none | Redirect everything else to `/home` |
+| Method | Path                | Guard                 | Behaviour                                            |
+| ------ | ------------------- | --------------------- | ---------------------------------------------------- |
+| GET    | `/home`             | none                  | Intro page                                           |
+| GET    | `/about`            | none                  | Tech-stack page                                      |
+| GET    | `/register`         | guest only            | Registration form                                    |
+| POST   | `/register`         | none                  | Create user, set session, redirect `/profile`        |
+| GET    | `/login`            | guest only            | Login form                                           |
+| POST   | `/login`            | none                  | Check password, redirect `/thankyou` or `/signature` |
+| GET    | `/logout`           | none                  | Clear session, redirect `/register`                  |
+| GET    | `/profile`          | logged in             | Optional profile form (onboarding)                   |
+| POST   | `/profile`          | **none**              | Insert profile, redirect `/signature`                |
+| GET    | `/profile/edit`     | logged in             | Edit form                                            |
+| POST   | `/profile/edit`     | **none**              | Update user + profile, redirect `/supporter`         |
+| GET    | `/signature`        | logged in, not signed | Canvas signature page                                |
+| POST   | `/signature`        | **none**              | Insert signature, redirect `/thankyou`               |
+| POST   | `/signature/delete` | logged in             | Delete own signature, redirect `/signature`          |
+| GET    | `/thankyou`         | logged in             | Thank-you page, own signature, count                 |
+| GET    | `/supporter`        | logged in             | List of all supporters                               |
+| GET    | `/supporter/:city`  | logged in             | Supporters from one city                             |
+| POST   | `/delete`           | logged in             | Delete account, redirect `/home`                     |
+| GET    | `*`                 | none                  | Redirect everything else to `/home`                  |
 
 ### 2.2 Rebuild routes
 
-| Method | Path | Guard | Notes |
-|---|---|---|---|
-| GET | `/` | none | Home (`/home` → 301 `/`) |
-| GET | `/about` | none | |
-| GET/POST | `/register` | guest only | |
-| GET/POST | `/login` | guest only | |
-| POST | `/logout` | signed in | (changed) was GET |
-| GET/POST | `/profile` | signed in | onboarding, upsert |
-| GET/POST | `/profile/edit` | signed in | |
-| GET/POST | `/signature` | signed in, not signed | |
-| POST | `/signature/delete` | signed in, has signed | |
-| GET | `/thank-you` | signed in, has signed | |
-| GET | `/supporters` | signed in | paginated |
-| GET | `/supporters/city/:city` | signed in | `:city` URL-encoded |
-| GET/POST | `/account/delete` | signed in | confirmation page + POST **(new)** |
-| GET | `/healthz` | none | liveness/readiness **(new)** |
-| any | unknown | none | 404 page **(changed)** |
+| Method   | Path                     | Guard                 | Notes                                             |
+| -------- | ------------------------ | --------------------- | ------------------------------------------------- |
+| GET      | `/`                      | none                  | Home (`/home` → 301 `/`)                          |
+| GET      | `/about`                 | none                  |                                                   |
+| GET      | `/privacy`               | none                  | privacy notice, no session for guests **(new)**   |
+| GET/POST | `/register`              | guest only            |                                                   |
+| GET/POST | `/login`                 | guest only            |                                                   |
+| POST     | `/logout`                | signed in             | (changed) was GET                                 |
+| GET/POST | `/profile`               | signed in             | onboarding, upsert                                |
+| GET/POST | `/profile/edit`          | signed in             |                                                   |
+| GET/POST | `/signature`             | signed in, not signed |                                                   |
+| GET      | `/signature/image.png`   | signed in, has signed | own signature image only, 404 otherwise **(new)** |
+| GET/POST | `/signature/delete`      | signed in, has signed | confirmation page + POST **(new)**                |
+| GET      | `/thank-you`             | signed in, has signed |                                                   |
+| GET      | `/supporters`            | signed in             | paginated                                         |
+| GET      | `/supporters/city/:city` | signed in             | `:city` URL-encoded                               |
+| GET/POST | `/account/delete`        | signed in             | confirmation page + POST **(new)**                |
+| GET      | `/health/live`           | none                  | liveness: the process only **(new)**              |
+| GET      | `/health/ready`          | none                  | readiness: database and Redis **(new)**           |
+| any      | unknown                  | none                  | 404 page **(changed)**                            |
 
 - **F-07** Every route in table 2.2 exists, and every guard in the "Guard" column is enforced on **both** GET and POST. A request that fails a guard gets a redirect for page requests, not a database error. [B-06, B-07]
 - **F-08** Unknown paths return HTTP 404 with a styled "Page not found" page that links home. They do not redirect. **(changed)** [B-43]
@@ -90,9 +94,9 @@ This document lists every user-facing feature of the legacy app (`_legacy/src/pe
 
 - **F-12** `GET /` shows the petition intro ("nonsense petition for absolutely nothing") with links to register, log in, the profile, the signature page, the supporters page and account deletion. Every link points to an existing route. [B-42]
 - **F-13** `GET /about` describes the project and lists the technologies of the **rebuild** stack.
-- **F-14** A single navigation component adapts to the auth state. **(changed)** [B-46]
+- **F-14** A single navigation component adapts to the auth state. **(changed)** **(amended, ADR 0014)** [B-46]
   - Guest: brand/home, About, Log in, Register.
-  - Signed in: brand/home, About, Supporters, Profile, Log out (a POST form button).
+  - Signed in: brand/home, Supporters, Profile, Log out (a POST form button). For signed-in users, About moves to the footer.
   - The current page's link has `aria-current="page"`.
 - **F-15** The footer shows the project credit, the current year (computed, not hard-coded) and a contact link taken from configuration. No phone number and no private email address appear in markup. **(changed)** [B-15]
 - **F-16** Every page has a unique `<title>` in the form "<Page> · Nonsense Petition". **(new)** [B-45]
@@ -104,19 +108,19 @@ This document lists every user-facing feature of the legacy app (`_legacy/src/pe
 - **F-19** Server-side validation (Zod) with field-level messages. **(new)** [B-24]
   - First and last name: required, trimmed, 1–100 characters.
   - Email: required, valid format, ≤ 254 characters, trimmed and lower-cased before storage.
-  - Password: required, 10–128 characters, never trimmed.
+  - Password: required, 12–128 characters, never trimmed. **(amended, ADR 0009)**
 - **F-20** If the email is already registered (case-insensitively), the email field shows "An account with this email already exists", with a link to log in. First name, last name and email are kept in the form. The password is never echoed back. [B-24, B-25]
 - **F-21** On validation failure, an error summary at the top lists all errors as links to the fields and receives focus. Each invalid field has `aria-invalid="true"` and `aria-describedby` pointing to its message. **(new)** [B-68]
 - **F-22** A signed-in user who opens `/register` or `/login` is redirected to `/thank-you` if they have signed, otherwise to `/signature`.
 - **F-23** A user can log in with email (case-insensitive) and password. On success the session ID is regenerated and the user is redirected to `/thank-you` if they have signed, otherwise to `/signature`. This works for users with and without a signature. [B-22]
 - **F-24** On failure (unknown email **or** wrong password), the login page is re-rendered with HTTP 401 and the single message "Email or password is incorrect". The email is kept. Response time does not reveal whether the email exists (dummy hash verification). [B-09, B-23]
-- **F-25** Logout is a POST with a CSRF token. It destroys the server-side session, clears the cookie and redirects to `/` with a "You are logged out" message. **(changed)** [B-08]
+- **F-25** Logout is a POST with a CSRF token. It deletes the server-side session; the browser gets a new anonymous session id that only carries the flash message. It redirects to `/` with a "You are logged out" message. **(changed)** **(amended, ADR 0002)** [B-08]
 - **F-26** Login and registration are rate-limited, e.g. 10 attempts per 15 minutes per IP and per email. Exceeding the limit returns HTTP 429 with a readable page. **(new)** [B-10]
 - **F-27** Passwords are hashed with argon2id (OWASP-recommended parameters). Plaintext passwords and hashes are never logged. [B-11, B-12]
 
 ## 6. Session
 
-- **F-28** Sessions are stored server-side in Redis. The cookie holds only an opaque session ID and has `HttpOnly`, `Secure` (in production), `SameSite=Lax` and a path of `/`. The session holds only the user ID. Names, email and signature IDs are not stored in it. **(changed)** [B-04]
+- **F-28** Sessions are stored server-side in Redis. The cookie holds only an opaque session ID and has `HttpOnly`, `Secure` (in production), `SameSite=Lax` and a path of `/`. The session holds only the user ID plus non-personal technical fields (session version, issue time, CSRF binding flag, one-time flash). Names, email and signature IDs are not stored in it. **(changed)** **(amended, ADR 0002)** [B-04]
 - **F-29** Sessions expire after an idle timeout (e.g. 2 hours, rolling) and an absolute lifetime (e.g. 7 days). Values come from configuration. **(new)** [B-04, B-57]
 - **F-30** Guests who request a protected page are redirected to `/login?returnTo=<path>`. After login they return to that path (same-origin relative paths only). **(changed)**: legacy redirected to `/register`.
 - **F-31** If the user in the session no longer exists (for example, the account was deleted on another device), the session is destroyed and the request is treated as a guest request. [B-05]
@@ -200,10 +204,10 @@ This document lists every user-facing feature of the legacy app (`_legacy/src/pe
 ## 15. Cross-cutting security
 
 - **F-70** Every state-changing request is a POST protected by a CSRF token. A missing or invalid token returns a 403 page, not a stack trace. [B-08, B-13, B-14]
-- **F-71** `helmet` sets security headers, including a strict CSP: no inline scripts, `img-src 'self' data:` for signatures, and fonts served from self. `X-Powered-By` is disabled. **(new)** [B-10, B-16]
+- **F-71** `helmet` sets security headers, including a strict CSP: no inline scripts, `img-src 'self'` (signatures are served by the private route `GET /signature/image.png`), and fonts served from self. `X-Powered-By` is disabled. **(new)** **(amended, ADR 0004)** [B-10, B-16]
 - **F-72** All configuration (port, database URL, Redis URL, session secret, cookie settings, contact link) comes from environment variables validated with Zod at startup. The app refuses to start when a value is missing or invalid. The repo contains no secrets, only `.env.example`. [B-02, B-03, B-57]
 - **F-73** Structured logging (pino) with request IDs. Passwords, hashes, emails, session data and signature payloads are redacted or never logged. [B-12, B-58]
-- **F-74** `GET /healthz` returns 200 when the database and Redis are reachable, otherwise 503. **(new)**
+- **F-74** `GET /health/ready` returns 200 when the database and Redis are reachable, otherwise 503. `GET /health/live` reports the process only. There is no `GET /healthz`. **(new)** **(amended, ADR 0011)**
 
 ## 16. UX states
 

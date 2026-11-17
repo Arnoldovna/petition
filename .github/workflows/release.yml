@@ -1,0 +1,91 @@
+name: Release
+
+# Images are built only from commits that passed CI on main (conventions §9, ADR 0015), and only while the repository
+# is public (CI cost rule, ADR 0018). While it is private, `images` and `deploy` show as skipped.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  # The commit CI tested (ADR 0018 §4). Under workflow_run, github.sha is the head of main when this workflow starts,
+  # which can be newer than the tested commit. Manual runs are allowed on main only (see the `images` condition).
+  RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+jobs:
+  images:
+    name: build + push image
+    # `repository` is part of both the workflow_run and the workflow_dispatch payload. Manual runs only on main,
+    # because `latest` must never point at a branch build.
+    if: >-
+      github.event.repository.private == false &&
+      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          persist-credentials: false
+      - name: Image name (GHCR requires lowercase)
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=sha-${{ env.RELEASE_SHA }}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.revision=${{ env.RELEASE_SHA }}
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app
+          provenance: mode=max
+          sbom: true
+
+  # Prepared but disabled until a hosting target exists and the repository is public (ADR 0015, ADR 0018).
+  # Enable: Settings -> Variables -> DEPLOY_ENABLED=true, create the "production" environment (required reviewers),
+  # add its secrets, then replace the placeholder step. Checklist for the target (ADR 0015): IMPRINT_URL set
+  # (ADR 0016), at least 384 MiB memory for the app container (ADR 0009), no text/html compression at the proxy
+  # (ADR 0010).
+  deploy:
+    needs: images
+    if: github.event.repository.private == false && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - name: Deploy
+        env:
+          IMAGE_TAG: sha-${{ env.RELEASE_SHA }}
+        run: |
+          echo "::error::No deploy target configured yet (image tag ${IMAGE_TAG})."
+          exit 1

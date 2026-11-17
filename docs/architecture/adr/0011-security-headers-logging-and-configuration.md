@@ -32,18 +32,20 @@ rewrite `/assets` and `/fonts` to `https://127.0.0.1:3000` and a reviewer would 
 `headers.int.test.ts` covers both switch positions in `NODE_ENV=production`.
 
 **Logging (pino 10, pino-http 11)**
+
 - Request id: a well-formed incoming `x-request-id` (`/^[\w-]{8,128}$/`) or a UUID, echoed in the response.
 - Redaction paths: `req.headers.cookie`, `req.headers.authorization`, `res.headers["set-cookie"]`, `*.password`,
   `*.currentPassword`, `*.newPassword`, `*.passwordHash`, `*.email`, `*._csrf`, `*.signature`, `*.image`,
   `*.typedName`. Request bodies are never logged.
 - Domain events log ids only: `user.registered {userId}`, `user.logged_in {userId}`, `signature.created {userId,
-  method}`, `signature.deleted {userId}`, `profile.updated {userId}`, `account.deleted {userId}`, `auth.login_failed`
+method}`, `signature.deleted {userId}`, `profile.updated {userId}`, `account.deleted {userId}`, `auth.login_failed`
   (no email), `rate_limit.hit {limiter}`, `rate_limit.relaxed {limiter, max}` (startup, ADR 0012),
   `account.erased {userId}` (manual erasure, ADR 0016).
 - 5xx at `error` with the error object; 4xx at `warn` without stack; health checks not logged.
 - `no-console` is an ESLint error (B-58). Development uses `pino-pretty` as a transport.
 
 **Configuration**
+
 - `src/config/env.ts` is the only reader of `process.env` (plus tooling entry points: `db/migrate.ts`,
   `tools/seed.ts`, `tools/erase-user.ts`, `tools/smoke-canvas.ts`, `drizzle.config.ts`, `playwright.config.ts` and
   `scripts/*.mjs`). Zod schema, fail-fast at startup, error message lists keys only.

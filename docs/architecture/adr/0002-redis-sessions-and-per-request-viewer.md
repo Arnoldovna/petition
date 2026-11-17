@@ -35,7 +35,7 @@ showed the guest navigation to signed-in users.
      `await regenerateSession(req)` (promisified `req.session.regenerate`) deletes the old store entry and leaves a
      fresh, empty, unsaved session object on `req.session`, so the rest of the request runs as a guest (F-29).
 5. **Session content.** `SessionData = { userId?: number; sessionVersion?: number; issuedAt?: number;
-   csrfBound?: true; flash?: Flash }`. No names, emails or signature ids (F-28). `flash` is a fixed, server-written
+csrfBound?: true; flash?: Flash }`. No names, emails or signature ids (F-28). `flash` is a fixed, server-written
    message and is deleted when a page renders it (ADR 0008). FEATURES F-28 is amended accordingly (OVERVIEW.md
    section 2.2).
 6. **Session id rotation.** `establishSession(req, user, policy)` calls `regenerate`, then sets `userId`,
@@ -49,7 +49,7 @@ showed the guest navigation to signed-in users.
    session has a `userId`. `findViewer` is injected; it is the auth module's viewer repository
    (`createViewerRepository(db)` exported from `features/auth/index.ts`), so `shared` contains no SQL:
    `SELECT u.id, u.first_name, u.session_version, (s.user_id IS NOT NULL) AS has_signed FROM users u LEFT JOIN
-   signatures s ON s.user_id = u.id WHERE u.id = $1`.
+signatures s ON s.user_id = u.id WHERE u.id = $1`.
    - No row (account deleted elsewhere) or `session_version` differs (password changed elsewhere): **regenerate** the
      session (as in item 4) and continue as a guest (F-31, B-05). Never `destroy()`.
    - Otherwise `res.locals.viewer = { userId, firstName, hasSigned }`. "Has signed" is never cached (F-32, B-35).

@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "lib": ["es2025", "dom", "dom.iterable"],
+    "types": ["node"]
+  },
+  "include": ["**/*.ts"]
+}

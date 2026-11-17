@@ -77,8 +77,9 @@ the woff2 files works, "Lena Hartmann" at 64 px renders to a 4.7 KB PNG, `loadIm
   registers the shipped fonts, renders `Łukasz Żółć` (primary font) and `Nguyễn Ελένη Пётр` (fallback font), round-trips
   each PNG through the drawn-signature validator and asserts at least 1,000 inked pixels and no rejection. `scripts/run-e2e.mjs`
   runs it in the image the isolated E2E stack just built (`docker run --rm petition-e2e-app dist/tools/smoke-canvas.js`,
-  ADR 0017), so it is part of `test:e2e` so it runs on linux/amd64 in CI and on linux/arm64 on Marina's Mac on every local
-  `pnpm verify`. In phase 1 the signature module is still a stub, so the phase-1 version of the smoke check drives
+  ADR 0017). Because it is part of `test:e2e`, it runs on linux/amd64 in the CI `e2e` job of every pull request (not on
+  pushes to `main`, ADR 0018) and on linux/arm64 on Marina's Mac on every local `pnpm verify`. In phase 1 the signature
+  module is still a stub, so the phase-1 version of the smoke check drives
   @napi-rs/canvas directly (register fonts, draw text, `encode('png')`, `loadImage`, count pixels); the signature
   module switches it to `renderTypedSignature` plus the validator.
 - Fallback if the native module does not work in `gcr.io/distroless/nodejs26-debian13:nonroot`: switch the runtime

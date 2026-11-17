@@ -1,0 +1,205 @@
+/*
+ * maw-studio design tokens — Tailwind CSS v4.
+ *
+ * This is the ONLY file in a project that may contain raw colour values,
+ * raw lengths and easing curves. Everything else references these tokens
+ * (via @apply with token utilities, or var(--token) in plain CSS).
+ *
+ * Copy into <project>/src/styles/tokens.css and change only:
+ *   --color-accent (per-project accent, see SKILL.md)
+ *
+ * `static` is required: component CSS (Vue \3c style>, React CSS files) is compiled
+ * separately via @reference, so main.css cannot see which tokens those files use.
+ * Without `static`, unused-in-main tokens would be tree-shaken from :root.
+ */
+
+@theme static {
+  /* 1. Remove every Tailwind default we do not want to exist. */
+  --color-*: initial;
+  --font-*: initial;
+  --font-weight-*: initial;
+  --text-*: initial;
+  --tracking-*: initial;
+  --leading-*: initial;
+  --breakpoint-*: initial;
+  --container-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --blur-*: initial;
+  --perspective-*: initial;
+  --aspect-*: initial;
+  --ease-*: initial;
+  --animate-*: initial;
+
+  /* 2. Colour — base (swapped in dark mode, see bottom of file) */
+  --color-paper: #fff;
+  --color-ink: #000;
+  --color-ink-muted: #606060; /* 6.29:1 on paper — secondary text, input underline */
+  --color-rule: #a8a8a8; /* decorative 1px rules only (not a UI boundary) */
+  --color-rule-strong: var(--color-ink); /* rule on hover / active / selected */
+  --color-surface: #f2f2f2; /* browser-frame bar, image placeholder, skeleton */
+  --color-on-accent: #000; /* text on accent fields — never swaps */
+
+  /* 3. Colour — accents (flat fills, never gradients, never text colour on paper) */
+  --color-apricot: #f39945;
+  --color-sky: #b8d3f3;
+  --color-olive: #ad9234;
+  --color-sand: #e1d7b5;
+  --color-vermilion: #f85d33;
+  --color-rose: #e59797;
+  --color-blush: #f5b7a9;
+  --color-rust: #c36035;
+
+  /* Per-project accent: imageboard = sky, petition = vermilion, social-network = rose */
+  --color-accent: var(--color-vermilion);
+  --color-error: var(--color-rust); /* 4.16:1 on paper → UI marker only, message text stays ink */
+
+  /* 4. Typography — Schibsted Grotesk (SIL OFL 1.1), self-hosted via @fontsource */
+  --font-sans: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+
+  --text-micro: 0.75rem; /* 12px */
+  --text-micro--line-height: 1.4;
+  --text-micro--letter-spacing: 0.05em;
+  --text-meta: 0.875rem; /* 14px */
+  --text-meta--line-height: 1.4;
+  --text-meta--letter-spacing: 0.05em;
+  --text-body: 1rem; /* 16px */
+  --text-body--line-height: 1.45;
+  --text-caption: 1.0625rem; /* 17px */
+  --text-caption--line-height: 1.35;
+  --text-caption--letter-spacing: 0.015em;
+  --text-lead: 1.3125rem; /* 21px */
+  --text-lead--line-height: 1.3;
+  --text-title-s: 1.5rem; /* 24px */
+  --text-title-s--line-height: 1.2;
+  --text-title-s--letter-spacing: 0.02em;
+  --text-title: 1.9375rem; /* 31px */
+  --text-title--line-height: 1.15;
+  --text-title--letter-spacing: 0.02em;
+  --text-title-l: 2.4375rem; /* 39px */
+  --text-title-l--line-height: 1.1;
+  --text-title-l--letter-spacing: 0.01em;
+  --text-display: 3.0625rem; /* 49px */
+  --text-display--line-height: 1.05;
+  --text-display-xl: 4.5rem; /* 72px */
+  --text-display-xl--line-height: 1;
+  --text-display-xl--letter-spacing: -0.01em;
+
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0;
+  --tracking-title: 0.02em;
+  --tracking-meta: 0.05em;
+  --tracking-label: 0.1em;
+
+  --leading-none: 1;
+  --leading-tight: 1.1;
+  --leading-heading: 1.2;
+  --leading-body: 1.45;
+
+  /* 5. Spacing — 4px base. Allowed steps: 0 1 2 3 4 5 6 8 10 12 16 20 24 32 */
+  --spacing: 0.25rem;
+
+  /* 6. Layout */
+  --breakpoint-sm: 40rem; /* 640 */
+  --breakpoint-md: 48rem; /* 768 */
+  --breakpoint-lg: 64rem; /* 1024 */
+  --breakpoint-xl: 80rem; /* 1280 */
+
+  --container-row: 36rem; /* list row switches to title-left / meta-right */
+  --container-wide: 56rem; /* grids go to 3 columns */
+  --container-gallery-4: 72rem; /* dense image grids go to 4 columns (imageboard gallery) */
+  --container-prose: 40rem; /* max line length for running text (~70ch) */
+  --container-page: 80rem; /* 1280px page max width */
+
+  --aspect-media: 16 / 10;
+  --aspect-square: 1 / 1;
+  --aspect-portrait: 4 / 5;
+
+  /* 7. Lines, radius, focus, layers (plain custom properties) */
+  --rule-width: 1px;
+  --rule-width-strong: 2px;
+  --focus-width: 2px;
+  --focus-offset: 0.25rem;
+  --underline-offset: 0.2em;
+  --radius-frame: 0.1875rem; /* 3px — browser-frame only, nothing else is rounded */
+  --layer-header: 10;
+  --layer-preview: 20;
+  --layer-modal: 30;
+  --layer-toast: 40;
+  --header-fade: linear-gradient(to bottom, var(--color-paper) 15%, transparent);
+  --preview-width: 22rem; /* hover image preview */
+
+  /* 8. Motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-shake: cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 400ms;
+  --duration-shake: 150ms;
+
+  --animate-shake: shake var(--duration-shake) var(--ease-shake) both;
+  --animate-fade-in: fade-in var(--duration-slow) var(--ease-standard) both;
+
+  @keyframes shake {
+    10%,
+    90% {
+      translate: -1px 0;
+    }
+
+    20%,
+    80% {
+      translate: 1px 0;
+    }
+
+    30%,
+    50%,
+    70% {
+      translate: -2px 0;
+    }
+
+    40%,
+    60% {
+      translate: 2px 0;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+/* Dark mode: paper/ink swap, accents unchanged, text on accents stays black. */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+
+    --color-paper: #000;
+    --color-ink: #fff;
+    --color-ink-muted: #9a9a9a; /* 7.46:1 on black */
+    --color-rule: #5c5c5c; /* 3.14:1 on black */
+    --color-surface: #1a1a1a;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      color-scheme: dark;
+
+      --color-paper: #000;
+      --color-ink: #fff;
+      --color-ink-muted: #9a9a9a;
+      --color-rule: #5c5c5c;
+      --color-surface: #1a1a1a;
+    }
+  }
+}

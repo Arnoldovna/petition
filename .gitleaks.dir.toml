@@ -1,0 +1,11 @@
+# Working-tree scan (`gitleaks dir`) only: same rules as .gitleaks.toml, plus the local env files that
+# .gitignore keeps out of git. History and staged scans use .gitleaks.toml, so a committed .env is still caught.
+[extend]
+path = ".gitleaks.toml"
+
+[[allowlists]]
+description = "Local, gitignored env files"
+paths = [
+  '''(^|/)\.env$''',
+  '''(^|/)\.env\.(local|development|test|production)(\.local)?$''',
+]

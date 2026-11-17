@@ -1,6 +1,7 @@
 # ADR 0015: Test layers, HTML validation, one-command setup and the delivery pipeline
 
-- Status: Accepted (revised after architecture critique, 2026-11-15)
+- Status: Accepted (revised after architecture critique, 2026-11-15; amended by ADR 0018 (CI cost rule) and ADR 0019
+  (consistency-pass alignment), 2026-11-16)
 - Date: 2026-11-15
 - Covers: B-41, B-42, B-59, B-60, B-62, B-73, F-01, F-74, F-78, F-87
 
@@ -32,16 +33,22 @@ that claimed PLAN.md pins the 10 line (it does not). Test data isolation and par
   - `desktop` (1440 x 900, Chromium) and `mobile` (Pixel 7, 390 x 844, Chromium): every other spec; both declare
     `dependencies: ['seed-readonly']`, so seed numbers are asserted before any spec adds or removes signers.
   - `webkit-iphone` (`devices['iPhone 15']`, WebKit): `signature-pad.spec.ts` only (touch, pointer capture, release
-    outside the canvas, B-36, B-37).
+    outside the canvas, B-36, B-37). It also declares `dependencies: ['seed-readonly']`, because the spec signs and so
+    changes the totals `supporters.spec.ts` asserts (ADR 0019 §6).
   - `retries: 0` locally **and in CI**. A flaky test is a failing test and gets a root-cause fix (quality gate), never
     a retry.
+  - `workers: process.env.CI ? 2 : 4`: one app container (384 MiB, two concurrent password hashes) serves every
+    worker; phase-5 units add `--workers=2` (ADR 0019 §6).
   - Signed-in specs use a worker-scoped fixture that registers one user per worker and saves its `storageState`;
     specs that log out, change the password or delete the account register their own user. Mutating specs use unique
     cities (`e2e-<uuid>`) and assert counts relative to a value read at the start of the test.
   - `e2e/a11y.ts` fails on serious or critical axe violations (WCAG 2.2 AA tags).
 - **HTML validity (F-87, B-73): one validator, the W3C Nu validator.** `e2e/html-validity.spec.ts` visits every page
-  in guest, signed-in, error and validation states and writes each raw response body to `test-results/html/`.
-  `scripts/validate-html.mjs` runs the Nu validator image with `--errors-only` over that folder. The image reference
+  in guest, signed-in, error and validation states and writes each raw response body to `html/` inside the run's
+  output directory as `<project>-<page>-<state>.html` (`test-results/html/` in a full run; Playwright cleans it at the
+  start, so no stale page survives, and the project prefix keeps `desktop` and `mobile` from overwriting each other).
+  `scripts/validate-html.mjs [dir]` (default `test-results/html`) runs the Nu validator image with `--errors-only` over
+  that folder; `run-e2e.mjs` calls it only after a green Playwright run. The image reference
   (tag plus digest) lives in `docker/nu-validator.Dockerfile` (`FROM ghcr.io/validator/validator:<tag>@sha256:<digest>`),
   which the script reads and Dependabot updates. html-validate is not used (F-87 names the W3C validator literally;
   Docker is required anyway).
@@ -51,18 +58,24 @@ that claimed PLAN.md pins the 10 line (it does not). Test data isolation and par
 
 ### One-command setup (names and contracts: `project-scaffold/references/conventions.md` §5)
 
-- **`pnpm setup:env`** → `scripts/setup-env.mjs` (Node built-ins only): creates `.env` from `.env.example` if it is
-  missing, otherwise adds only missing keys; fills empty `SESSION_SECRET`, `CSRF_SECRET`, `SEED_DEMO_PASSWORD` and
-  `POSTGRES_PASSWORD` with `crypto.randomBytes(32).toString('base64url')`; an existing value is **never**
-  overwritten.
+- **`pnpm setup:env`** → `scripts/setup-env.mjs` (Node built-ins only): creates `.env` (mode 600) from
+  `.env.example` if it is missing, otherwise adds only missing keys; fills every **empty** key whose name contains
+  `SECRET` or `PASSWORD` as a word (`SESSION_SECRET`, `CSRF_SECRET`, `SEED_DEMO_PASSWORD`) with
+  `crypto.randomBytes(32).toString('base64url')`; an existing value is **never** overwritten; prints key names only.
+  `POSTGRES_PASSWORD` keeps the template's fixed local value `local-only` (ADR 0019 §7): the dev `DATABASE_URL` must
+  match it, and a generated value would lock out an existing database volume whenever `.env` is recreated.
 - **`pnpm dev:setup`** → `scripts/dev-setup.mjs`:
-  1. checks Node 26 (`.nvmrc`), pnpm (version from `packageManager`), Docker (daemon reachable, Compose v2.24 or
-     later for `!reset`) and git 2.31 or later; prints what is missing and exits 1;
-  2. runs `setup:env`;
-  3. runs `pnpm infra:up`, `pnpm db:migrate`, `pnpm db:seed`. Idempotent.
-- **`pnpm demo`** = `pnpm setup:env && pnpm stack:demo` (production image with migrate and seed, compose profile
-  `demo`, ADR 0016 for the seed guard; prints the URL and the demo login). A reviewer runs
-  `pnpm install && pnpm demo` and opens `http://127.0.0.1:3000`.
+  1. checks Node 26 (`.nvmrc`), pnpm (version from `packageManager`), Docker (daemon reachable, Compose 2.24.4 or
+     later for `!reset` and `!override`) and git 2.31 or later; prints what is missing and exits 1;
+  2. runs `setup:env`, then checks that `DATABASE_URL` names the same user, password and database as `POSTGRES_*`
+     (key names only in the message);
+  3. runs `pnpm infra:up`, `pnpm db:migrate`, `pnpm db:seed`. Idempotent: a second run changes nothing and succeeds,
+     also after a local registration (the seed skips, ADR 0019 §7).
+- **`pnpm demo`** = `node scripts/dev-setup.mjs --demo`: the tool check, `setup:env`, then `pnpm stack:demo`
+  (`docker compose --profile demo up -d --build --wait`: production image with migrate and seed, ADR 0016 for the seed
+  guard), then it prints `http://127.0.0.1:<APP_PORT>` and the demo login (`demo@petition.test` and
+  `SEED_DEMO_PASSWORD`, the one secret conventions §5 allows to print). A reviewer runs `pnpm install && pnpm demo`.
+  `pnpm stack:down` (`docker compose --profile app --profile demo down`) stops it and keeps the data.
 - No script is named `setup`, because `pnpm setup` is a pnpm built-in command (it configures `PNPM_HOME`) and would
   never reach a package script.
 - The CI `e2e` job and the `dev-setup-smoke` job call `node scripts/setup-env.mjs`; the template's `sed` loop over
@@ -72,16 +85,20 @@ that claimed PLAN.md pins the 10 line (it does not). Test data isolation and par
 ### CI and CD
 
 - **CI** (`ci.yml` from the project-scaffold template): jobs lint (+ schema drift check on `drizzle/`), typecheck,
-  unit, integration, build, e2e (Nu validator, canvas smoke check, `playwright install --with-deps chromium webkit`),
-  `dev-setup-smoke`, gitleaks. SHA-pinned actions, `permissions: contents: read`, concurrency cancel-in-progress.
+  unit, integration, build, e2e (Nu validator, canvas smoke check, `playwright install --with-deps chromium webkit`;
+  **pull requests only**, ADR 0018), `dev-setup-smoke`, gitleaks. SHA-pinned actions, `permissions: contents: read`,
+  concurrency cancel-in-progress.
 - **Audit** (`audit.yml`, conventions §9): `pnpm audit --prod --audit-level=high` weekly, on lockfile changes on
   `main` and on demand; not a PR check.
-- **CD** (`release.yml`): triggered by `workflow_run` of `CI` with `types: [completed]` and `branches: [main]`; the job
-  runs only when `github.event.workflow_run.conclusion == 'success'` and `github.event.workflow_run.event == 'push'`,
-  and checks out `github.event.workflow_run.head_sha`. It builds and pushes `ghcr.io/arnoldovna/petition` with tags
-  `sha-<sha>` and `latest`, provenance and SBOM. `workflow_dispatch` stays for manual rebuilds. Deploy job present but
-  gated by `vars.DEPLOY_ENABLED == 'true'`; its checklist requires `IMPRINT_URL` (ADR 0016), at least 384 MiB memory
-  (ADR 0009) and no `text/html` compression at the proxy (ADR 0010).
+- **CD** (`release.yml`): triggered by `workflow_run` of `CI` with `types: [completed]` and `branches: [main]`; the
+  `images` job runs only when the repository is public (`github.event.repository.private == false`, ADR 0018) and
+  `github.event.workflow_run.conclusion == 'success'` and `github.event.workflow_run.event == 'push'`, or on a manual
+  `workflow_dispatch` on `main`. It checks out `RELEASE_SHA` (`github.event.workflow_run.head_sha`, else `github.sha`)
+  and builds and pushes `ghcr.io/arnoldovna/petition` with tags `sha-<RELEASE_SHA>` and `latest`, the matching
+  revision label, provenance and SBOM. Deploy job present but gated by the same visibility rule and
+  `vars.DEPLOY_ENABLED == 'true'`; its checklist requires `IMPRINT_URL` (ADR 0016), at least 384 MiB memory
+  (ADR 0009) and no `text/html` compression at the proxy (ADR 0010). While the repository is private, both jobs show as
+  skipped.
 - **Dependabot:** `npm` (grouped prod/dev, 3-day cooldown), `github-actions`, `docker` for `/` (Dockerfile) and
   `/docker` (Nu validator), `docker-compose` for `/` (`postgres:18-alpine`, `redis:8-alpine`). Every image is pinned
   by digest (compose, Dockerfile, `test/images.ts`, the Nu validator), conventions §9.

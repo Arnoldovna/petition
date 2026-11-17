@@ -1,0 +1,68 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Berlin
+    cooldown:
+      default-days: 3
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: chore(deps)
+    groups:
+      production:
+        dependency-type: production
+        update-types: [minor, patch]
+      development:
+        dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      # typescript-eslint supports TypeScript < 6.1; TypeScript 7 has no JS compiler API yet.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directories: ['/', '/.github/actions/*']
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Berlin
+    commit-message:
+      prefix: ci(deps)
+    groups:
+      actions:
+        patterns: ['*']
+
+  # '/': the app Dockerfile (node and distroless base images). '/docker': the Nu validator reference that
+  # scripts/validate-html.mjs reads from docker/nu-validator.Dockerfile (ADR 0015).
+  - package-ecosystem: docker
+    directories: ['/', '/docker']
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Berlin
+    commit-message:
+      prefix: build(deps)
+    groups:
+      base-images:
+        patterns: ['*']
+
+  # Every image in docker-compose.yml is pinned by digest (conventions §9). test/images.ts reads its references from
+  # docker-compose.yml, so an update here also reaches the integration tests (ADR 0019 §5).
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Berlin
+    commit-message:
+      prefix: build(deps)
+    groups:
+      compose-images:
+        patterns: ['*']

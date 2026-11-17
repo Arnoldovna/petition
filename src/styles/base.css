@@ -1,0 +1,58 @@
+/*
+ * Element defaults only — no classes here. Tokens only.
+ * The @font-face rules live in fonts.css; scripts/copy-fonts.mjs copies the font files (ADR 0010).
+ */
+@layer base {
+  html {
+    @apply bg-paper text-ink font-sans font-regular text-body;
+
+    -webkit-font-smoothing: antialiased;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply m-0 min-block-dvh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-medium leading-heading;
+
+    text-wrap: balance;
+    hyphens: auto;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+    text-decoration-thickness: var(--rule-width);
+    text-underline-offset: var(--underline-offset);
+  }
+
+  img,
+  video {
+    @apply block max-inline-full;
+
+    block-size: auto;
+  }
+
+  :focus-visible {
+    outline: var(--focus-width) solid var(--color-ink);
+    outline-offset: var(--focus-offset);
+  }
+
+  ::selection {
+    @apply bg-accent text-on-accent;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+}

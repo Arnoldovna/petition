@@ -1,0 +1,22 @@
+**/node_modules
+**/dist
+**/coverage
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/secrets*.json
+.git
+.github
+playwright-report
+test-results
+docs
+e2e
+scripts/__tests__
+
+# Generated assets: the image builds its own dist/ (ADR 0010). public/assets/ and public/fonts/ only guard against
+# leftovers from older checkouts; committed static files in public/ stay in the context.
+.dev
+public/assets
+public/fonts

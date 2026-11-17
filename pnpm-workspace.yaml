@@ -1,0 +1,10 @@
+# No workspace packages: this file only carries pnpm settings.
+
+# pnpm 10 blocks dependency lifecycle scripts by default. Allow only packages that need them.
+onlyBuiltDependencies:
+  - argon2
+  - esbuild
+  - lefthook
+
+# Wait a day before installing freshly published versions (supply-chain hygiene).
+minimumReleaseAge: 1440

@@ -1,0 +1,115 @@
+# Local infrastructure and the production image (OVERVIEW.md section 19, conventions §5 and §6).
+#   default profile  postgres + redis for `pnpm dev` (`pnpm infra:up`)
+#   profile app      + migrate and app: the production image on http://127.0.0.1:${APP_PORT} (`pnpm stack:up`)
+#   profile demo     + seed: the reviewer path (`pnpm demo` -> `pnpm stack:demo`), demo login printed by the script
+#   profile e2e      same services as demo; only used by scripts/run-e2e.mjs as project `petition-e2e` together
+#                    with docker-compose.e2e.yml (tmpfs database, no published database ports, raised limits)
+# Every port binds to 127.0.0.1. Secrets come from .env (`pnpm setup:env`). Every image is pinned by digest and
+# updated by Dependabot (docker-compose ecosystem, conventions §9); test/images.ts reads the postgres and redis
+# references from this file, so Testcontainers always runs the same images.
+name: petition
+
+# Migrations only need the database (src/db/migrate.ts reads DATABASE_URL), so the one-shot gets no app secrets.
+x-db-env: &db-env
+  NODE_ENV: production
+  LOG_LEVEL: info
+  DATABASE_URL: postgres://${POSTGRES_USER:?set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:?set POSTGRES_DB in .env}
+
+x-app-env: &app-env
+  <<: *db-env
+  PORT: '3000'
+  TRUST_PROXY: '0' # the app is published directly, no reverse proxy in front of it
+  COOKIE_SECURE: 'false' # the local stack is plain http (no HSTS, no upgrade-insecure-requests); production: true
+  REDIS_URL: redis://redis:6379
+  SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env (pnpm setup:env)}
+  CSRF_SECRET: ${CSRF_SECRET:?set CSRF_SECRET in .env (pnpm setup:env)}
+  # Defaults match src/config/env.ts (OVERVIEW.md section 16).
+  SESSION_IDLE_MINUTES: ${SESSION_IDLE_MINUTES:-120}
+  SESSION_ABSOLUTE_HOURS: ${SESSION_ABSOLUTE_HOURS:-168}
+  RATE_LIMIT_GLOBAL_MAX: ${RATE_LIMIT_GLOBAL_MAX:-300}
+  RATE_LIMIT_AUTH_MAX: ${RATE_LIMIT_AUTH_MAX:-10}
+  CONTACT_URL: ${CONTACT_URL:-https://github.com/Arnoldovna}
+  IMPRINT_URL: ${IMPRINT_URL:-} # empty: no imprint link (F-89)
+  APP_TIME_ZONE: ${APP_TIME_ZONE:-Europe/Berlin}
+
+# The image runs as uid 65532 and binds port 3000: it needs no Linux capabilities.
+x-hardening: &hardening
+  cap_drop: [ALL]
+  security_opt: ['no-new-privileges:true']
+
+services:
+  postgres:
+    image: postgres:18-alpine@sha256:b6972e1115a4ff8eba5d7f7d19184926d1e16d7d1136ae1e1a7ebf286da0f015
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+    ports: ['127.0.0.1:${POSTGRES_PORT:-5432}:5432']
+    volumes: [postgres-data:/var/lib/postgresql]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine@sha256:7958cfbb9d152f87dadfbc89f1b0b15938f0b81ff8982feb327476f4911935c3
+    command: ['redis-server', '--save', '', '--appendonly', 'no']
+    ports: ['127.0.0.1:${REDIS_PORT:-6379}:6379']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    profiles: [app, demo, e2e]
+    build: .
+    command: ['dist/db/migrate.js']
+    environment: *db-env
+    <<: *hardening
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  # Demo data (ADR 0016, 0019 section 7). SEED_ALLOW is set here and by `pnpm db:seed`, never in .env. NODE_ENV stays
+  # `production` on purpose: the guard never relies on it. The seed skips (exit 0) when the database holds users
+  # outside @petition.test, so a second `pnpm demo` after a registration still starts.
+  seed:
+    profiles: [demo, e2e]
+    build: .
+    command: ['dist/tools/seed.js']
+    environment:
+      <<: *app-env
+      SEED_ALLOW: 'true'
+      SEED_DEMO_PASSWORD: ${SEED_DEMO_PASSWORD:?set SEED_DEMO_PASSWORD in .env (pnpm setup:env)}
+    <<: *hardening
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  app:
+    profiles: [app, demo, e2e]
+    build: .
+    environment: *app-env
+    ports: ['127.0.0.1:${APP_PORT:-3000}:3000']
+    # ADR 0009: argon2id with memoryCost 64 MiB and at most two concurrent hashes peaks at 128 MiB on top of Node's
+    # heap, so the container needs at least 384 MiB. The same floor applies to any production host (deploy checklist).
+    mem_limit: 384m
+    <<: *hardening
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+      # Only in the demo and e2e profiles; `required: false` lets profile `app` start without it (ADR 0019 section 6).
+      seed: { condition: service_completed_successfully, required: false }
+    healthcheck:
+      test:
+        - CMD
+        - /nodejs/bin/node
+        - -e
+        - "fetch('http://127.0.0.1:3000/health/ready').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+volumes:
+  postgres-data:

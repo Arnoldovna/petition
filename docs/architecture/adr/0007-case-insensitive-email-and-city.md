@@ -14,25 +14,27 @@ Postgres image, Testcontainers and a managed production database.
 ## Decision
 
 **Email**
+
 - Zod, normalise **before** validating the format:
   `z.string().trim().toLowerCase().min(1, 'Enter an email address').max(254, ...).pipe(z.email('Enter a valid email address, like name@example.com'))`.
-  In Zod 4 a format schema checks first, so `z.email().trim().toLowerCase()` (the skill template's `auth.schema.ts`
-  and `references/security.md`) rejects `' Ada@Example.com '` (verified with zod 4.6.7). petition does not copy that
-  template line; `fields.test.ts` covers surrounding whitespace, upper case and the combination. Zod 4's default email
-  pattern is ASCII, so JavaScript and Postgres lower-casing agree.
-- **Skill follow-up (outside this repository):** fix the template to the order above, because imageboard and
-  social-network reuse it for JSON APIs where no browser trims input.
+  In Zod 4 a format schema checks first, so `z.email().trim().toLowerCase()` (the first version of the skill
+  template) rejects `' Ada@Example.com '` (verified with zod 4.6.7). `fields.test.ts` covers surrounding whitespace,
+  upper case and the combination. Zod 4's default email pattern is ASCII, so JavaScript and Postgres lower-casing agree.
+- **Skill follow-up: resolved in the consistency pass (2026-11-15).** The `express-feature-module` template
+  (`auth.schema.ts`) now uses `z.string().trim().toLowerCase().max(254).pipe(z.email())`, and conventions §8 makes the
+  order binding for all three projects.
 - Column `users.email text NOT NULL` with `CHECK (email = lower(email))` and the unique index
   `users_email_lower_idx ON users (lower(email))` (pattern from the skill, no citext extension).
 - Lookups use `lower(email) = $1` with the already-lowercased value.
 
 **City**
+
 - Zod normalisation on write: `normalize('NFC')`, trim, collapse inner whitespace to one space, 1 to 100 characters.
   DB backstop: `CHECK (city = btrim(city) AND city !~ '\s{2,}' AND char_length(city) BETWEEN 1 AND 100)`.
 - Comparisons use the **explicit collation `pg_c_utf8`** (built into every PostgreSQL 17+ database, independent of
   the database's default locale and the OS): expression index
   `profiles_city_key_idx ON profiles (lower(city COLLATE "pg_c_utf8"))`, and the query uses the identical expression
-  on both sides. `München`, `MÜNCHEN` and ` münchen ` therefore match on every environment.
+  on both sides. `München`, `MÜNCHEN` and `münchen` therefore match on every environment.
 - Route `GET /supporters/city/:city`: Express decodes the parameter; the controller normalises it with the same Zod
   schema. Invalid (empty after trim, longer than 100) returns the 404 page. The heading always uses the requested,
   normalised, HTML-escaped value (B-33).

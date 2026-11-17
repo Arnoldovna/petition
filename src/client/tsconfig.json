@@ -1,0 +1,13 @@
+{
+  // Browser entries bundled by esbuild (scripts/build-client.mjs, ADR 0010): DOM lib, no Node types.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "types": [],
+    "module": "preserve",
+    "moduleResolution": "bundler"
+  },
+  "include": ["**/*.ts"]
+}

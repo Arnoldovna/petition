@@ -5,66 +5,71 @@ city and homepage, signs with a hand-drawn (or typed) signature, sees a thank-yo
 supporter count, browses all supporters (also by city), edits their profile, deletes their signature or deletes their
 account.
 
-This document is the entry point. Binding inputs: `/Users/marina/Code/PLAN.md` (architecture table, quality gate,
+This document is the entry point. Binding inputs: `~/PLAN.md` (architecture table, quality gate,
 definition of done), [FEATURES.md](../FEATURES.md) (acceptance criteria F-01 to F-91), [BUGS.md](../BUGS.md) (B-01 to
-B-83, all must be resolved) and the skills `express-feature-module`, `project-scaffold`, `modular-css-tailwind4`,
-`maw-design-system`. Details live in [DATA-MODEL.md](./DATA-MODEL.md), [ROUTES.md](./ROUTES.md),
-[BUILD-ORDER.md](./BUILD-ORDER.md) and the [ADRs](./adr/).
+B-83, all must be resolved), `project-scaffold/references/conventions.md` (cross-project rules) and the skills
+`express-feature-module`, `project-scaffold`, `modular-css-tailwind4`, `maw-design-system`. Details live in
+[DATA-MODEL.md](./DATA-MODEL.md), [ROUTES.md](./ROUTES.md), [BUILD-ORDER.md](./BUILD-ORDER.md) and the
+[ADRs](./adr/). The repository lives in `~/petition`; the machine prerequisites come from
+`~/.devenv.sh` (ADR 0019).
 
-The legacy code (`~/Code/_legacy/src/petition`, 2018) is reference only. Nothing is copied from it, least of all
-configuration values or secrets.
+The legacy code (2018, kept on the old Mac under `~/Code/_legacy`, not on this machine) is reference only. Nothing is
+copied from it, least of all configuration values or secrets.
 
 ---
 
 ## 1. Context and constraints
 
-| Constraint | Source | Consequence |
-|---|---|---|
-| Single Express 5 SSR app, express-handlebars, Tailwind CLI, Redis sessions | PLAN.md, project table | ADR 0001 |
-| Feature modules, ESLint import boundaries, factory DI, no singletons | PLAN.md, `express-feature-module` | sections 4, 7 |
-| Every form works without JavaScript; drawing has a typed-name fallback | F-45, F-76 | ADR 0005, ADR 0010 |
-| No real-time features, no file uploads besides the signature | F-10, F-11 | sections 10, 11 |
-| maw-studio identity, accent vermilion `#F85D33`, Schibsted Grotesk, no utility classes in markup | PLAN.md, `maw-design-system`, `modular-css-tailwind4` | ADR 0014, section 15 |
-| WCAG 2.2 AA, axe clean, W3C-valid HTML | F-78 to F-87 | ADR 0015 |
-| Repo private, MIT licence `Arnoldovna`, English everywhere | PLAN.md, `project-scaffold` | |
-| Privacy notice where data is collected, imprint link, erasure on request | GDPR Art. 13 and 17, section 5 DDG, F-88 to F-91 | ADR 0016 |
-| Parallel units in one working tree with disjoint files and scoped checks, one gate per phase (cross-project conventions) | PLAN.md (parallel phases), `project-scaffold/references/conventions.md`, BUILD-ORDER.md | ADR 0017 |
+| Constraint                                                                                                               | Source                                                                                  | Consequence                                                       |
+| ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Single Express 5 SSR app, express-handlebars, Tailwind CLI, Redis sessions                                               | PLAN.md, project table                                                                  | ADR 0001                                                          |
+| Feature modules, ESLint import boundaries, factory DI, no singletons                                                     | PLAN.md, `express-feature-module`                                                       | sections 4, 7                                                     |
+| Every form works without JavaScript; drawing has a typed-name fallback                                                   | F-45, F-76                                                                              | ADR 0005, ADR 0010                                                |
+| No real-time features, no file uploads besides the signature                                                             | F-10, F-11                                                                              | sections 10, 11                                                   |
+| maw-studio identity, accent vermilion `#F85D33`, Schibsted Grotesk, no utility classes in markup                         | PLAN.md, `maw-design-system`, `modular-css-tailwind4`                                   | ADR 0014, section 15                                              |
+| WCAG 2.2 AA, axe clean, W3C-valid HTML                                                                                   | F-78 to F-87                                                                            | ADR 0015                                                          |
+| Repo private, MIT licence `Arnoldovna`, English everywhere                                                               | PLAN.md, `project-scaffold`                                                             | CI cost rule: e2e on PRs only, images only once public (ADR 0018) |
+| Privacy notice where data is collected, imprint link, erasure on request                                                 | GDPR Art. 13 and 17, section 5 DDG, F-88 to F-91                                        | ADR 0016                                                          |
+| Parallel units in one working tree with disjoint files and scoped checks, one gate per phase (cross-project conventions) | PLAN.md (parallel phases), `project-scaffold/references/conventions.md`, BUILD-ORDER.md | ADR 0017, ADR 0019                                                |
+| Machine prerequisites through `~/.devenv.sh`, no system changes                                       | PLAN.md Etappe 0                                                                        | BUILD-ORDER Phase 0, ADR 0019                                     |
 
 ## 2. Decisions
 
 ### 2.1 ADR index
 
-| ADR | Decision |
-|---|---|
-| [0001](./adr/0001-single-ssr-app-with-feature-modules.md) | Single Express SSR app with feature modules |
-| [0002](./adr/0002-redis-sessions-and-per-request-viewer.md) | Redis sessions, per-request viewer from the DB, session versioning |
-| [0003](./adr/0003-csrf-signed-double-submit-for-forms.md) | csrf-csrf with form field tokens, POST-only state changes |
-| [0004](./adr/0004-signature-as-validated-png-bytes.md) | Signature as validated, re-encoded PNG bytes in `bytea`, private image route |
-| [0005](./adr/0005-server-side-image-processing-with-napi-rs-canvas.md) | @napi-rs/canvas for PNG decode/re-encode and typed-name signatures |
-| [0006](./adr/0006-supporters-query-count-and-offset-pagination.md) | One base query for list and count, numbered offset pagination |
-| [0007](./adr/0007-case-insensitive-email-and-city.md) | Case-insensitive email and city with `pg_c_utf8` |
-| [0008](./adr/0008-ssr-form-handling-and-error-pages.md) | Form Result types, PRG, 422 re-render, flash, error pages |
-| [0009](./adr/0009-password-policy-and-reauthentication.md) | Password 12..128, argon2id, constant-path login, re-auth |
-| [0010](./adr/0010-progressive-enhancement-client-and-asset-pipeline.md) | Vanilla TS progressive enhancement, hashed self-hosted assets |
-| [0011](./adr/0011-security-headers-logging-and-configuration.md) | Strict CSP, pino redaction, Zod env |
-| [0012](./adr/0012-rate-limiting.md) | Configurable Redis rate limits per IP /56, keyed email HMAC and user |
-| [0013](./adr/0013-deletion-flows.md) | Confirmation pages, cascades, re-auth for account deletion |
-| [0014](./adr/0014-views-and-css-architecture.md) | Handlebars view rules, BEM + Tailwind 4 via `@apply`, maw tokens |
-| [0015](./adr/0015-test-and-delivery-pipeline.md) | Test layers, Nu validator, `pnpm setup:env`/`dev:setup`/`demo`, CI/CD, pnpm version |
-| [0016](./adr/0016-privacy-notice-imprint-and-erasure.md) | Privacy page, imprint link, disclosure, erasure on request, seed guard |
-| [0017](./adr/0017-test-isolation-and-parallel-builds.md) | Database per test file, test-only sign-in, isolated E2E stacks, merge rule |
+| ADR                                                                     | Decision                                                                                                                                                           |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [0001](./adr/0001-single-ssr-app-with-feature-modules.md)               | Single Express SSR app with feature modules                                                                                                                        |
+| [0002](./adr/0002-redis-sessions-and-per-request-viewer.md)             | Redis sessions, per-request viewer from the DB, session versioning                                                                                                 |
+| [0003](./adr/0003-csrf-signed-double-submit-for-forms.md)               | csrf-csrf with form field tokens, POST-only state changes                                                                                                          |
+| [0004](./adr/0004-signature-as-validated-png-bytes.md)                  | Signature as validated, re-encoded PNG bytes in `bytea`, private image route                                                                                       |
+| [0005](./adr/0005-server-side-image-processing-with-napi-rs-canvas.md)  | @napi-rs/canvas for PNG decode/re-encode and typed-name signatures                                                                                                 |
+| [0006](./adr/0006-supporters-query-count-and-offset-pagination.md)      | One base query for list and count, numbered offset pagination                                                                                                      |
+| [0007](./adr/0007-case-insensitive-email-and-city.md)                   | Case-insensitive email and city with `pg_c_utf8`                                                                                                                   |
+| [0008](./adr/0008-ssr-form-handling-and-error-pages.md)                 | Form Result types, PRG, 422 re-render, flash, error pages                                                                                                          |
+| [0009](./adr/0009-password-policy-and-reauthentication.md)              | Password 12..128, argon2id, constant-path login, re-auth                                                                                                           |
+| [0010](./adr/0010-progressive-enhancement-client-and-asset-pipeline.md) | Vanilla TS progressive enhancement, hashed self-hosted assets                                                                                                      |
+| [0011](./adr/0011-security-headers-logging-and-configuration.md)        | Strict CSP, pino redaction, Zod env                                                                                                                                |
+| [0012](./adr/0012-rate-limiting.md)                                     | Configurable Redis rate limits per IP /56, keyed email HMAC and user                                                                                               |
+| [0013](./adr/0013-deletion-flows.md)                                    | Confirmation pages, cascades, re-auth for account deletion                                                                                                         |
+| [0014](./adr/0014-views-and-css-architecture.md)                        | Handlebars view rules, BEM + Tailwind 4 via `@apply`, maw tokens                                                                                                   |
+| [0015](./adr/0015-test-and-delivery-pipeline.md)                        | Test layers, Nu validator, `pnpm setup:env`/`dev:setup`/`demo`, CI/CD, pnpm version                                                                                |
+| [0016](./adr/0016-privacy-notice-imprint-and-erasure.md)                | Privacy page, imprint link, disclosure, erasure on request, seed guard                                                                                             |
+| [0017](./adr/0017-test-isolation-and-parallel-builds.md)                | Database per test file, test-only sign-in, isolated E2E stacks, merge rule                                                                                         |
+| [0018](./adr/0018-ci-cost-rule.md)                                      | CI cost rule: e2e on pull requests only, GHCR images only for a public repository, release of the tested commit                                                    |
+| [0019](./adr/0019-consistency-pass-alignment.md)                        | Alignment with the consistency pass: Phase 0 via `.devenv.sh`, importable shared tree, staged dependencies, runnable 1a skeleton, e2e override, seed skip, scripts |
 
 ### 2.2 FEATURES amendments (applied to `docs/FEATURES.md` in the scaffold phase)
 
-| Id | Change | Reason |
-|---|---|---|
-| F-19 | Password length 10..128 becomes **12..128** | Skill non-negotiable, ADR 0009 |
-| F-25 | "clears the cookie" becomes "deletes the server-side session; the browser gets a new anonymous session id that only carries the flash message" | Flash must survive logout (F-17), ADR 0002 |
-| F-28 | "The session holds only the user ID" becomes "the user ID plus non-personal technical fields (session version, issue time, CSRF binding flag, one-time flash)" | ADR 0002 |
-| F-14 | Signed in: brand/home, Supporters, Profile, Log out; About moves to the footer for signed-in users (guest nav unchanged) | maw header pattern allows 1 to 3 links, ADR 0014 |
-| F-71 | `img-src 'self'` (stricter than `'self' data:`) | Signatures are served by a private route, ADR 0004 |
-| F-74 | `GET /health/ready` (database and Redis, 200 or 503) replaces `GET /healthz`; `GET /health/live` reports the process only | One readiness path, skill health pattern, ADR 0011 |
-| 2.2 table | Add `GET /privacy`, `GET /signature/delete` (confirmation page), `GET /signature/image.png`, `GET /health/live`, `GET /health/ready`; remove `GET /healthz` | ADR 0016, ADR 0013, ADR 0004, ADR 0011 |
+| Id        | Change                                                                                                                                                         | Reason                                             |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| F-19      | Password length 10..128 becomes **12..128**                                                                                                                    | Skill non-negotiable, ADR 0009                     |
+| F-25      | "clears the cookie" becomes "deletes the server-side session; the browser gets a new anonymous session id that only carries the flash message"                 | Flash must survive logout (F-17), ADR 0002         |
+| F-28      | "The session holds only the user ID" becomes "the user ID plus non-personal technical fields (session version, issue time, CSRF binding flag, one-time flash)" | ADR 0002                                           |
+| F-14      | Signed in: brand/home, Supporters, Profile, Log out; About moves to the footer for signed-in users (guest nav unchanged)                                       | maw header pattern allows 1 to 3 links, ADR 0014   |
+| F-71      | `img-src 'self'` (stricter than `'self' data:`)                                                                                                                | Signatures are served by a private route, ADR 0004 |
+| F-74      | `GET /health/ready` (database and Redis, 200 or 503) replaces `GET /healthz`; `GET /health/live` reports the process only                                      | One readiness path, skill health pattern, ADR 0011 |
+| 2.2 table | Add `GET /privacy`, `GET /signature/delete` (confirmation page), `GET /signature/image.png`, `GET /health/live`, `GET /health/ready`; remove `GET /healthz`    | ADR 0016, ADR 0013, ADR 0004, ADR 0011             |
 
 F-88 to F-91 (privacy and legal) were added directly to FEATURES.md section 18 during the architecture review
 (ADR 0016). No other acceptance criterion changes.
@@ -128,14 +133,14 @@ flowchart TB
   container --> db & shared & signature
 ```
 
-| Module | Owns routes | Owns writes to | Exports (index.ts) | Depends on (injected) |
-|---|---|---|---|---|
-| `pages` | `/`, `/home`, `/about`, `/privacy` | nothing | router | none |
-| `auth` | `/register`, `/login`, `/logout`, `/account/delete` | `users` (insert, rehash, email, password hash, `session_version`, delete) | router, `createViewerRepository`, `createCredentials` | `db`, `hasher`, `timingDummyHash`, `rateLimits`, session helpers, `sessionPolicy` |
-| `profile` | `/profile`, `/profile/edit` | `profiles`; `users` first and last name; email and password only through `credentials.apply` | router | `db`, `credentials`, `rateLimits` |
-| `signature` | `/signature`, `/signature/image.png`, `/signature/delete`, `/thank-you` | `signatures` | router, `createSignatureImages` | `db`, `signatureImages`, `countSupporters`, `rateLimits` |
-| `supporters` | `/supporters`, `/supporters/city/:city` | nothing (read only) | router, `countSupporters` | `db`, `pageSize` |
-| `tools` (not a module, entry points) | none | `seed.ts` inserts demo data; `erase-user.ts` deletes one user | nothing | env, `db`, features' `index.ts` |
+| Module                               | Owns routes                                                             | Owns writes to                                                                               | Exports (index.ts)                                    | Depends on (injected)                                                             |
+| ------------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `pages`                              | `/`, `/home`, `/about`, `/privacy`                                      | nothing                                                                                      | router                                                | none                                                                              |
+| `auth`                               | `/register`, `/login`, `/logout`, `/account/delete`                     | `users` (insert, rehash, email, password hash, `session_version`, delete)                    | router, `createViewerRepository`, `createCredentials` | `db`, `hasher`, `timingDummyHash`, `rateLimits`, session helpers, `sessionPolicy` |
+| `profile`                            | `/profile`, `/profile/edit`                                             | `profiles`; `users` first and last name; email and password only through `credentials.apply` | router                                                | `db`, `credentials`, `rateLimits`                                                 |
+| `signature`                          | `/signature`, `/signature/image.png`, `/signature/delete`, `/thank-you` | `signatures`                                                                                 | router, `createSignatureImages`                       | `db`, `signatureImages`, `countSupporters`, `rateLimits`                          |
+| `supporters`                         | `/supporters`, `/supporters/city/:city`                                 | nothing (read only)                                                                          | router, `countSupporters`                             | `db`, `pageSize`                                                                  |
+| `tools` (not a module, entry points) | none                                                                    | `seed.ts` inserts demo data; `erase-user.ts` deletes one user                                | nothing                                               | env, `db`, features' `index.ts`                                                   |
 
 Each module's `index.ts` exports `create<Name>Module(deps): { router: Router; ... }`. The deps interfaces, the auth
 kernel (`viewer.repository.ts`, `credentials.ts`) and the signature-image contract are fixed in the scaffold
@@ -145,26 +150,26 @@ kernel (`viewer.repository.ts`, `credentials.ts`) and the signature-image contra
 
 ### 5.1 Middleware order (`src/app.ts`)
 
-| # | Middleware | Notes |
-|---|---|---|
-| 1 | `app.disable('x-powered-by')`, `trust proxy` = `TRUST_PROXY`, `query parser` = `simple`, view engine | B-10, B-45 |
-| 2 | `createRequestLogger(logger)` (pino-http, request id) | F-73 |
-| 3 | `/health` router (`/health/live`, `/health/ready`) | before helmet, sessions, limits; F-74 |
-| 4 | `securityHeaders({ https: isHttps(env) })` (helmet, CSP; HSTS and UIR only over https) | ADR 0011 |
-| 5 | static: `/assets` and `/fonts` (each with `compression()`, the only compressed routes), root icons and manifest | before session and CSRF (B-59); BREACH, ADR 0010 |
-| 6 | `viewLocals(env)`: `year`, `contactUrl`, `imprintUrl`, `currentPath`, `Cache-Control: no-store` for dynamic HTML | F-15, F-89 |
-| 7 | `session` (express-session + RedisStore, cookie `petition.sid` / `__Host-petition.sid`) | ADR 0002 |
-| 8 | `enforceAbsoluteLifetime(sessionPolicy)`: regenerates an expired session | F-29 |
-| 9 | `loadViewer(findViewer)` -> `res.locals.viewer` or guest; regenerates ghost or outdated sessions | F-31, F-32 |
-| 10 | `rateLimiter('global', rateLimits.globalPerMinute, keyByIp)` | ADR 0012 |
-| 11 | `app.use('/signature', urlencoded({ limit: '128kb' }))` then global `urlencoded({ extended: false, limit: '16kb' })` | ADR 0004 |
-| 12 | `deps.testRoutes` (only in `createTestApp`: `POST /__test/sign-in`) | ADR 0017 |
-| 13 | `cookieParser()` | csrf-csrf requirement |
-| 14 | `csrf.doubleCsrfProtection` (form field `_csrf`) | ADR 0003 |
-| 15 | `GET /home` 301 `/` | B-44 |
-| 16 | routers: pages, auth, profile, signature, supporters (each with per-route guards and limiters) | |
-| 17 | `notFoundHandler` | F-08 |
-| 18 | `errorHandler` (HTML page through `renderPage`, or problem+json) | F-09, ADR 0008 |
+| #   | Middleware                                                                                                                                            | Notes                                            |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 1   | `app.disable('x-powered-by')`, `trust proxy` = `TRUST_PROXY`, `query parser` = `simple`, view engine                                                  | B-10, B-45                                       |
+| 2   | `createRequestLogger(logger)` (pino-http, request id)                                                                                                 | F-73                                             |
+| 3   | `/health` router (`/health/live`, `/health/ready`)                                                                                                    | before helmet, sessions, limits; F-74            |
+| 4   | `securityHeaders({ https: isHttps(env) })` (helmet, CSP; HSTS and UIR only over https)                                                                | ADR 0011                                         |
+| 5   | static: `/assets` and `/fonts` (each with `compression()`, the only compressed routes), root icons and manifest                                       | before session and CSRF (B-59); BREACH, ADR 0010 |
+| 6   | `viewLocals(env)`: `year`, `contactUrl`, `imprintUrl`, `currentPath`, `Cache-Control: no-store` for dynamic HTML                                      | F-15, F-89                                       |
+| 7   | `session` (express-session + RedisStore, cookie `petition.sid` / `__Host-petition.sid`)                                                               | ADR 0002                                         |
+| 8   | `enforceAbsoluteLifetime(sessionPolicy)`: regenerates an expired session                                                                              | F-29                                             |
+| 9   | `loadViewer(findViewer)` -> `res.locals.viewer` or guest; regenerates ghost or outdated sessions                                                      | F-31, F-32                                       |
+| 10  | `rateLimiter('global', rateLimits.globalPerMinute, keyByIp)`                                                                                          | ADR 0012                                         |
+| 11  | `app.use('/signature', urlencoded({ limit: '128kb' }))` then global `urlencoded({ extended: false, limit: '16kb' })`                                  | ADR 0004                                         |
+| 12  | `deps.testRoutes` (only in `createTestApp`: `POST /__test/sign-in`, with its own `express.json({ limit: '1kb' })`; the app itself has no JSON parser) | ADR 0017, ADR 0019                               |
+| 13  | `cookieParser()`                                                                                                                                      | csrf-csrf requirement                            |
+| 14  | `csrf.doubleCsrfProtection` (form field `_csrf`)                                                                                                      | ADR 0003                                         |
+| 15  | `GET /home` 301 `/`                                                                                                                                   | B-44                                             |
+| 16  | routers: pages, auth, profile, signature, supporters (each with per-route guards and limiters)                                                        |                                                  |
+| 17  | `notFoundHandler`                                                                                                                                     | F-08                                             |
+| 18  | `errorHandler` (HTML page through `renderPage`, or problem+json)                                                                                      | F-09, ADR 0008                                   |
 
 There is no token or flash middleware: `renderPage` adds `viewer`, `csrfToken` and the one-time `flash` when a page is
 rendered (ADR 0003, ADR 0008). Because the viewer is known from step 9 on, every error page, including 413 (step 11),
@@ -237,27 +242,36 @@ databases, `createTestApp(overrides)` with a fresh store prefix per call, Playwr
 `release.yml` after CI success, compose profiles `demo` and `e2e`, no html-validate. Since the 2026-11-15
 consistency pass the cookie name, email order, store prefix and `retries: 0` are template defaults, and per-file
 databases, no `webServer` and the `workflow_run` release are cross-project conventions
-(`project-scaffold/references/conventions.md`).
+(`project-scaffold/references/conventions.md`). Added in the 2026-11-16 re-review (ADR 0018, 0019): e2e job on pull
+requests only, `images`/`deploy` only for a public repository, `RELEASE_SHA` instead of `type=sha`, the template CI's
+dev-project "Stack logs"/"Tear down" steps dropped, `!override` for the e2e app port, `knip.jsonc`, `test:coverage`,
+`stack:down` also covering the `demo` profile, `test/images.ts` reading its references from `docker-compose.yml`.
+Added at Gate 1a (2026-11-16): `.prettierignore` also ignores `*.hbs` (Prettier's Handlebars parser deletes
+`<!doctype html>` and cannot parse `{{> partial}}`), no direct `testcontainers` devDependency (only the
+`@testcontainers/*` modules are imported; they bring it), and `public/robots.txt` moves from 1b to 1a so the image
+build has its `public/` folder.
 
 ```
 petition/
 ├── .github/
 │   ├── actions/setup/action.yml                 (tpl) node 26 + pnpm + cache
-│   ├── workflows/ci.yml                         (tpl) lint, typecheck, unit, integration, build, e2e, gitleaks
-│   ├── workflows/release.yml                    (tpl single-app) workflow_run after green CI on main; GHCR image, gated deploy
+│   ├── workflows/ci.yml                         (tpl) lint, typecheck, unit, integration, build, e2e (PRs only), dev-setup-smoke, gitleaks
+│   ├── workflows/release.yml                    (tpl single-app) workflow_run after green CI on main; GHCR image only when public; gated deploy
+│   ├── workflows/audit.yml                      pnpm audit weekly, on lockfile changes on main, on demand (conventions §9)
 │   ├── dependabot.yml                           (tpl) npm, actions, docker '/' + '/docker', docker-compose '/'
 │   └── pull_request_template.md                 (tpl)
-├── .editorconfig  .nvmrc  .prettierrc.json  .prettierignore            (tpl)
+├── .editorconfig  .nvmrc  .prettierrc.json  .prettierignore            (tpl; .prettierignore + *.hbs)
 ├── .gitignore  .dockerignore  .gitleaks.toml  .gitleaks.dir.toml      (tpl; both ignore .dev/; .dockerignore also public/assets/, public/fonts/)
-├── .env.example                                 (tpl single-app + petition keys, section 16)
+├── .env.example                                 (tpl single-app + petition keys, section 16; no SEED_ALLOW, no E2E_BASE_URL)
+├── .npmrc                                       (tpl) engine-strict=true
 ├── commitlint.config.js  lefthook.yml  lint-staged.config.js           (tpl)
-├── knip.json                                    entry: src/server.ts, src/db/migrate.ts, src/tools/*.ts, src/client/*.ts, scripts/*.mjs
+├── knip.jsonc                                   entry: src/tools/*.ts, src/client/*.ts, scripts/*.mjs (src/server.ts, src/db/migrate.ts come from package.json scripts); commented ignores only (ADR 0019)
 ├── eslint.config.js                             (tpl single-app) + client and tools elements, sql.raw and res.render bans, no test imports in src
 ├── stylelint.config.mjs                         (tpl modular-css-tailwind4) + outline:none override for form-field.css
 ├── tsconfig.base.json  tsconfig.json  tsconfig.build.json              (tpl; tsconfig.json excludes src/client)
 ├── vitest.config.ts  playwright.config.ts  drizzle.config.ts            (tpl, adapted: per-file DB setup; Playwright projects, no webServer, no retries)
 ├── docker-compose.yml                           (tpl single-app) + profiles app / demo / e2e, seed one-shot, configurable host ports
-├── docker-compose.e2e.yml                       tmpfs Postgres, no published DB/Redis ports, raised rate limits
+├── docker-compose.e2e.yml                       tmpfs Postgres, no published DB/Redis ports, app on !override 127.0.0.1:${E2E_PORT:-8182}, raised rate limits
 ├── docker/nu-validator.Dockerfile               FROM ghcr.io/validator/validator:<tag>@sha256:<digest> (Dependabot-updated)
 ├── Dockerfile                                   (tpl single-app) + COPY scripts for the asset build
 ├── package.json  pnpm-lock.yaml  pnpm-workspace.yaml
@@ -266,32 +280,34 @@ petition/
 ├── README.md                                    stub (filled in Etappe 3 with portfolio-readme)
 ├── docs/
 │   ├── FEATURES.md  BUGS.md  (OPERATIONS.md in Etappe 3: erasure procedure, deploy checklist)
-│   ├── architecture/{OVERVIEW.md, DATA-MODEL.md, ROUTES.md, BUILD-ORDER.md, adr/0001..0017-*.md}
+│   ├── architecture/{OVERVIEW.md, DATA-MODEL.md, ROUTES.md, BUILD-ORDER.md, adr/0001..0019-*.md}
 │   └── media/                                   README screenshots later
 ├── drizzle/
 │   ├── 0000_init.sql                            (gen) reviewed by hand
 │   └── meta/{_journal.json, 0000_snapshot.json} (gen)
 ├── scripts/
-│   ├── setup-env.mjs                            pnpm setup:env: creates/merges .env, generated secrets, never overwrites
-│   ├── dev-setup.mjs                            pnpm dev:setup: checks tools, setup:env, infra + migrate + seed (idempotent)
-│   ├── run-e2e.mjs                              pnpm test:e2e / e2e:up / e2e:down: compose project petition-e2e on E2E_PORT 8182, smoke check, Playwright, Nu, down -v
+│   ├── setup-env.mjs                            pnpm setup:env: creates/merges .env, fills empty SECRET/PASSWORD keys, never overwrites
+│   ├── dev-setup.mjs                            pnpm dev:setup: checks tools and DATABASE_URL vs POSTGRES_*, setup:env, infra + migrate + seed (idempotent);
+│   │                                            --demo (pnpm demo): setup:env, stack:demo, prints URL and demo login
+│   ├── run-e2e.mjs                              pnpm test:e2e / e2e:up / e2e:down: project petition-e2e, E2E_PORT (env > .env > 8182), smoke check, Playwright, Nu, down -v --remove-orphans
 │   ├── check-no-utilities.mjs                   (tpl modular-css-tailwind4, verbatim)
 │   ├── check-views.mjs                          bans {{{ }}}, target="_blank", style="", inline <script>
 │   ├── build-client.mjs                         esbuild: [name]-[hash] entries, linked source maps, metafile
 │   ├── hash-css.mjs  write-manifest.mjs         app.css -> app-<hash>.css; manifest.json from metafile + CSS hash
 │   ├── copy-fonts.mjs                           <outDir>/public/fonts (browser) and <outDir>/signature-fonts (server)
-│   ├── font-glyphs.mjs                          fontkit: cmap of the signature fonts -> glyphs.generated.ts
+│   ├── font-glyphs.mjs                          fontkit: cmap of the signature fonts -> glyphs.generated.ts (phase 1b)
 │   ├── generate-icons.mjs                       favicon.svg -> apple-touch-icon.png, icon-512.png (run manually)
-│   └── validate-html.mjs                        W3C Nu validator (docker, image from docker/nu-validator.Dockerfile) over test-results/html/
+│   └── validate-html.mjs                        W3C Nu validator (docker, image from docker/nu-validator.Dockerfile) over [dir], default test-results/html/
 ├── public/                                      committed static files only
 │   └── favicon.svg  apple-touch-icon.png  icon-512.png  site.webmanifest  robots.txt
 ├── .dev/                                        (ignored) dev output: public/{assets,fonts}, signature-fonts
 ├── dist/                                        (ignored) build output: server JS, tools, public/{assets,fonts} (hashed + manifest), signature-fonts
 ├── test/
-│   ├── global-setup.ts                          (tpl, adapted) Postgres 18 + Redis 8 containers, migrated template database
-│   ├── setup-database.ts  database.ts           per-file CREATE DATABASE ... TEMPLATE, DROP afterwards; currentDatabaseUrl()
-│   ├── test-app.ts                              (tpl, adapted) createTestApp(overrides): fresh store prefix, limits 10,000, policy, fakes
-│   ├── test-routes.ts  auth.ts                  POST /__test/sign-in (test apps only); signIn(agent, userId)
+│   ├── images.ts                                postgres and redis image refs (tag@sha256) read from docker-compose.yml
+│   ├── global-setup.ts                          (tpl, adapted) Postgres 18 + Redis 8 containers, migrated template database petition_template
+│   ├── setup-database.ts  database.ts           per-file CREATE DATABASE ... TEMPLATE, DROP ... WITH (FORCE) afterwards; currentDatabaseUrl() (hooks only)
+│   ├── test-app.ts                              (tpl, adapted) createTestApp(overrides) -> { app, db, redis, prefix, close }: fresh prefix, limits 10,000, policy, fakes
+│   ├── test-routes.ts  auth.ts                  POST /__test/sign-in (test apps only, own JSON parser); signIn(agent, userId)
 │   ├── fakes.ts                                 in-memory repositories, fake hasher (records verify calls), fake signature images
 │   ├── forms.ts                                 getForm(agent, path) -> {csrf, values}; postForm(agent, path, fields)
 │   ├── html.ts                                  parse(html) via node-html-parser; helpers: text(sel), attr(sel, name)
@@ -347,7 +363,8 @@ petition/
     │   │   └── __tests__/{signature.service.test.ts, sign.int.test.ts, thank-you.int.test.ts, delete.int.test.ts}
     │   └── supporters/{supporters.schema.ts, supporters.repository.ts, supporters.service.ts, supporters.controller.ts, supporters.routes.ts, index.ts}
     │       └── __tests__/{supporters.service.test.ts, supporters.int.test.ts, city.int.test.ts}
-    ├── __tests__/{route-matrix.int.test.ts, error-pages.int.test.ts, headers.int.test.ts, supporter-count.int.test.ts}
+    ├── __tests__/{route-matrix.int.test.ts, error-pages.int.test.ts, headers.int.test.ts, supporter-count.int.test.ts,
+    │              rate-limits.int.test.ts}                       cross-module tests, written in step 2b
     ├── client/
     │   ├── tsconfig.json                        lib ES2024 + DOM, no node types
     │   ├── form-guard.ts  signature-pad.ts  signature-pad.core.ts
@@ -373,18 +390,19 @@ petition/
 Enforced by `eslint-plugin-boundaries` (`boundaries/dependencies`, `default: 'disallow'`) as in the single-app
 template, extended with the `client` element:
 
-| From | May import |
-|---|---|
-| `features/<x>/*` | own files; `features/<y>/index.ts` only (currently no feature does this; cross-feature data and behaviour are injected by `app.ts`); `shared/*`, `config/*`, `db/*`; external packages |
-| `shared/*` | `shared/*`, `config/*`, external packages; **never `db` or features** (the viewer query is injected, ADR 0001) |
-| `db/*` | `db/*`, `config/*`; never `shared`, tools or features |
-| `tools/*` | `tools/*`, `features/<x>/index.ts`, `shared/*`, `db/*`, `config/*`; nothing imports `tools` |
-| `config/*` | `config/*` and external packages only |
-| `client/*` | `client/*` only; no server code, no Node built-ins |
-| `app.ts`, `container.ts`, `server.ts` | everything except `tools` (composition root) |
-| `test/**` | everything; nothing in `src/` imports `test/` |
+| From                                  | May import                                                                                                                                                                             |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `features/<x>/*`                      | own files; `features/<y>/index.ts` only (currently no feature does this; cross-feature data and behaviour are injected by `app.ts`); `shared/*`, `config/*`, `db/*`; external packages |
+| `shared/*`                            | `shared/*`, `config/*`, external packages; **never `db` or features** (the viewer query is injected, ADR 0001)                                                                         |
+| `db/*`                                | `db/*`, `config/*`; never `shared`, tools or features                                                                                                                                  |
+| `tools/*`                             | `tools/*`, `features/<x>/index.ts`, `shared/*`, `db/*`, `config/*`; nothing imports `tools`                                                                                            |
+| `config/*`                            | `config/*` and external packages only                                                                                                                                                  |
+| `client/*`                            | `client/*` only; no server code, no Node built-ins                                                                                                                                     |
+| `app.ts`, `container.ts`, `server.ts` | everything except `tools` (composition root)                                                                                                                                           |
+| `test/**`                             | everything; no non-test file in `src/` imports `test/` (test files in `src/**/__tests__/` import the harness)                                                                          |
 
 Additional rules:
+
 - SQL only in `*.repository.ts`, `features/auth/credentials.ts`, `tools/*.ts` and `db/migrate.ts`; `sql.raw` banned
   (`no-restricted-syntax`).
 - `res.render` only in `shared/view/render.ts` (`no-restricted-syntax`); everything else calls `renderPage`.
@@ -446,17 +464,17 @@ and ADR 0005 (typed-name rendering). There is no object storage, no `multer` and
 
 ADR 0008. Summary:
 
-| Kind | Mechanism | HTTP | Rendering |
-|---|---|---|---|
-| Form validation | `parseForm` -> `{ ok: false }` | 422 | same view, error summary (focus), inline messages, values kept |
-| Business rule (email taken, wrong current password, blank signature) | service Result | 422 | same view |
-| Failed login | service Result | 401 | login view, one generic message |
-| Guard failure | redirect | 302 / 303 | target page |
-| Bad query or param, unknown route | `NotFoundError` / `notFoundHandler` | 404 | error page |
-| CSRF | csrf-csrf error | 403 | error page "This form has expired" |
-| Body too large / malformed | body-parser error | 413 / 400 | error page |
-| Rate limit, hasher queue full | `TooManyRequestsError` | 429 | error page + `Retry-After` |
-| Anything else | unknown error | 500 | error page; stack only in logs |
+| Kind                                                                 | Mechanism                           | HTTP      | Rendering                                                      |
+| -------------------------------------------------------------------- | ----------------------------------- | --------- | -------------------------------------------------------------- |
+| Form validation                                                      | `parseForm` -> `{ ok: false }`      | 422       | same view, error summary (focus), inline messages, values kept |
+| Business rule (email taken, wrong current password, blank signature) | service Result                      | 422       | same view                                                      |
+| Failed login                                                         | service Result                      | 401       | login view, one generic message                                |
+| Guard failure                                                        | redirect                            | 302 / 303 | target page                                                    |
+| Bad query or param, unknown route                                    | `NotFoundError` / `notFoundHandler` | 404       | error page                                                     |
+| CSRF                                                                 | csrf-csrf error                     | 403       | error page "This form has expired"                             |
+| Body too large / malformed                                           | body-parser error                   | 413 / 400 | error page                                                     |
+| Rate limit, hasher queue full                                        | `TooManyRequestsError`              | 429       | error page + `Retry-After`                                     |
+| Anything else                                                        | unknown error                       | 500       | error page; stack only in logs                                 |
 
 Non-HTML clients (`Accept: application/json`) get RFC 9457 problem+json from the same handler. Every HTML response,
 success or error, is rendered by `renderPage` (ADR 0003, 0008), so it carries the viewer, a valid CSRF token when a
@@ -505,24 +523,24 @@ ADR 0011: pino 10 + pino-http 11, request ids, redaction list, domain events wit
 The parameter names and meanings below are **phase-1 API** (BUILD-ORDER.md rule 5): markup and CSS of a partial may
 change in later phases, its parameters may not without a shared-file request.
 
-| Partial | Block | Parameters | Used by |
-|---|---|---|---|
-| `site-header` | `site-header` | `viewer`, `currentPath`, `csrfToken` | layout |
-| `site-footer` | `site-footer` | `year`, `contactUrl`, `imprintUrl` (links: about, privacy, contact, imprint when set) | layout |
-| `flash` | `flash` | `flash` | layout |
-| `page-heading` | `page-heading` | `title`, `lead` | all pages |
-| `csrf-field` | none (hidden input) | `csrfToken` | all forms |
-| `button` | `button` | `type`, `label`, `modifier` (`button--primary`, `button--outlined`, `button--text`) | all forms |
-| `form-field` | `form-field` | `form`, `name`, `label`, `type`, `autocomplete`, `inputmode`, `hint` | auth, profile, signature (typed), account delete |
-| `error-summary` | `error-summary` | `errorList` | all forms |
-| `row-list` / `list-row` | `row-list`, `list-row` | `href`, `title`, `meta` | home, about, thank-you links |
-| `empty-state` | `empty-state` | `title`, `text`, `href`, `linkLabel` | supporters list and city |
-| `pagination` | `pagination` | `pagination` view model | supporters list and city |
-| `supporter-row` | `supporter-row` | `supporter`, `showCity` | supporters list and city |
-| `signature-pad` | `signature-pad` | `csrfToken`, `exportWidth`, `exportHeight`, `error` | sign page |
-| `typed-signature` | `typed-signature` | `csrfToken`, `form` (submit is always `button--outlined`) | sign page |
-| `signature-frame` | `signature-frame` | `src`, `alt` | thank-you |
-| `confirm-panel` | `confirm-panel` | `title`, `items`, `action`, `buttonLabel`, `cancelHref`, `cancelLabel` | signature delete, account delete |
+| Partial                 | Block                  | Parameters                                                                            | Used by                                          |
+| ----------------------- | ---------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `site-header`           | `site-header`          | `viewer`, `currentPath`, `csrfToken`                                                  | layout                                           |
+| `site-footer`           | `site-footer`          | `year`, `contactUrl`, `imprintUrl` (links: about, privacy, contact, imprint when set) | layout                                           |
+| `flash`                 | `flash`                | `flash`                                                                               | layout                                           |
+| `page-heading`          | `page-heading`         | `title`, `lead`                                                                       | all pages                                        |
+| `csrf-field`            | none (hidden input)    | `csrfToken`                                                                           | all forms                                        |
+| `button`                | `button`               | `type`, `label`, `modifier` (`button--primary`, `button--outlined`, `button--text`)   | all forms                                        |
+| `form-field`            | `form-field`           | `form`, `name`, `label`, `type`, `autocomplete`, `inputmode`, `hint`                  | auth, profile, signature (typed), account delete |
+| `error-summary`         | `error-summary`        | `errorList`                                                                           | all forms                                        |
+| `row-list` / `list-row` | `row-list`, `list-row` | `href`, `title`, `meta`                                                               | home, about, thank-you links                     |
+| `empty-state`           | `empty-state`          | `title`, `text`, `href`, `linkLabel`                                                  | supporters list and city                         |
+| `pagination`            | `pagination`           | `pagination` view model                                                               | supporters list and city                         |
+| `supporter-row`         | `supporter-row`        | `supporter`, `showCity`                                                               | supporters list and city                         |
+| `signature-pad`         | `signature-pad`        | `csrfToken`, `exportWidth`, `exportHeight`, `error`                                   | sign page                                        |
+| `typed-signature`       | `typed-signature`      | `csrfToken`, `form` (submit is always `button--outlined`)                             | sign page                                        |
+| `signature-frame`       | `signature-frame`      | `src`, `alt`                                                                          | thank-you                                        |
+| `confirm-panel`         | `confirm-panel`        | `title`, `items`, `action`, `buttonLabel`, `cancelHref`, `cancelLabel`                | signature delete, account delete                 |
 
 ### 15.3 CSS files (`src/styles/components/`, each imported by `main.css`, alphabetical)
 
@@ -556,88 +574,96 @@ global `:focus-visible` ring, `scroll-padding-top`), `utilities.css` (`.visually
 
 Validated in `src/config/env.ts` at startup. Secrets have no defaults.
 
-| Variable | Type / rule | Default | Used by |
-|---|---|---|---|
-| `NODE_ENV` | `development` \| `test` \| `production` | `development` | logging, asset mode (dev never reads a manifest), `COOKIE_SECURE` default |
-| `PORT` | int 1..65535 | `3000` | server |
-| `LOG_LEVEL` | pino level | `info` | logger |
-| `TRUST_PROXY` | int 0..5 (hops) | `0` | client IP for rate limits |
-| `DATABASE_URL` | `postgres(ql)://` URL | required | db client |
-| `REDIS_URL` | `redis(s)://` URL | required | sessions, rate limits |
-| `COOKIE_SECURE` | stringbool; means "served over https" | `NODE_ENV === 'production'` | secure cookies and `__Host-` names, HSTS, `upgrade-insecure-requests` (ADR 0011) |
-| `SESSION_SECRET` | comma list, each at least 32 chars; first signs | required | express-session (rotation); HKDF source for the email rate-limit key |
-| `CSRF_SECRET` | at least 32 chars | required | csrf-csrf |
-| `SESSION_IDLE_MINUTES` | int 5..1440 | `120` | `sessionPolicy.idleMs` (cookie maxAge, Redis TTL) |
-| `SESSION_ABSOLUTE_HOURS` | int 1..720 | `168` | `sessionPolicy.absoluteMs` |
-| `RATE_LIMIT_GLOBAL_MAX` | int 1..100000 | `300` (per minute) | global limiter; above default logs `rate_limit.relaxed` |
-| `RATE_LIMIT_AUTH_MAX` | int 1..100000 | `10` (per 15 minutes) | auth-ip, register-email, login-email-subnet; login-email = 10 x this per hour |
-| `CONTACT_URL` | `https://` URL | `https://github.com/Arnoldovna` | footer, privacy page (F-15, F-88) |
-| `IMPRINT_URL` | `https://` URL, optional | empty (no link) | footer imprint link (F-89); required by the deploy job |
-| `APP_TIME_ZONE` | IANA zone, checked with `Intl.DateTimeFormat` | `Europe/Berlin` | date formatting |
-| `SEED_DEMO_PASSWORD` | at least 12 chars | required for the seed only (read by `tools/seed.ts`) | seed |
-| `SEED_ALLOW` | must be exactly `true` | unset | seed guard (ADR 0016); set by `pnpm db:seed` and the compose `seed` service |
-| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | strings | `.env.example` / `pnpm setup:env` values | docker compose only |
-| `POSTGRES_PORT`, `REDIS_PORT` | int | `5432`, `6379` | docker compose host ports of the dev infrastructure |
-| `APP_PORT` | int | `3000` | docker compose host port of the app (`scripts/run-e2e.mjs` sets it to `E2E_PORT`) |
-| `E2E_PORT` | int | `8182` | host port of the e2e stack (compose project `petition-e2e`, ADR 0017, conventions §6) |
-| `E2E_BASE_URL` | URL | set by `scripts/run-e2e.mjs` | Playwright only (required) |
+| Variable                                            | Type / rule                                     | Default                                                                             | Used by                                                                                                                                                     |
+| --------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                                          | `development` \| `test` \| `production`         | `development`                                                                       | logging, asset mode (dev never reads a manifest), `COOKIE_SECURE` default                                                                                   |
+| `PORT`                                              | int 1..65535                                    | `3000`                                                                              | server                                                                                                                                                      |
+| `LOG_LEVEL`                                         | pino level                                      | `info`                                                                              | logger                                                                                                                                                      |
+| `TRUST_PROXY`                                       | int 0..5 (hops)                                 | `0`                                                                                 | client IP for rate limits                                                                                                                                   |
+| `DATABASE_URL`                                      | `postgres(ql)://` URL                           | required                                                                            | db client                                                                                                                                                   |
+| `REDIS_URL`                                         | `redis(s)://` URL                               | required                                                                            | sessions, rate limits                                                                                                                                       |
+| `COOKIE_SECURE`                                     | stringbool; means "served over https"           | `NODE_ENV === 'production'`                                                         | secure cookies and `__Host-` names, HSTS, `upgrade-insecure-requests` (ADR 0011)                                                                            |
+| `SESSION_SECRET`                                    | comma list, each at least 32 chars; first signs | required                                                                            | express-session (rotation); HKDF source for the email rate-limit key                                                                                        |
+| `CSRF_SECRET`                                       | at least 32 chars                               | required                                                                            | csrf-csrf                                                                                                                                                   |
+| `SESSION_IDLE_MINUTES`                              | int 5..1440                                     | `120`                                                                               | `sessionPolicy.idleMs` (cookie maxAge, Redis TTL)                                                                                                           |
+| `SESSION_ABSOLUTE_HOURS`                            | int 1..720                                      | `168`                                                                               | `sessionPolicy.absoluteMs`                                                                                                                                  |
+| `RATE_LIMIT_GLOBAL_MAX`                             | int 1..100000                                   | `300` (per minute)                                                                  | global limiter; above default logs `rate_limit.relaxed`                                                                                                     |
+| `RATE_LIMIT_AUTH_MAX`                               | int 1..100000                                   | `10` (per 15 minutes)                                                               | auth-ip, register-email, login-email-subnet; login-email = 10 x this per hour                                                                               |
+| `CONTACT_URL`                                       | `https://` URL                                  | `https://github.com/Arnoldovna`                                                     | footer, privacy page (F-15, F-88)                                                                                                                           |
+| `IMPRINT_URL`                                       | `https://` URL, optional                        | empty (no link)                                                                     | footer imprint link (F-89); required by the deploy job                                                                                                      |
+| `APP_TIME_ZONE`                                     | IANA zone, checked with `Intl.DateTimeFormat`   | `Europe/Berlin`                                                                     | date formatting                                                                                                                                             |
+| `SEED_DEMO_PASSWORD`                                | at least 12 chars                               | required for the seed only (read by `tools/seed.ts`); generated by `pnpm setup:env` | seed, demo login printed by `pnpm demo`                                                                                                                     |
+| `SEED_ALLOW`                                        | must be exactly `true`                          | unset; **never in `.env` or `.env.example`**                                        | seed guard (ADR 0016, 0019); set per invocation by `pnpm db:seed` and the compose `seed` service                                                            |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | URL-safe strings                                | `petition`, `local-only`, `petition` (fixed local values, not generated, ADR 0019)  | docker compose; the dev `DATABASE_URL` must name the same three (`pnpm dev:setup` checks)                                                                   |
+| `POSTGRES_PORT`, `REDIS_PORT`                       | int                                             | `5432`, `6379`                                                                      | docker compose host ports of the dev infrastructure (also published by `pnpm demo`)                                                                         |
+| `APP_PORT`                                          | int                                             | `3000`                                                                              | docker compose host port of the app for `pnpm stack:up` and `pnpm demo`; not used by e2e                                                                    |
+| `E2E_PORT`                                          | int                                             | `8182`                                                                              | host port of the e2e stack (compose project `petition-e2e`); `run-e2e.mjs` reads it from the environment, else `.env`, else 8182 (conventions §6, ADR 0019) |
+| `E2E_BASE_URL`                                      | URL                                             | set by `scripts/run-e2e.mjs`; not in `.env.example`                                 | Playwright only (required)                                                                                                                                  |
+
+`.env.example` documents every key above with a comment, except `SEED_ALLOW` and `E2E_BASE_URL`. `pnpm setup:env`
+generates exactly the empty keys whose name contains `SECRET` or `PASSWORD` as a word (`SESSION_SECRET`,
+`CSRF_SECRET`, `SEED_DEMO_PASSWORD`) and never overwrites a value.
 
 Removed from the template: `CORS_ORIGINS`, all `S3_*`, `UPLOAD_MAX_BYTES`.
 
 ## 17. Test strategy
 
-Layers, tools and rules: ADR 0015, ADR 0017 and `express-feature-module/references/testing.md`. Every BUGS item gets a
-regression test where it is testable. Never weaken a test to get green. Each integration test file has its own
-database; E2E starts from a fresh stack; no retries.
+Layers, tools and rules: ADR 0015, ADR 0017, ADR 0019 and `express-feature-module/references/testing.md`. Every BUGS
+item gets a regression test where it is testable. Never weaken a test to get green. Each integration test file has its
+own database; E2E starts from a fresh stack; no retries. Test titles start with the ids they cover (`F-24, B-09: ...`,
+conventions §11), so phase 5e can check this table and section 21 with `grep`.
 
-| FEATURES | Unit (Vitest, fakes) | Integration (Supertest + Testcontainers) | E2E (Playwright + axe) |
-|---|---|---|---|
-| F-01 to F-06 | | `db/__tests__/schema.int.test.ts` (constraints, cascade, `pg_c_utf8`), `tools/__tests__/seed.int.test.ts` (idempotent, refuses without `SEED_ALLOW`, refuses on foreign emails) | stack runs migrate + seed |
-| F-07 | `shared/auth/__tests__/guards.test.ts` | `src/__tests__/route-matrix.int.test.ts` (every route x guest / unsigned / signed via `signIn`, GET and POST; `/__test/sign-in` 404 without test routes) | `auth.spec.ts` |
-| F-08, F-09 | `problem.test.ts` | `error-pages.int.test.ts` (404 page, 500 via a test-only throwing route, no stack, no hang, signed-in nav on 413/429/403), `session.int.test.ts` (stale or expired cookie never gives 500) | `links.spec.ts` |
-| F-10, F-11 | | | (none to test) |
-| F-12 to F-16 | `helpers.test.ts` (plural, formatCount, formatDate, currentAttr) | `pages.int.test.ts` (nav per state, aria-current, footer year and contact, unique titles) | `links.spec.ts`, `a11y.spec.ts` |
-| F-17 | `render.test.ts` (flash consumed only on render) | flash shown once (logout, sign, delete, profile, account); survives a redirect-only request | `journey-sign.spec.ts` |
-| F-18 to F-22 | `fields.test.ts` (incl. email with spaces and upper case), `auth.service.test.ts` | `register.int.test.ts` (validation, email taken whatever the password, case variants, guest-only, resubmit with the token from the 422 body) | `auth.spec.ts` |
-| F-23, F-24 | `auth.service.test.ts` (dummy hash path, rehash) | `login.int.test.ts` (with and without signature, 401 same body, returnTo, session id changes) | `auth.spec.ts` |
-| F-25 | | `logout.int.test.ts` (POST only, old cookie dead, flash) | `journey-sign.spec.ts` |
-| F-26 | `rate-limit-keys.test.ts` (IPv6 /56 shared key, HMAC normalisation, fallback) | `shared/security/__tests__/rate-limit.int.test.ts` (production limits: 11th attempt 429 page, per email across IPs, successful logins not counted, no `ERR_ERL_*` warning) | (none: E2E raises the limits) |
-| F-27 | `password.test.ts` (argon2id params, semaphore bound and queue rejection) | | |
-| F-28 to F-32 | | `session.int.test.ts` (cookie name and flags, idle TTL via `redis.pTTL()`, absolute expiry with a fake clock, Redis content has no PII, no 500 after expiry), `viewer.int.test.ts` (deleted user, password changed elsewhere, hasSigned from DB, stale cookie on `GET /login` is 200) | `auth.spec.ts` (returnTo) |
-| F-33 to F-36 | `fields.test.ts` (all age/city/homepage cases incl. `https://https://`), `profile.service.test.ts` | `onboarding.int.test.ts` (every optional-field combination, upsert, prefill, skip) | `profile.spec.ts` |
-| F-37 to F-45 | `signature-pad.core.test.ts`, `png.test.ts`, `signature-image.test.ts` (primary and fallback font), `glyphs.test.ts` (drift), `fields.test.ts` (`’` normalised, Vietnamese, Greek, Cyrillic accepted, CJK rejected with message), `signature.service.test.ts` | `sign.int.test.ts` (blank, wrong prefix, wrong size, too large 413/422, JPEG, typed name, idempotent double POST, already signed) | `signature-pad.spec.ts` (mouse, touch, release outside, clear, blank, resize; also WebKit iPhone), `journey-typed.spec.ts` (JS disabled) |
-| F-46 to F-48 | | `thank-you.int.test.ts` (renders the injected count, plural, image route owner-only, unsigned redirect), `src/__tests__/supporter-count.int.test.ts` (count = list total with the real modules) | `journey-sign.spec.ts` (relative count) |
-| F-49, F-50 | | `delete.int.test.ts` (own row only, confirm page only when signed), `supporter-count.int.test.ts` (count decreases) | `deletion.spec.ts` |
-| F-51 to F-59 | `pagination.test.ts`, `supporters.service.test.ts` | `supporters.int.test.ts` (signers without profile, order, page 2, out of range, empty state on its own empty database, XSS escaped), `city.int.test.ts` (Unicode, `/ ? # &`, empty city, heading) | `supporters.spec.ts` (seed-readonly), `xss.spec.ts` (unique city) |
-| F-60 to F-66 | `profile.service.test.ts` (re-auth rules with a fake `credentials`) | `edit.int.test.ts` (transaction rollback on email taken, clear fields, password change logs out other agent, resubmit after 422), `credentials.int.test.ts` | `profile.spec.ts` |
-| F-67 to F-69 | `auth.service.test.ts` | `account-delete.int.test.ts` (wrong password, cascade, session ended, re-register) | `deletion.spec.ts` |
-| F-70 | | `csrf.int.test.ts` + a CSRF-missing case in every POST route test | |
-| F-71, F-86 | | `headers.int.test.ts` (CSP string, no `x-powered-by`, HSTS and UIR only with `COOKIE_SECURE=true`, HTML not compressed) | `security-headers.spec.ts` (no CSP violations, no third-party requests, no UIR on the http stack) |
-| F-72 | `config/__tests__/env.test.ts` (missing and invalid keys, message has no values) | | |
-| F-73 | `logger.test.ts` (redaction of every path) | | |
-| F-74 | | `health.int.test.ts` (`/health/ready` 200, 503 with stopped Redis client, shutting down; `/healthz` is 404) | `scripts/run-e2e.mjs` waits on the compose healthcheck (`/health/ready`) |
-| F-75, F-76 | | | `journey-sign.spec.ts` (double click), `journey-typed.spec.ts` (JS disabled for every form) |
-| F-77 | | | copy-lint review (Phase 4) |
-| F-78 to F-85 | | | `a11y.spec.ts` (axe on every page and state, keyboard-only journey, focus visible, 320px no horizontal scroll, 200% zoom, reduced motion) |
-| F-87 | | | `html-validity.spec.ts` writes raw bodies, `scripts/validate-html.mjs` (Nu) validates them |
-| F-88 to F-91 | | `pages.int.test.ts` (privacy page for guests without a session, footer links, imprint link only when configured), `register.int.test.ts` and `onboarding.int.test.ts` (disclosure), `erase-user.int.test.ts` | `links.spec.ts`, `a11y.spec.ts`, `html-validity.spec.ts` (privacy page) |
+| FEATURES     | Unit (Vitest, fakes)                                                                                                                                                                                                                                          | Integration (Supertest + Testcontainers)                                                                                                                                                                                                                                                                                                  | E2E (Playwright + axe)                                                                                                                                           |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F-01 to F-06 |                                                                                                                                                                                                                                                               | `db/__tests__/schema.int.test.ts` (constraints, cascade, `pg_c_utf8`), `tools/__tests__/seed.int.test.ts` (idempotent, refuses without `SEED_ALLOW`, writes nothing and resolves "skipped" when a non-`@petition.test` user exists)                                                                                                       | stack runs migrate + seed; CI `dev-setup-smoke` runs it twice                                                                                                    |
+| F-07         | `shared/auth/__tests__/guards.test.ts`                                                                                                                                                                                                                        | `src/__tests__/route-matrix.int.test.ts` (every route x guest / unsigned / signed via `signIn`, GET and POST; `/__test/sign-in` 404 without test routes)                                                                                                                                                                                  | `auth.spec.ts`                                                                                                                                                   |
+| F-08, F-09   | `problem.test.ts`                                                                                                                                                                                                                                             | `error-pages.int.test.ts` (404 page, 500 via a test-only throwing route, no stack, no hang, signed-in nav on 413/429/403), `session.int.test.ts` (stale or expired cookie never gives 500)                                                                                                                                                | `links.spec.ts`                                                                                                                                                  |
+| F-10, F-11   |                                                                                                                                                                                                                                                               |                                                                                                                                                                                                                                                                                                                                           | (none to test)                                                                                                                                                   |
+| F-12 to F-16 | `helpers.test.ts` (plural, formatCount, formatDate, currentAttr)                                                                                                                                                                                              | `pages.int.test.ts` (nav per state, aria-current, footer year and contact, unique titles)                                                                                                                                                                                                                                                 | `links.spec.ts`, `a11y.spec.ts`                                                                                                                                  |
+| F-17         | `render.test.ts` (flash consumed only on render)                                                                                                                                                                                                              | flash shown once (logout, sign, delete, profile, account); survives a redirect-only request                                                                                                                                                                                                                                               | `journey-sign.spec.ts`                                                                                                                                           |
+| F-18 to F-22 | `fields.test.ts` (incl. email with spaces and upper case), `auth.service.test.ts`                                                                                                                                                                             | `register.int.test.ts` (validation, email taken whatever the password, case variants, guest-only, resubmit with the token from the 422 body)                                                                                                                                                                                              | `auth.spec.ts`                                                                                                                                                   |
+| F-23, F-24   | `auth.service.test.ts` (dummy hash path, rehash)                                                                                                                                                                                                              | `login.int.test.ts` (with and without signature, 401 same body, returnTo, session id changes)                                                                                                                                                                                                                                             | `auth.spec.ts`                                                                                                                                                   |
+| F-25         |                                                                                                                                                                                                                                                               | `logout.int.test.ts` (POST only, old cookie dead, flash)                                                                                                                                                                                                                                                                                  | `journey-sign.spec.ts`                                                                                                                                           |
+| F-26         | `rate-limit-keys.test.ts` (IPv6 /56 shared key, HMAC normalisation, fallback)                                                                                                                                                                                 | `shared/security/__tests__/rate-limit.int.test.ts` (1b: limiter mechanics with production limits on a test-only route, 429 page, `Retry-After`, no `ERR_ERL_*` warning), `src/__tests__/rate-limits.int.test.ts` (2b: real routes, 11th failed login is 429, per email across IPs, successful logins not counted, register, reauth, sign) | (none: E2E raises the limits)                                                                                                                                    |
+| F-27         | `password.test.ts` (argon2id params, semaphore bound and queue rejection)                                                                                                                                                                                     |                                                                                                                                                                                                                                                                                                                                           |                                                                                                                                                                  |
+| F-28 to F-32 |                                                                                                                                                                                                                                                               | `session.int.test.ts` (cookie name and flags, idle TTL via `redis.pTTL()`, absolute expiry with a fake clock, Redis content has no PII, no 500 after expiry), `viewer.int.test.ts` (deleted user, password changed elsewhere, hasSigned from DB, stale cookie on `GET /login` is 200)                                                     | `auth.spec.ts` (returnTo)                                                                                                                                        |
+| F-33 to F-36 | `fields.test.ts` (all age/city/homepage cases incl. `https://https://`), `profile.service.test.ts`                                                                                                                                                            | `onboarding.int.test.ts` (every optional-field combination, upsert, prefill, skip)                                                                                                                                                                                                                                                        | `profile.spec.ts`                                                                                                                                                |
+| F-37 to F-45 | `signature-pad.core.test.ts`, `png.test.ts`, `signature-image.test.ts` (primary and fallback font), `glyphs.test.ts` (drift), `fields.test.ts` (`’` normalised, Vietnamese, Greek, Cyrillic accepted, CJK rejected with message), `signature.service.test.ts` | `sign.int.test.ts` (blank, wrong prefix, wrong size, too large 413/422, JPEG, typed name, idempotent double POST, already signed)                                                                                                                                                                                                         | `signature-pad.spec.ts` (mouse, touch, release outside, clear, blank, resize; also WebKit iPhone), `journey-typed.spec.ts` (JS disabled)                         |
+| F-46 to F-48 |                                                                                                                                                                                                                                                               | `thank-you.int.test.ts` (renders the injected count, plural, image route owner-only, unsigned redirect), `src/__tests__/supporter-count.int.test.ts` (count = list total with the real modules)                                                                                                                                           | `journey-sign.spec.ts` (relative count)                                                                                                                          |
+| F-49, F-50   |                                                                                                                                                                                                                                                               | `delete.int.test.ts` (own row only, confirm page only when signed), `supporter-count.int.test.ts` (count decreases)                                                                                                                                                                                                                       | `deletion.spec.ts`                                                                                                                                               |
+| F-51 to F-59 | `pagination.test.ts`, `supporters.service.test.ts`                                                                                                                                                                                                            | `supporters.int.test.ts` (signers without profile, order, page 2, out of range, empty state on its own empty database, XSS escaped), `city.int.test.ts` (Unicode, `/ ? # &`, empty city, heading)                                                                                                                                         | `supporters.spec.ts` (seed-readonly), `xss.spec.ts` (unique city)                                                                                                |
+| F-60 to F-66 | `profile.service.test.ts` (re-auth rules with a fake `credentials`)                                                                                                                                                                                           | `edit.int.test.ts` (transaction rollback on email taken, clear fields, password change logs out other agent, resubmit after 422), `credentials.int.test.ts`                                                                                                                                                                               | `profile.spec.ts`                                                                                                                                                |
+| F-67 to F-69 | `auth.service.test.ts`                                                                                                                                                                                                                                        | `account-delete.int.test.ts` (wrong password, cascade, session ended, re-register)                                                                                                                                                                                                                                                        | `deletion.spec.ts`                                                                                                                                               |
+| F-70         |                                                                                                                                                                                                                                                               | `csrf.int.test.ts` + a CSRF-missing case in every POST route test                                                                                                                                                                                                                                                                         |                                                                                                                                                                  |
+| F-71, F-86   |                                                                                                                                                                                                                                                               | `headers.int.test.ts` (CSP string, no `x-powered-by`, HSTS and UIR only with `COOKIE_SECURE=true`, HTML not compressed)                                                                                                                                                                                                                   | `security-headers.spec.ts` (no CSP violations, no third-party requests, no UIR on the http stack)                                                                |
+| F-72         | `config/__tests__/env.test.ts` (missing and invalid keys, message has no values)                                                                                                                                                                              |                                                                                                                                                                                                                                                                                                                                           |                                                                                                                                                                  |
+| F-73         | `logger.test.ts` (redaction of every path)                                                                                                                                                                                                                    |                                                                                                                                                                                                                                                                                                                                           |                                                                                                                                                                  |
+| F-74         |                                                                                                                                                                                                                                                               | `health.int.test.ts` (`/health/ready` 200, 503 with stopped Redis client, shutting down; `/healthz` is 404)                                                                                                                                                                                                                               | `scripts/run-e2e.mjs` waits on the compose healthcheck (`/health/ready`)                                                                                         |
+| F-75, F-76   |                                                                                                                                                                                                                                                               |                                                                                                                                                                                                                                                                                                                                           | `journey-sign.spec.ts` (double click), `journey-typed.spec.ts` (JS disabled for every form)                                                                      |
+| F-77         |                                                                                                                                                                                                                                                               |                                                                                                                                                                                                                                                                                                                                           | copy-lint review (Phase 4)                                                                                                                                       |
+| F-78 to F-85 |                                                                                                                                                                                                                                                               |                                                                                                                                                                                                                                                                                                                                           | `a11y.spec.ts` (axe on every page and state, keyboard-only journey, focus visible, 320px no horizontal scroll, 200% zoom, reduced motion)                        |
+| F-87         |                                                                                                                                                                                                                                                               |                                                                                                                                                                                                                                                                                                                                           | `html-validity.spec.ts` writes raw bodies to `html/` in the run's output directory, `scripts/validate-html.mjs` (Nu) validates them after a green Playwright run |
+| F-88 to F-91 |                                                                                                                                                                                                                                                               | `pages.int.test.ts` (privacy page for guests without a session, footer links, imprint link only when configured), `register.int.test.ts` and `onboarding.int.test.ts` (disclosure), `erase-user.int.test.ts`                                                                                                                              | `links.spec.ts`, `a11y.spec.ts`, `html-validity.spec.ts` (privacy page)                                                                                          |
 
 ## 18. CI/CD
 
-- **`ci.yml`** (template, unchanged structure): triggers on pull requests and pushes to `main`; jobs `lint`
+- **`ci.yml`** (template structure): triggers on pull requests, pushes to `main` and `workflow_dispatch`; jobs `lint`
   (format check, ESLint incl. `import-x/no-cycle` + knip + check-views, stylelint, utility check, schema drift on
   `drizzle/`), `typecheck` (server, client, e2e),
   `unit`, `integration` (Testcontainers on the runner's Docker, one database per file), `build`, `e2e`
-  (`node scripts/setup-env.mjs`, `pnpm exec playwright install --with-deps chromium webkit`,
-  `pnpm test:e2e` = isolated stack, canvas smoke check on amd64, Playwright with `retries: 0`, Nu validator; uploads
-  report, HTML snapshots and compose logs on failure), `gitleaks` (checksum-verified CLI, full history).
-  `permissions: contents: read`, concurrency group per ref with cancel-in-progress, every action pinned to a commit SHA
-  (versions.md), `persist-credentials: false`.
+  (**pull requests only**, ADR 0018; `node scripts/setup-env.mjs`, `pnpm exec playwright install --with-deps chromium
+webkit`, `pnpm test:e2e` = isolated stack, canvas smoke check on amd64, Playwright with `retries: 0`, Nu validator;
+  uploads `playwright-report/` and `test-results/` incl. HTML snapshots and `compose.log` on failure),
+  `dev-setup-smoke`, `gitleaks` (checksum-verified CLI, full history). `permissions: contents: read`, concurrency group
+  per ref with cancel-in-progress, every action pinned to a commit SHA (versions.md), `persist-credentials: false`.
 - **`release.yml`**: `on: workflow_run` (workflow `CI`, `types: [completed]`, `branches: [main]`) plus
-  `workflow_dispatch`; runs only when the CI run concluded `success` for a `push`, checks out its `head_sha`, builds
-  the image with Buildx and pushes `ghcr.io/arnoldovna/petition:sha-<sha>` and `:latest` with provenance and SBOM;
-  `deploy` job gated by `vars.DEPLOY_ENABLED == 'true'` and the `production` environment, with the checklist from
-  ADR 0015 (`IMPRINT_URL`, 384 MiB, no HTML compression at the proxy).
+  `workflow_dispatch` (on `main` only). Job `images` runs only when **the repository is public**
+  (`github.event.repository.private == false`, ADR 0018) and the CI run concluded `success` for a `push`; it checks out
+  `RELEASE_SHA` (the CI run's `head_sha`), builds the image with Buildx and pushes
+  `ghcr.io/arnoldovna/petition:sha-<RELEASE_SHA>` and `:latest` with provenance, SBOM and the matching revision label.
+  `deploy` needs `images` and is additionally gated by `vars.DEPLOY_ENABLED == 'true'` and the `production`
+  environment, with the checklist from ADR 0015 (`IMPRINT_URL`, 384 MiB, no HTML compression at the proxy). While the
+  repository is private, both jobs show as skipped; the PR's `e2e` job proves that the image builds.
 - **Dependabot:** npm (prod and dev groups, 3-day cooldown, TypeScript majors ignored), github-actions, docker `/` and
   `/docker` (Nu validator digest), docker-compose `/` (Postgres and Redis images).
 - **Local hooks:** lefthook pre-commit runs `gitleaks git --staged`, lint-staged (Prettier, ESLint, stylelint,
@@ -650,30 +676,40 @@ database; E2E starts from a fresh stack; no retries.
 
 ## 19. Docker and local development
 
-- **Compose** (`docker-compose.yml`, project name `petition` unless `COMPOSE_PROJECT_NAME` is set):
+- **Compose** (`docker-compose.yml`, project name `petition` unless `COMPOSE_PROJECT_NAME` is set; every image pinned
+  by digest):
   - default profile: `postgres` (`postgres:18-alpine`, healthcheck `pg_isready`, volume `/var/lib/postgresql`),
     `redis` (`redis:8-alpine`, no persistence, healthcheck `redis-cli ping`); ports bound to `127.0.0.1` on
     `POSTGRES_PORT` and `REDIS_PORT`.
   - profile `app`: `migrate` (one-shot, `dist/db/migrate.js`) and `app` (depends on migrate completed, redis healthy
-    and, when present, seed completed; healthcheck `node -e fetch('/health/ready')`; `COOKIE_SECURE=false` because the
-    local stack is plain http, so no HSTS and no UIR either; at least 384 MiB memory).
+    and, when its profile is active, seed completed: `required: false`; healthcheck `node -e fetch('/health/ready')`;
+    `COOKIE_SECURE=false` because the local stack is plain http, so no HSTS and no UIR either; host port `APP_PORT`;
+    at least 384 MiB memory).
   - profiles `demo` and `e2e`: everything in `app` plus `seed` (one-shot, `dist/tools/seed.js`, `SEED_ALLOW=true`,
-    `SEED_DEMO_PASSWORD`; `NODE_ENV` stays `production`).
-  - `docker-compose.e2e.yml` (only used by `scripts/run-e2e.mjs`, project `petition-e2e`): Postgres on tmpfs, no published Postgres or Redis ports,
-    raised rate limits (ADR 0017).
+    `SEED_DEMO_PASSWORD`; `NODE_ENV` stays `production`; skips with exit 0 when the database holds non-demo users,
+    ADR 0019).
+  - `docker-compose.e2e.yml` (only used by `scripts/run-e2e.mjs`, project `petition-e2e`): Postgres on tmpfs, no
+    published Postgres or Redis ports (`!reset`), app only on `127.0.0.1:${E2E_PORT:-8182}` (`!override`), raised rate
+    limits (ADR 0017, 0019). The e2e stack and `pnpm demo` can run at the same time.
 - **Image** (`Dockerfile`, single-app template): `node:26-slim` build stages with `pnpm fetch` cache, build runs
   `pnpm run build` (fonts, CSS, client, manifest, tsc) into `dist/`; runtime `gcr.io/distroless/nodejs26-debian13:nonroot`
   with `dist/` (server, tools, `public/` build output, `signature-fonts/`), `public/`, `src/views/`, `drizzle/` and
   production `node_modules` (incl. the `@napi-rs/canvas` linux-gnu binary). Non-root uid 65532, no shell.
-- **Reviewer path:** `pnpm install && pnpm demo` (`setup:env`, then the production image with migrate and seed) and open
-  `http://127.0.0.1:3000`; log in as `demo@petition.test` with the `SEED_DEMO_PASSWORD` from `.env`.
+- **Reviewer path:** `pnpm install && pnpm demo` (`node scripts/dev-setup.mjs --demo`: tool check, `setup:env`, then
+  the production image with migrate and seed through `pnpm stack:demo`); it prints `http://127.0.0.1:3000` and the
+  demo login (`demo@petition.test` with the `SEED_DEMO_PASSWORD` from `.env`). `pnpm stack:down` stops it and keeps the
+  data; `docker compose --profile app --profile demo down -v` resets it (needed after recreating `.env`, because the
+  seed never changes an existing demo user's password).
 - **Developer loop:**
-  1. `nvm use` (Node 26), `npm i -g pnpm@10.34.9`, `pnpm install`
+  1. Node 26 from `.nvmrc` and pnpm 10.34.9 (`packageManager`; corepack or `npm i -g pnpm@10.34.9`). On Marina's
+     machine: `source ~/.devenv.sh` (BUILD-ORDER Phase 0). Then `pnpm install`.
   2. `pnpm dev:setup` (checks tools, creates `.env` with generated secrets if missing, starts Postgres and Redis,
-     migrates, seeds)
+     migrates, seeds; a second run changes nothing)
   3. `pnpm dev` (copies fonts to `.dev/`, then runs `dev:server` (tsx watch), `dev:css` (Tailwind watch) and
-     `dev:client` (esbuild watch) in parallel, all writing to `.dev/public`) at `http://127.0.0.1:3000`
-  4. `pnpm verify` before every commit (quality gate); it needs no running dev infrastructure.
+     `dev:client` (esbuild watch) in parallel, all writing to `.dev/public`) at `http://127.0.0.1:3000` (not at the
+     same time as `pnpm demo`, which also uses port 3000)
+  4. `pnpm verify` before every commit (quality gate); it needs no running dev infrastructure and uses its own e2e
+     project on 8182.
 
 ## 20. Dependencies (exact versions)
 
@@ -681,63 +717,74 @@ Checked with `npm view <pkg> version` on 2026-11-15. pnpm `minimumReleaseAge: 14
 24 hours, so two packages stay one patch behind `latest` (noted). TypeScript stays on 6.0 (typescript-eslint peer
 range, versions.md).
 
+**When each dependency is added** (ADR 0019 §3): knip in `pnpm lint` reports unused dependencies, and parallel units
+may not add any. So phase 1a installs what the runnable skeleton imports, phase 1b (sequential) adds the rest, and
+nothing is added in phases 2 to 5 except by the orchestrator between waves. Column "From" below; devDependencies are
+all 1a except `@types/express-session`, `@types/cookie-parser`, `node-html-parser` (`test/html.ts`) and `fontkit`
+(`scripts/font-glyphs.mjs`), which come with 1b.
+
 **Runtime (`dependencies`)**
 
-| Package | Version | Purpose |
-|---|---|---|
-| express | 5.3.0 | HTTP server |
-| express-handlebars | 9.0.6 | SSR views |
-| express-session | 1.19.0 | sessions |
-| connect-redis | 10.0.0 | session store |
-| redis | 6.3.1 | Redis client |
-| cookie-parser | 1.4.7 | CSRF cookie |
-| csrf-csrf | 4.1.0 | CSRF |
-| helmet | 8.3.0 | security headers |
-| express-rate-limit | 8.7.4 | rate limiting |
-| rate-limit-redis | 6.0.2 | rate-limit store |
-| compression | 1.8.2 | gzip/brotli for `/assets` and `/fonts` only (ADR 0010) |
-| zod | 4.6.7 | validation, env |
-| drizzle-orm | 0.45.4 | ORM |
-| pg | 8.23.1 | Postgres driver |
-| argon2 | 0.45.2 | password hashing |
-| pino | 10.4.0 | logging |
-| pino-http | 11.0.0 | request logging |
-| @napi-rs/canvas | 1.1.1 | PNG decode/re-encode, typed signatures (ADR 0005) |
+| Package            | Version | Purpose                                                | From                    |
+| ------------------ | ------- | ------------------------------------------------------ | ----------------------- |
+| express            | 5.3.0   | HTTP server                                            | 1a                      |
+| express-handlebars | 9.0.6   | SSR views                                              | 1a                      |
+| express-session    | 1.19.0  | sessions                                               | 1b                      |
+| connect-redis      | 10.0.0  | session store                                          | 1b                      |
+| redis              | 6.3.1   | Redis client                                           | 1a (readiness)          |
+| cookie-parser      | 1.4.7   | CSRF cookie                                            | 1b                      |
+| csrf-csrf          | 4.1.0   | CSRF                                                   | 1b                      |
+| helmet             | 8.3.0   | security headers                                       | 1a                      |
+| express-rate-limit | 8.7.4   | rate limiting                                          | 1b                      |
+| rate-limit-redis   | 6.0.2   | rate-limit store                                       | 1b                      |
+| compression        | 1.8.2   | gzip/brotli for `/assets` and `/fonts` only (ADR 0010) | 1a                      |
+| zod                | 4.6.7   | validation, env                                        | 1a                      |
+| drizzle-orm        | 0.45.4  | ORM                                                    | 1a                      |
+| pg                 | 8.23.1  | Postgres driver                                        | 1a                      |
+| argon2             | 0.45.2  | password hashing                                       | 1b                      |
+| pino               | 10.4.0  | logging                                                | 1a                      |
+| pino-http          | 11.0.0  | request logging                                        | 1a                      |
+| @napi-rs/canvas    | 1.1.1   | PNG decode/re-encode, typed signatures (ADR 0005)      | 1a (canvas smoke check) |
 
 The font packages are devDependencies: the build copies only the needed woff2 files into `dist/` (ADR 0005, 0010).
 
 **Development (`devDependencies`)**
 
-| Package | Version | | Package | Version |
-|---|---|---|---|---|
-| typescript | 6.0.3 (7.0.2 is latest, not supported by typescript-eslint) | | tsx | 4.23.15 |
-| @types/node | 26.6.6 | | @types/express | 5.0.6 |
-| @types/express-session | 1.19.0 | | @types/cookie-parser | 1.4.10 |
-| @types/pg | 8.23.1 | | @types/compression | 1.8.1 |
-| @types/supertest | 7.2.1 | | drizzle-kit | 0.31.11 |
-| eslint | 10.15.0 | | @eslint/js | 10.0.1 |
-| typescript-eslint | 8.72.2 | | eslint-plugin-boundaries | 7.4.3 (7.4.4 is < 24 h old) |
-| eslint-import-resolver-typescript | 4.4.5 | | eslint-config-prettier | 10.1.8 |
-| globals | 17.14.0 | | prettier | 3.10.1 |
-| stylelint | 18.0.0 | | stylelint-config-standard | 41.0.0 |
-| tailwindcss | 4.3.5 | | @tailwindcss/cli | 4.3.5 |
-| esbuild | 0.28.2 | | knip | 6.45.1 |
-| vitest | 5.1.0 | | @vitest/coverage-v8 | 5.1.0 |
-| supertest | 7.3.2 | | testcontainers | 12.2.1 |
-| @testcontainers/postgresql | 12.2.1 | | @testcontainers/redis | 12.2.1 |
-| node-html-parser | 9.0.7 | | @playwright/test | 1.65.1 |
-| @axe-core/playwright | 4.14.0 | | fontkit | 2.0.4 (3.0.0 is a four-day-old major) |
-| lefthook | 2.2.2 | | lint-staged | 17.6.0 (17.6.1 is < 24 h old) |
-| @commitlint/cli | 21.2.4 | | @commitlint/config-conventional | 21.2.4 |
-| pino-pretty | 13.2.0 | | @fontsource/schibsted-grotesk | 5.3.0 (static 400/500, as in the template and maw-design-system) |
-| @fontsource/noto-sans | 5.3.0 (server-side typed-signature fallback, weight 500, OFL) | | eslint-plugin-import-x | 4.18.1 (`import-x/no-cycle`, conventions §9) |
+| Package                           | Version                                                       |     | Package                         | Version                                                          |
+| --------------------------------- | ------------------------------------------------------------- | --- | ------------------------------- | ---------------------------------------------------------------- |
+| typescript                        | 6.0.3 (7.0.2 is latest, not supported by typescript-eslint)   |     | tsx                             | 4.23.15                                                          |
+| @types/node                       | 26.6.6                                                        |     | @types/express                  | 5.0.6                                                            |
+| @types/express-session            | 1.19.0                                                        |     | @types/cookie-parser            | 1.4.10                                                           |
+| @types/pg                         | 8.23.1                                                        |     | @types/compression              | 1.8.1                                                            |
+| @types/supertest                  | 7.2.1                                                         |     | drizzle-kit                     | 0.31.11                                                          |
+| eslint                            | 10.15.0                                                       |     | @eslint/js                      | 10.0.1                                                           |
+| typescript-eslint                 | 8.72.2                                                        |     | eslint-plugin-boundaries        | 7.4.3 (7.4.4 is < 24 h old)                                      |
+| eslint-import-resolver-typescript | 4.4.5                                                         |     | eslint-config-prettier          | 10.1.8                                                           |
+| globals                           | 17.14.0                                                       |     | prettier                        | 3.10.1                                                           |
+| stylelint                         | 18.0.0                                                        |     | stylelint-config-standard       | 41.0.0                                                           |
+| tailwindcss                       | 4.3.5                                                         |     | @tailwindcss/cli                | 4.3.5                                                            |
+| esbuild                           | 0.28.2                                                        |     | knip                            | 6.45.1                                                           |
+| vitest                            | 5.1.0                                                         |     | @vitest/coverage-v8             | 5.1.0                                                            |
+| supertest                         | 7.3.2                                                         |     | @testcontainers/postgresql      | 12.2.1                                                           |
+| @testcontainers/redis             | 12.2.1                                                        |     |                                 |                                                                  |
+| node-html-parser                  | 9.0.7                                                         |     | @playwright/test                | 1.65.1                                                           |
+| @axe-core/playwright              | 4.14.0                                                        |     | fontkit                         | 2.0.4 (3.0.0 is a four-day-old major)                            |
+| lefthook                          | 2.2.2                                                         |     | lint-staged                     | 17.6.0 (17.6.1 is < 24 h old)                                    |
+| @commitlint/cli                   | 21.2.4                                                        |     | @commitlint/config-conventional | 21.2.4                                                           |
+| pino-pretty                       | 13.2.0                                                        |     | @fontsource/schibsted-grotesk   | 5.3.0 (static 400/500, as in the template and maw-design-system) |
+| @fontsource/noto-sans             | 5.3.0 (server-side typed-signature fallback, weight 500, OFL) |     | eslint-plugin-import-x          | 4.18.1 (`import-x/no-cycle`, conventions §9)                     |
 
 Not used (dropped from the templates): `cors`, `multer`, `file-type`, `@aws-sdk/client-s3`,
-`html-validate` (one validator, ADR 0015).
-Tools outside npm: Node 26 (`.nvmrc`), pnpm 10.34.9 (kept on purpose, ADR 0015; 12.21.0 is `latest`), git 2.31 or
-later, Docker with Compose 2.24 or later, gitleaks 8.30.1, Docker images `postgres:18-alpine`, `redis:8-alpine`,
-`node:26-slim`, `gcr.io/distroless/nodejs26-debian13:nonroot`, `ghcr.io/validator/validator` (tag and digest in
-`docker/nu-validator.Dockerfile`, chosen in the scaffold).
+`html-validate` (one validator, ADR 0015), and the direct `testcontainers` entry (nothing imports it; the two
+`@testcontainers/*` modules depend on it, and knip reports an unused direct entry).
+`@vitest/coverage-v8` is used by the `test:coverage` script (not part of `verify`).
+
+Tools outside npm (Phase 0, provided by `~/.devenv.sh` on Marina's machine): Node 26 (`.nvmrc`),
+pnpm 10.34.9 (kept on purpose, ADR 0015; 12.21.0 is `latest`), git 2.31 or later, Docker with Compose 2.24.4 or later
+(`!reset`, `!override`), gitleaks 8.30.1, Docker images `postgres:18-alpine`, `redis:8-alpine`, `node:26-slim`,
+`gcr.io/distroless/nodejs26-debian13:nonroot`, `ghcr.io/validator/validator` (tag and digest in
+`docker/nu-validator.Dockerfile`, chosen in the scaffold), all pinned by digest; `rhysd/actionlint` only as a one-off
+check at Gate 1a (ADR 0018).
 
 `pnpm-workspace.yaml`: `onlyBuiltDependencies: [argon2, esbuild, lefthook]`, `minimumReleaseAge: 1440`.
 
@@ -745,103 +792,103 @@ later, Docker with Compose 2.24 or later, gitleaks 8.30.1, Docker images `postgr
 
 Every item from BUGS.md maps to a design decision and a place where it is verified.
 
-| BUGS | Resolution | Verified by |
-|---|---|---|
-| B-01 stored XSS | No triple-stash (check-views.mjs), escaped `supporter-row` partial, URL validation, CSP `script-src 'self'` (ADR 0014, 0011) | `supporters.int.test.ts`, `xss.spec.ts` |
-| B-02 committed DB credentials | Env only, `.env.example`, `.gitignore`, gitleaks pre-commit + CI (ADR 0011); rotation is Marina's PLAN step 0 | `secrets:scan` in verify and CI |
-| B-03 hard-coded session secret | `SESSION_SECRET` list from env, min 32 chars (ADR 0002) | `env.test.ts` |
-| B-04 client-side session, PII in cookie | Redis store, opaque id, hardened app-scoped cookie, regenerate on every identity change (ADR 0002) | `session.int.test.ts` |
-| B-05 ghost sessions | Viewer loader per request, regenerate instead of destroy (ADR 0002) | `viewer.int.test.ts`, `session.int.test.ts` (no 500) |
-| B-06 POST routes without auth | Guards on every protected route, GET and POST | `route-matrix.int.test.ts` |
-| B-07 missing signed guards | `requireSigned` / `requireNotSigned`, idempotent insert (ADR 0004) | `route-matrix`, `sign.int.test.ts`, `thank-you.int.test.ts` |
-| B-08 GET logout | `POST /logout` with CSRF (ADR 0003) | `logout.int.test.ts` |
-| B-09 user enumeration | One code path, dummy hash, same 401 view (ADR 0009) | `auth.service.test.ts`, `login.int.test.ts` |
-| B-10 no rate limit, no headers | helmet CSP (ADR 0011), configurable Redis limiters with IPv6 /56 and HMAC email keys (ADR 0012) | `headers.int.test.ts`, `rate-limit.int.test.ts`, `rate-limit-keys.test.ts` |
-| B-11 weak password handling | 12..128, argon2id, `type="password"`, re-auth (ADR 0009) | `fields.test.ts`, `edit.int.test.ts` |
-| B-12 hashes and PII in logs | pino redaction, ids-only events (ADR 0011); no reversible email in Redis (ADR 0012) | `logger.test.ts` |
-| B-13 stack traces leak | Central error handler, error pages (ADR 0008) | `error-pages.int.test.ts` |
-| B-14 EOL dependencies | Node 26, Express 5, csrf-csrf, Drizzle, exact current versions, Dependabot (section 20) | CI, Dependabot |
-| B-15 private contact data in footer | `CONTACT_URL`, credit only (ADR 0011) | `pages.int.test.ts` |
-| B-16 CDN scripts, Google Fonts | No jQuery, self-hosted fonts, CSP `default-src 'self'` (ADR 0010, 0011) | `security-headers.spec.ts` |
-| B-17 `_blank` without rel | Same-tab links, `rel="noopener noreferrer nofollow ugc"`, `_blank` banned (ADR 0014) | `check-views.mjs`, `supporters.int.test.ts` |
-| B-18 homepage not validated | `optionalHomepage` rule, DB CHECK (ROUTES 1, DATA-MODEL 2.3) | `fields.test.ts`, `schema.int.test.ts` |
-| B-19 signature payload not validated | Validation pipeline, re-encode, bytea, limits (ADR 0004) | `signature-image.test.ts`, `sign.int.test.ts` |
-| B-20 swallowed errors, hanging requests | Express 5 async + error handler (ADR 0008) | `error-pages.int.test.ts` |
-| B-21 unreturned promises | async/await, `no-floating-promises` | ESLint |
-| B-22 login hangs without signature | `findForLogin` LEFT JOIN (ADR 0009) | `login.int.test.ts` |
-| B-23 wrong password shows register page | Same login view, 401 (ADR 0009) | `login.int.test.ts` |
-| B-24 every error is "email taken", input lost | Field-level Zod messages, values kept, 23505 mapping (ADR 0008) | `register.int.test.ts` |
-| B-25 case-sensitive email | Lowercase + `lower(email)` unique index (ADR 0007) | `register.int.test.ts`, `login.int.test.ts` |
-| B-26 empty age crashes onboarding | `''` -> `NULL` preprocessing | `onboarding.int.test.ts` (all combinations) |
-| B-27 age validation | Integer 1..120, `inputmode="numeric"`, DB CHECK | `fields.test.ts`, `schema.int.test.ts` |
-| B-28 onboarding revisit hangs | Upsert + prefill | `onboarding.int.test.ts` |
-| B-29 edit reports success on failure, not atomic | Transaction, Result types, 422 (ADR 0008) | `edit.int.test.ts` |
-| B-30 signers without profile hidden | LEFT JOIN profiles, shared base query (ADR 0006) | `supporters.int.test.ts` |
-| B-31 unordered, unpaginated | ORDER BY created_at, id + index + pagination (ADR 0006) | `supporters.int.test.ts` |
-| B-32 city links break | `encodeURIComponent`, normalisation, `pg_c_utf8` (ADR 0007) | `city.int.test.ts`, `supporters.spec.ts` |
-| B-33 city heading from first row | Heading from param, empty state (ADR 0007) | `city.int.test.ts` |
-| B-34 non-atomic, unconfirmed deletion | Cascade, transaction, confirmation, re-auth (ADR 0013) | `account-delete.int.test.ts`, `schema.int.test.ts` |
-| B-35 signature state cached in session | `hasSigned` from DB per request (ADR 0002) | `viewer.int.test.ts` |
-| B-36 strokes lost outside canvas | Pointer capture, serialise on pointerup and submit (ADR 0010) | `signature-pad.spec.ts` |
-| B-37 no touch support | Pointer Events, `touch-action: none` (ADR 0010) | `signature-pad.spec.ts` (mobile project) |
-| B-38 wrong coordinates, blurry, invalid size | `getBoundingClientRect`, DPR backing store, responsive aspect ratio (ADR 0010) | `signature-pad.core.test.ts`, `signature-pad.spec.ts` |
-| B-39 O(n^2) redraw, no clear | Incremental segments, clear button (ADR 0010) | `signature-pad.core.test.ts`, `signature-pad.spec.ts` |
-| B-40 cursor-following hint throws | Not rebuilt; links look like links; no per-page stray scripts | `security-headers.spec.ts` (no console errors) |
-| B-41 dead code and assets | Fresh code, knip, ESLint unused vars, stylelint (ADR 0015) | `pnpm lint` |
-| B-42 broken internal link | Home links to real routes; link crawler (ADR 0015) | `links.spec.ts` |
-| B-43 catch-all redirect, missing icons | Real 404, real icon set and manifest (ADR 0008, 0010) | `error-pages.int.test.ts`, `links.spec.ts` |
-| B-44 no route for `/` | `GET /`, `/home` 301 | `pages.int.test.ts` |
-| B-45 missing titles | Per-page `title` in view model, default layout once (ADR 0014) | `pages.int.test.ts` (unique titles across all pages) |
-| B-46 six nav partials | One `site-header` partial with `aria-current` (ADR 0014) | `pages.int.test.ts` |
-| B-47 delete offered to non-signers | Link only when `hasSigned`, confirmation page (ADR 0013) | `edit.int.test.ts`, `delete.int.test.ts` |
-| B-48 inconsistent redirects, no feedback | Route table, flash, named guards (ROUTES 1, ADR 0008) | route and flash tests |
-| B-49 double-submit races | Idempotent inserts/upserts, `form-guard.ts`; a no-JS register double submit ends on the 403 or the F-20 page, never in an error (ADR 0004, 0009, 0010) | `sign.int.test.ts`, `register.int.test.ts`, `journey-sign.spec.ts` |
-| B-50 god files | Feature modules, boundaries (ADR 0001) | ESLint boundaries |
-| B-51 mixed styles, hand-rolled promises | TS strict ESM, async/await, Prettier | lint, typecheck |
-| B-52 redundant sequential queries | Joined queries, `Promise.all` (DATA-MODEL 4) | code review |
-| B-53 misleading names | Naming map (DATA-MODEL 1), one field name per concept (section 8) | code review |
-| B-54 DELETE helpers return undefined | Boolean from `rowCount` (ADR 0013) | `*.service.test.ts` |
-| B-55 FULL OUTER JOIN | LEFT JOIN in `findAccount` | `edit.int.test.ts` |
-| B-56 validation by DB error | Zod at the edge, DB as backstop (ADR 0008) | `fields.test.ts` |
-| B-57 hard-coded config | `config/env.ts` Zod (section 16) | `env.test.ts` |
-| B-58 debug logging | pino, `no-console` | ESLint |
-| B-59 repo and tooling hygiene | project-scaffold templates, tests, CI, static before session (section 5.1), `pnpm dev:setup` | `pnpm verify`, CI (`dev-setup-smoke`) |
-| B-60 destructive schema scripts | Drizzle migrations, seed (DATA-MODEL 5, 6) | `global-setup.ts`, `seed.int.test.ts` |
-| B-61 constraints and indexes | DATA-MODEL 2, 3 | `schema.int.test.ts` |
-| B-62 outdated README | Rewritten in Etappe 3 with `portfolio-readme`, media in `docs/media/` | Etappe 3 review |
-| B-63 no viewport, fixed layout | Viewport meta, fluid layout, responsive canvas (ADR 0010, 0014) | `a11y.spec.ts` (320px) |
-| B-64 charset position | `<meta charset>` first in layout | `html-validity.spec.ts` |
-| B-65 controls without labels | `form-field` partial with `label for` + `id` | `a11y.spec.ts`, `html-validity.spec.ts` |
-| B-66 focus indicators removed | Global `:focus-visible` ring (ADR 0014) | `a11y.spec.ts` (focus visible) |
-| B-67 no semantic structure | Landmarks, one `h1`, lists, skip link (layout 15.1) | `pages.int.test.ts`, axe |
-| B-68 errors not announced or linked | Error summary + `aria-invalid` + `aria-describedby` (ADR 0008) | `register.int.test.ts`, `a11y.spec.ts` |
-| B-69 poor image alternatives, oversized icons | No icon images; text links naming the destination; `alt=""` for decoration | axe, `pages.int.test.ts` |
-| B-70 inaccessible canvas | Labelled canvas, typed-name alternative, `<noscript>` (ADR 0005, 0010) | `journey-typed.spec.ts`, axe |
-| B-71 `autocomplete="off"` | Correct autocomplete tokens (ROUTES 3, 4) | `pages`/`register` int tests, axe |
-| B-72 wrong input types | `type="password"`, `type="url"`, `type="email"`, `inputmode="numeric"` | `html-validity.spec.ts`, int tests |
-| B-73 invalid HTML | One layout, W3C Nu validator over every page state (ADR 0015) | `html-validity.spec.ts`, `validate-html.mjs` |
-| B-74 tiny text, low contrast, faux bold, clipped footer | maw tokens, 16px body, two loaded weights, no fixed heights (ADR 0014) | design review, axe contrast |
-| B-75 spelling errors | Copy review, `plural` helper, F-77 | copy-lint, `helpers.test.ts` |
-| B-76 no tokens | `tokens.css`, stylelint colour bans | `lint:css` |
-| B-77 copy-paste CSS | BEM component files | `check:utilities`, review |
-| B-78 magic numbers, spacer divs | Spacing scale, gap, sticky header, `scroll-padding-top` | `lint:css`, design review |
-| B-79 problematic selectors | BEM only, no IDs, ASCII kebab-case | `lint:css` |
-| B-80 duplicate declarations | stylelint duplicate/shorthand rules | `lint:css` |
-| B-81 floats, `100vw`, overlapping header | Flex/grid, `width: 100%`, sticky header | `a11y.spec.ts` (no horizontal scroll) |
-| B-82 four unbuilt stylesheets | One hashed, minified CSS (ADR 0010) | `build`, `security-headers.spec.ts` (cache headers) |
-| B-83 hover-only feedback, motion | `:focus-visible` pairs, `motion-safe` (ADR 0014) | `check:utilities` (motion audit), `a11y.spec.ts` (reduced motion) |
-| Section F (no SQLi, CSRF on all POSTs) | Drizzle parameters, `sql.raw` ban, CSRF on every POST | ESLint, `csrf.int.test.ts` |
+| BUGS                                                    | Resolution                                                                                                                                             | Verified by                                                                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| B-01 stored XSS                                         | No triple-stash (check-views.mjs), escaped `supporter-row` partial, URL validation, CSP `script-src 'self'` (ADR 0014, 0011)                           | `supporters.int.test.ts`, `xss.spec.ts`                                                                                      |
+| B-02 committed DB credentials                           | Env only, `.env.example`, `.gitignore`, gitleaks pre-commit + CI (ADR 0011); rotation is Marina's PLAN step 0                                          | `secrets:scan` in verify and CI                                                                                              |
+| B-03 hard-coded session secret                          | `SESSION_SECRET` list from env, min 32 chars (ADR 0002)                                                                                                | `env.test.ts`                                                                                                                |
+| B-04 client-side session, PII in cookie                 | Redis store, opaque id, hardened app-scoped cookie, regenerate on every identity change (ADR 0002)                                                     | `session.int.test.ts`                                                                                                        |
+| B-05 ghost sessions                                     | Viewer loader per request, regenerate instead of destroy (ADR 0002)                                                                                    | `viewer.int.test.ts`, `session.int.test.ts` (no 500)                                                                         |
+| B-06 POST routes without auth                           | Guards on every protected route, GET and POST                                                                                                          | `route-matrix.int.test.ts`                                                                                                   |
+| B-07 missing signed guards                              | `requireSigned` / `requireNotSigned`, idempotent insert (ADR 0004)                                                                                     | `route-matrix`, `sign.int.test.ts`, `thank-you.int.test.ts`                                                                  |
+| B-08 GET logout                                         | `POST /logout` with CSRF (ADR 0003)                                                                                                                    | `logout.int.test.ts`                                                                                                         |
+| B-09 user enumeration                                   | One code path, dummy hash, same 401 view (ADR 0009)                                                                                                    | `auth.service.test.ts`, `login.int.test.ts`                                                                                  |
+| B-10 no rate limit, no headers                          | helmet CSP (ADR 0011), configurable Redis limiters with IPv6 /56 and HMAC email keys (ADR 0012)                                                        | `headers.int.test.ts`, `rate-limit.int.test.ts`, `rate-limits.int.test.ts` (real routes, step 2b), `rate-limit-keys.test.ts` |
+| B-11 weak password handling                             | 12..128, argon2id, `type="password"`, re-auth (ADR 0009)                                                                                               | `fields.test.ts`, `edit.int.test.ts`                                                                                         |
+| B-12 hashes and PII in logs                             | pino redaction, ids-only events (ADR 0011); no reversible email in Redis (ADR 0012)                                                                    | `logger.test.ts`                                                                                                             |
+| B-13 stack traces leak                                  | Central error handler, error pages (ADR 0008)                                                                                                          | `error-pages.int.test.ts`                                                                                                    |
+| B-14 EOL dependencies                                   | Node 26, Express 5, csrf-csrf, Drizzle, exact current versions, Dependabot (section 20)                                                                | CI, Dependabot                                                                                                               |
+| B-15 private contact data in footer                     | `CONTACT_URL`, credit only (ADR 0011)                                                                                                                  | `pages.int.test.ts`                                                                                                          |
+| B-16 CDN scripts, Google Fonts                          | No jQuery, self-hosted fonts, CSP `default-src 'self'` (ADR 0010, 0011)                                                                                | `security-headers.spec.ts`                                                                                                   |
+| B-17 `_blank` without rel                               | Same-tab links, `rel="noopener noreferrer nofollow ugc"`, `_blank` banned (ADR 0014)                                                                   | `check-views.mjs`, `supporters.int.test.ts`                                                                                  |
+| B-18 homepage not validated                             | `optionalHomepage` rule, DB CHECK (ROUTES 1, DATA-MODEL 2.3)                                                                                           | `fields.test.ts`, `schema.int.test.ts`                                                                                       |
+| B-19 signature payload not validated                    | Validation pipeline, re-encode, bytea, limits (ADR 0004)                                                                                               | `signature-image.test.ts`, `sign.int.test.ts`                                                                                |
+| B-20 swallowed errors, hanging requests                 | Express 5 async + error handler (ADR 0008)                                                                                                             | `error-pages.int.test.ts`                                                                                                    |
+| B-21 unreturned promises                                | async/await, `no-floating-promises`                                                                                                                    | ESLint                                                                                                                       |
+| B-22 login hangs without signature                      | `findForLogin` LEFT JOIN (ADR 0009)                                                                                                                    | `login.int.test.ts`                                                                                                          |
+| B-23 wrong password shows register page                 | Same login view, 401 (ADR 0009)                                                                                                                        | `login.int.test.ts`                                                                                                          |
+| B-24 every error is "email taken", input lost           | Field-level Zod messages, values kept, 23505 mapping (ADR 0008)                                                                                        | `register.int.test.ts`                                                                                                       |
+| B-25 case-sensitive email                               | Lowercase + `lower(email)` unique index (ADR 0007)                                                                                                     | `register.int.test.ts`, `login.int.test.ts`                                                                                  |
+| B-26 empty age crashes onboarding                       | `''` -> `NULL` preprocessing                                                                                                                           | `onboarding.int.test.ts` (all combinations)                                                                                  |
+| B-27 age validation                                     | Integer 1..120, `inputmode="numeric"`, DB CHECK                                                                                                        | `fields.test.ts`, `schema.int.test.ts`                                                                                       |
+| B-28 onboarding revisit hangs                           | Upsert + prefill                                                                                                                                       | `onboarding.int.test.ts`                                                                                                     |
+| B-29 edit reports success on failure, not atomic        | Transaction, Result types, 422 (ADR 0008)                                                                                                              | `edit.int.test.ts`                                                                                                           |
+| B-30 signers without profile hidden                     | LEFT JOIN profiles, shared base query (ADR 0006)                                                                                                       | `supporters.int.test.ts`                                                                                                     |
+| B-31 unordered, unpaginated                             | ORDER BY created_at, id + index + pagination (ADR 0006)                                                                                                | `supporters.int.test.ts`                                                                                                     |
+| B-32 city links break                                   | `encodeURIComponent`, normalisation, `pg_c_utf8` (ADR 0007)                                                                                            | `city.int.test.ts`, `supporters.spec.ts`                                                                                     |
+| B-33 city heading from first row                        | Heading from param, empty state (ADR 0007)                                                                                                             | `city.int.test.ts`                                                                                                           |
+| B-34 non-atomic, unconfirmed deletion                   | Cascade, transaction, confirmation, re-auth (ADR 0013)                                                                                                 | `account-delete.int.test.ts`, `schema.int.test.ts`                                                                           |
+| B-35 signature state cached in session                  | `hasSigned` from DB per request (ADR 0002)                                                                                                             | `viewer.int.test.ts`                                                                                                         |
+| B-36 strokes lost outside canvas                        | Pointer capture, serialise on pointerup and submit (ADR 0010)                                                                                          | `signature-pad.spec.ts`                                                                                                      |
+| B-37 no touch support                                   | Pointer Events, `touch-action: none` (ADR 0010)                                                                                                        | `signature-pad.spec.ts` (mobile project)                                                                                     |
+| B-38 wrong coordinates, blurry, invalid size            | `getBoundingClientRect`, DPR backing store, responsive aspect ratio (ADR 0010)                                                                         | `signature-pad.core.test.ts`, `signature-pad.spec.ts`                                                                        |
+| B-39 O(n^2) redraw, no clear                            | Incremental segments, clear button (ADR 0010)                                                                                                          | `signature-pad.core.test.ts`, `signature-pad.spec.ts`                                                                        |
+| B-40 cursor-following hint throws                       | Not rebuilt; links look like links; no per-page stray scripts                                                                                          | `security-headers.spec.ts` (no console errors)                                                                               |
+| B-41 dead code and assets                               | Fresh code, knip, ESLint unused vars, stylelint (ADR 0015)                                                                                             | `pnpm lint`                                                                                                                  |
+| B-42 broken internal link                               | Home links to real routes; link crawler (ADR 0015)                                                                                                     | `links.spec.ts`                                                                                                              |
+| B-43 catch-all redirect, missing icons                  | Real 404, real icon set and manifest (ADR 0008, 0010)                                                                                                  | `error-pages.int.test.ts`, `links.spec.ts`                                                                                   |
+| B-44 no route for `/`                                   | `GET /`, `/home` 301                                                                                                                                   | `pages.int.test.ts`                                                                                                          |
+| B-45 missing titles                                     | Per-page `title` in view model, default layout once (ADR 0014)                                                                                         | `pages.int.test.ts` (unique titles across all pages)                                                                         |
+| B-46 six nav partials                                   | One `site-header` partial with `aria-current` (ADR 0014)                                                                                               | `pages.int.test.ts`                                                                                                          |
+| B-47 delete offered to non-signers                      | Link only when `hasSigned`, confirmation page (ADR 0013)                                                                                               | `edit.int.test.ts`, `delete.int.test.ts`                                                                                     |
+| B-48 inconsistent redirects, no feedback                | Route table, flash, named guards (ROUTES 1, ADR 0008)                                                                                                  | route and flash tests                                                                                                        |
+| B-49 double-submit races                                | Idempotent inserts/upserts, `form-guard.ts`; a no-JS register double submit ends on the 403 or the F-20 page, never in an error (ADR 0004, 0009, 0010) | `sign.int.test.ts`, `register.int.test.ts`, `journey-sign.spec.ts`                                                           |
+| B-50 god files                                          | Feature modules, boundaries (ADR 0001)                                                                                                                 | ESLint boundaries                                                                                                            |
+| B-51 mixed styles, hand-rolled promises                 | TS strict ESM, async/await, Prettier                                                                                                                   | lint, typecheck                                                                                                              |
+| B-52 redundant sequential queries                       | Joined queries, `Promise.all` (DATA-MODEL 4)                                                                                                           | code review                                                                                                                  |
+| B-53 misleading names                                   | Naming map (DATA-MODEL 1), one field name per concept (section 8)                                                                                      | code review                                                                                                                  |
+| B-54 DELETE helpers return undefined                    | Boolean from `rowCount` (ADR 0013)                                                                                                                     | `*.service.test.ts`                                                                                                          |
+| B-55 FULL OUTER JOIN                                    | LEFT JOIN in `findAccount`                                                                                                                             | `edit.int.test.ts`                                                                                                           |
+| B-56 validation by DB error                             | Zod at the edge, DB as backstop (ADR 0008)                                                                                                             | `fields.test.ts`                                                                                                             |
+| B-57 hard-coded config                                  | `config/env.ts` Zod (section 16)                                                                                                                       | `env.test.ts`                                                                                                                |
+| B-58 debug logging                                      | pino, `no-console`                                                                                                                                     | ESLint                                                                                                                       |
+| B-59 repo and tooling hygiene                           | project-scaffold templates, tests, CI, static before session (section 5.1), idempotent `pnpm dev:setup` and `pnpm demo` (ADR 0019)                     | `pnpm verify`, CI (`dev-setup-smoke`), Gate 1b (second `pnpm demo`)                                                          |
+| B-60 destructive schema scripts                         | Drizzle migrations, insert-only seed behind `SEED_ALLOW` that skips databases with non-demo users (DATA-MODEL 5, 6; ADR 0016, 0019)                    | `global-setup.ts`, `seed.int.test.ts`                                                                                        |
+| B-61 constraints and indexes                            | DATA-MODEL 2, 3                                                                                                                                        | `schema.int.test.ts`                                                                                                         |
+| B-62 outdated README                                    | Rewritten in Etappe 3 with `portfolio-readme`, media in `docs/media/`                                                                                  | Etappe 3 review                                                                                                              |
+| B-63 no viewport, fixed layout                          | Viewport meta, fluid layout, responsive canvas (ADR 0010, 0014)                                                                                        | `a11y.spec.ts` (320px)                                                                                                       |
+| B-64 charset position                                   | `<meta charset>` first in layout                                                                                                                       | `html-validity.spec.ts`                                                                                                      |
+| B-65 controls without labels                            | `form-field` partial with `label for` + `id`                                                                                                           | `a11y.spec.ts`, `html-validity.spec.ts`                                                                                      |
+| B-66 focus indicators removed                           | Global `:focus-visible` ring (ADR 0014)                                                                                                                | `a11y.spec.ts` (focus visible)                                                                                               |
+| B-67 no semantic structure                              | Landmarks, one `h1`, lists, skip link (layout 15.1)                                                                                                    | `pages.int.test.ts`, axe                                                                                                     |
+| B-68 errors not announced or linked                     | Error summary + `aria-invalid` + `aria-describedby` (ADR 0008)                                                                                         | `register.int.test.ts`, `a11y.spec.ts`                                                                                       |
+| B-69 poor image alternatives, oversized icons           | No icon images; text links naming the destination; `alt=""` for decoration                                                                             | axe, `pages.int.test.ts`                                                                                                     |
+| B-70 inaccessible canvas                                | Labelled canvas, typed-name alternative, `<noscript>` (ADR 0005, 0010)                                                                                 | `journey-typed.spec.ts`, axe                                                                                                 |
+| B-71 `autocomplete="off"`                               | Correct autocomplete tokens (ROUTES 3, 4)                                                                                                              | `pages`/`register` int tests, axe                                                                                            |
+| B-72 wrong input types                                  | `type="password"`, `type="url"`, `type="email"`, `inputmode="numeric"`                                                                                 | `html-validity.spec.ts`, int tests                                                                                           |
+| B-73 invalid HTML                                       | One layout, W3C Nu validator over every page state (ADR 0015)                                                                                          | `html-validity.spec.ts`, `validate-html.mjs`                                                                                 |
+| B-74 tiny text, low contrast, faux bold, clipped footer | maw tokens, 16px body, two loaded weights, no fixed heights (ADR 0014)                                                                                 | design review, axe contrast                                                                                                  |
+| B-75 spelling errors                                    | Copy review, `plural` helper, F-77                                                                                                                     | copy-lint, `helpers.test.ts`                                                                                                 |
+| B-76 no tokens                                          | `tokens.css`, stylelint colour bans                                                                                                                    | `lint:css`                                                                                                                   |
+| B-77 copy-paste CSS                                     | BEM component files                                                                                                                                    | `check:utilities`, review                                                                                                    |
+| B-78 magic numbers, spacer divs                         | Spacing scale, gap, sticky header, `scroll-padding-top`                                                                                                | `lint:css`, design review                                                                                                    |
+| B-79 problematic selectors                              | BEM only, no IDs, ASCII kebab-case                                                                                                                     | `lint:css`                                                                                                                   |
+| B-80 duplicate declarations                             | stylelint duplicate/shorthand rules                                                                                                                    | `lint:css`                                                                                                                   |
+| B-81 floats, `100vw`, overlapping header                | Flex/grid, `width: 100%`, sticky header                                                                                                                | `a11y.spec.ts` (no horizontal scroll)                                                                                        |
+| B-82 four unbuilt stylesheets                           | One hashed, minified CSS (ADR 0010)                                                                                                                    | `build`, `security-headers.spec.ts` (cache headers)                                                                          |
+| B-83 hover-only feedback, motion                        | `:focus-visible` pairs, `motion-safe` (ADR 0014)                                                                                                       | `check:utilities` (motion audit), `a11y.spec.ts` (reduced motion)                                                            |
+| Section F (no SQLi, CSRF on all POSTs)                  | Drizzle parameters, `sql.raw` ban, CSRF on every POST                                                                                                  | ESLint, `csrf.int.test.ts`                                                                                                   |
 
 ## 22. Risks and open points
 
 1. **FEATURES amendments** (section 2.2) were reviewed by the architecture critic; the scaffold phase applies them to
    `docs/FEATURES.md`. F-88 to F-91 are already in FEATURES.md. Marina can still veto any of them.
 2. **@napi-rs/canvas in distroless**: proven locally on macOS (Node 22). The canvas smoke check (ADR 0005) runs inside
-   the built image on amd64 (CI) and arm64 (local `pnpm verify`) from phase 1 on. Fallback documented in ADR 0005.
+   the built image on amd64 (the PR's CI `e2e` job; not on `main`, ADR 0018) and arm64 (local `pnpm verify`) from
+   phase 1 on. Fallback documented in ADR 0005.
 3. **No-JS double submit of the register form**: the second POST arrives either after the first regenerated the
    session (403 "This form has expired"; the account exists and the browser holds the new cookie, so "home" shows the
-   user signed in) or concurrently (422 "An account with this email already exists."). Neither is an error state or a
-   500. JS users are protected by `form-guard.ts`. There is deliberately no register-as-login branch (ADR 0009).
+   user signed in) or concurrently (422 "An account with this email already exists."). Neither is an error state or a 500. JS users are protected by `form-guard.ts`. There is deliberately no register-as-login branch (ADR 0009).
 4. **Nu validator image** tag and digest are chosen in the scaffold and written to `docker/nu-validator.Dockerfile`.
 5. Offset pagination is a conscious deviation from the skill (ADR 0006).
 6. **Typed-name coverage**: Latin (incl. Vietnamese), Greek and Cyrillic only; other scripts must draw or
@@ -853,38 +900,79 @@ Every item from BUGS.md maps to a design decision and a place where it is verifi
    database-per-file harness; `project-scaffold` uses `retries: 0`, no longer claims PLAN.md pins pnpm 10, and its
    `references/conventions.md` makes the petition choices (no `webServer`, isolated e2e project, `workflow_run`
    release, docker-compose Dependabot, per-file test databases) binding for all three projects.
+9. **Release workflow untested while private** (ADR 0018): `images` and `deploy` never run before Marina makes the
+   repository public. Mitigation: actionlint at Gate 1a, the PR `e2e` job builds the same Dockerfile, and the
+   presentation phase's hand-over names `gh workflow run release.yml --ref main` as the first live run.
+10. **Conventions drift** (ADR 0019): `project-scaffold/references/conventions.md` §1 still describes fnm and
+    `/usr/local/bin/git`, and §9 has no CI cost rule. Petition follows PLAN.md and ADR 0018/0019; the shared file should
+    be updated before social-network is built, so it does not re-decide them.
+11. **Phase 0 depends on the user's shell**: `pnpm` is the corepack shim of the nvm default Node (24.21) that the
+    user's profile puts on `PATH`; `.devenv.sh` only prepends Node 26. If that install is removed, `pnpm` disappears.
+    The once-per-session check in BUILD-ORDER Phase 0 catches it; agents stop and report instead of repairing.
+12. **Dev ports shared across projects**: imageboard and petition both default to 5432/6379 for their dev
+    infrastructure, and `pnpm demo` publishes them too. Running both projects' dev or demo stacks at once needs
+    `POSTGRES_PORT`/`REDIS_PORT` in one `.env`. The e2e stacks (8181, 8182) never publish database ports.
 
 ## 23. Critique resolution (2026-11-15)
 
-| # | Severity | Finding | Resolution | Where |
-|---|---|---|---|---|
-| 1 | critical | Hard-coded rate limits make integration and E2E suites red | `RateLimitConfig` in `AppDeps`, env `RATE_LIMIT_GLOBAL_MAX`/`RATE_LIMIT_AUTH_MAX`; `createTestApp` limits 10,000 and fresh prefix per call; only `rate-limit.int.test.ts` uses production limits; E2E raises limits, no 429 in E2E; worker `storageState` | ADR 0012, 0015, 0017 |
-| 2 | major | `ipv6Subnet` ignored with custom key generators | `keyByIp = ipKeyGenerator(req.ip, 56)` everywhere, no `ipv6Subnet`, /56 unit test | ADR 0012 |
-| 3 | major | `session.destroy()` deletes `req.session`, later steps throw 500 | `regenerate` in `enforceAbsoluteLifetime` and `loadViewer`; no-500 regression tests | ADR 0002 |
-| 4 | major | No CSRF token on 422/401 re-renders; viewer loaded too late; flash consumed on redirects | `loadViewer` right after session; `renderPage` adds token, viewer and flash for every HTML response; resubmit round-trip tests | ADR 0002, 0003, 0008, section 5.1 |
-| 5 | major | Phase 2a cannot sign in; F-47 depends on merge order; partial parameters can break other modules | test-only `POST /__test/sign-in` + `signIn`; `countSupporters` override, F-47 in 2b; partial parameters frozen in phase 1 | ADR 0017, 0006, 0014, BUILD-ORDER rules 4, 5 |
-| 6 | major | Parallel local gates collide; merges not re-verified | isolated e2e compose project (`petition-e2e`), no published DB/Redis ports in E2E; parallel units in one tree with scoped checks, one gate per phase (superseded the worktree plan in the 2026-11-15 consistency pass) | ADR 0017, BUILD-ORDER rules 6, 7 |
-| 7 | major | Shared integration database, `truncateAll` | one database per test file from a migrated template; no truncate | ADR 0017 |
-| 8 | major | E2E specs share a persistent seeded database | fresh tmpfs stack per run, `down -v`; `seed-readonly` project first; unique cities and relative counts; `retries: 0` | ADR 0015, 0017 |
-| 9 | major | No one-command setup | `pnpm dev:setup`, `pnpm setup:env` and `pnpm demo` (cross-project names); CI uses `setup-env.mjs`. No script is named `setup` because `pnpm setup` is a pnpm built-in | ADR 0015 |
-| 10 | major | No privacy notice, imprint or erasure path | F-88 to F-91, `GET /privacy`, `IMPRINT_URL`, disclosure on register/onboarding, `pnpm admin:erase` | ADR 0016, FEATURES section 18 |
-| 11 | minor | Template validates email before trimming | `z.string().trim().toLowerCase()...pipe(z.email())`, tests; skill fix listed as follow-up | ADR 0007, ROUTES section 1 |
-| 12 | minor | Asset pipeline collisions | separate `.dev/` and `dist/public` outputs, cleaned builds, esbuild `[name]-[hash]`, dev ignores manifests, `.dockerignore` | ADR 0010 |
-| 13 | minor | Typed-name rule wider than font coverage | allowed set from the shipped glyphs (fontkit, drift test), `’` normalised, Noto Sans fallback for Vietnamese, Greek, Cyrillic; other scripts documented as a limitation | ADR 0005 |
-| 14 | minor | Distroless smoke check too shallow, one architecture | render + validator round trip + ink count inside the image, amd64 in CI and arm64 locally | ADR 0005 |
-| 15 | minor | HSTS/UIR tied to `NODE_ENV` | one `isHttps` switch (`COOKIE_SECURE`) | ADR 0011 |
-| 16 | minor | Session cookie name not app-scoped | `petition.sid` / `__Host-petition.sid` | ADR 0002 |
-| 17 | minor | BREACH exposure | compression only on `/assets` and `/fonts` | ADR 0010 |
-| 18 | minor | argon2 memory without concurrency limit | semaphore (2 running, 64 queued), 384 MiB container minimum; parameters kept for cross-project consistency | ADR 0009 |
-| 19 | minor | Reversible email key, lockout by junk attempts | HMAC-SHA256 with an HKDF key; login limits count failures only, per email + subnet and a higher per-email backstop | ADR 0012 |
-| 20 | minor | shared/db cycle, signature image in shared, duplicated credential logic | viewer repository and credentials exported by auth and injected; `src/tools/` for seed; image code inside the signature feature | ADR 0001, 0009 |
-| 21 | minor | Over-engineering | Nu validator only; register-as-login dropped; `/healthz` dropped, F-74 amended | ADR 0015, 0009, 0011 |
-| 22 | minor | Four nav links; two accent buttons on the sign page | F-14 amended (about to the footer for signed-in users); typed-name submit `button--outlined` | ADR 0014 |
-| 23 | minor | Release without CI gate, Dependabot gaps, Chromium only, retries | `workflow_run` after green CI; docker-compose and `/docker` ecosystems; WebKit iPhone project for the pad; no retries | ADR 0015 |
-| 24 | minor | Session expiry untestable | injected `SessionPolicy` with clock and millisecond values, TTL asserted with `redis.pTTL()` | ADR 0002 |
-| 25 | minor | pnpm 10 pinned with a wrong justification | **kept on purpose** (shared templates, 10 line maintained); upgrade belongs to the skill for all three projects; wrong claim corrected | ADR 0015 |
-| 26 | minor | Seed bypasses its production guard | `SEED_ALLOW=true` plus foreign-email guard; seed only in `demo` and `e2e` profiles | ADR 0016 |
+| #   | Severity | Finding                                                                                          | Resolution                                                                                                                                                                                                                                                | Where                                        |
+| --- | -------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| 1   | critical | Hard-coded rate limits make integration and E2E suites red                                       | `RateLimitConfig` in `AppDeps`, env `RATE_LIMIT_GLOBAL_MAX`/`RATE_LIMIT_AUTH_MAX`; `createTestApp` limits 10,000 and fresh prefix per call; only `rate-limit.int.test.ts` uses production limits; E2E raises limits, no 429 in E2E; worker `storageState` | ADR 0012, 0015, 0017                         |
+| 2   | major    | `ipv6Subnet` ignored with custom key generators                                                  | `keyByIp = ipKeyGenerator(req.ip, 56)` everywhere, no `ipv6Subnet`, /56 unit test                                                                                                                                                                         | ADR 0012                                     |
+| 3   | major    | `session.destroy()` deletes `req.session`, later steps throw 500                                 | `regenerate` in `enforceAbsoluteLifetime` and `loadViewer`; no-500 regression tests                                                                                                                                                                       | ADR 0002                                     |
+| 4   | major    | No CSRF token on 422/401 re-renders; viewer loaded too late; flash consumed on redirects         | `loadViewer` right after session; `renderPage` adds token, viewer and flash for every HTML response; resubmit round-trip tests                                                                                                                            | ADR 0002, 0003, 0008, section 5.1            |
+| 5   | major    | Phase 2a cannot sign in; F-47 depends on merge order; partial parameters can break other modules | test-only `POST /__test/sign-in` + `signIn`; `countSupporters` override, F-47 in 2b; partial parameters frozen in phase 1                                                                                                                                 | ADR 0017, 0006, 0014, BUILD-ORDER rules 4, 5 |
+| 6   | major    | Parallel local gates collide; merges not re-verified                                             | isolated e2e compose project (`petition-e2e`), no published DB/Redis ports in E2E; parallel units in one tree with scoped checks, one gate per phase (superseded the worktree plan in the 2026-11-15 consistency pass)                                    | ADR 0017, BUILD-ORDER rules 6, 7             |
+| 7   | major    | Shared integration database, `truncateAll`                                                       | one database per test file from a migrated template; no truncate                                                                                                                                                                                          | ADR 0017                                     |
+| 8   | major    | E2E specs share a persistent seeded database                                                     | fresh tmpfs stack per run, `down -v`; `seed-readonly` project first; unique cities and relative counts; `retries: 0`                                                                                                                                      | ADR 0015, 0017                               |
+| 9   | major    | No one-command setup                                                                             | `pnpm dev:setup`, `pnpm setup:env` and `pnpm demo` (cross-project names); CI uses `setup-env.mjs`. No script is named `setup` because `pnpm setup` is a pnpm built-in                                                                                     | ADR 0015                                     |
+| 10  | major    | No privacy notice, imprint or erasure path                                                       | F-88 to F-91, `GET /privacy`, `IMPRINT_URL`, disclosure on register/onboarding, `pnpm admin:erase`                                                                                                                                                        | ADR 0016, FEATURES section 18                |
+| 11  | minor    | Template validates email before trimming                                                         | `z.string().trim().toLowerCase()...pipe(z.email())`, tests; skill fix listed as follow-up                                                                                                                                                                 | ADR 0007, ROUTES section 1                   |
+| 12  | minor    | Asset pipeline collisions                                                                        | separate `.dev/` and `dist/public` outputs, cleaned builds, esbuild `[name]-[hash]`, dev ignores manifests, `.dockerignore`                                                                                                                               | ADR 0010                                     |
+| 13  | minor    | Typed-name rule wider than font coverage                                                         | allowed set from the shipped glyphs (fontkit, drift test), `’` normalised, Noto Sans fallback for Vietnamese, Greek, Cyrillic; other scripts documented as a limitation                                                                                   | ADR 0005                                     |
+| 14  | minor    | Distroless smoke check too shallow, one architecture                                             | render + validator round trip + ink count inside the image, amd64 in CI and arm64 locally                                                                                                                                                                 | ADR 0005                                     |
+| 15  | minor    | HSTS/UIR tied to `NODE_ENV`                                                                      | one `isHttps` switch (`COOKIE_SECURE`)                                                                                                                                                                                                                    | ADR 0011                                     |
+| 16  | minor    | Session cookie name not app-scoped                                                               | `petition.sid` / `__Host-petition.sid`                                                                                                                                                                                                                    | ADR 0002                                     |
+| 17  | minor    | BREACH exposure                                                                                  | compression only on `/assets` and `/fonts`                                                                                                                                                                                                                | ADR 0010                                     |
+| 18  | minor    | argon2 memory without concurrency limit                                                          | semaphore (2 running, 64 queued), 384 MiB container minimum; parameters kept for cross-project consistency                                                                                                                                                | ADR 0009                                     |
+| 19  | minor    | Reversible email key, lockout by junk attempts                                                   | HMAC-SHA256 with an HKDF key; login limits count failures only, per email + subnet and a higher per-email backstop                                                                                                                                        | ADR 0012                                     |
+| 20  | minor    | shared/db cycle, signature image in shared, duplicated credential logic                          | viewer repository and credentials exported by auth and injected; `src/tools/` for seed; image code inside the signature feature                                                                                                                           | ADR 0001, 0009                               |
+| 21  | minor    | Over-engineering                                                                                 | Nu validator only; register-as-login dropped; `/healthz` dropped, F-74 amended                                                                                                                                                                            | ADR 0015, 0009, 0011                         |
+| 22  | minor    | Four nav links; two accent buttons on the sign page                                              | F-14 amended (about to the footer for signed-in users); typed-name submit `button--outlined`                                                                                                                                                              | ADR 0014                                     |
+| 23  | minor    | Release without CI gate, Dependabot gaps, Chromium only, retries                                 | `workflow_run` after green CI; docker-compose and `/docker` ecosystems; WebKit iPhone project for the pad; no retries                                                                                                                                     | ADR 0015                                     |
+| 24  | minor    | Session expiry untestable                                                                        | injected `SessionPolicy` with clock and millisecond values, TTL asserted with `redis.pTTL()`                                                                                                                                                              | ADR 0002                                     |
+| 25  | minor    | pnpm 10 pinned with a wrong justification                                                        | **kept on purpose** (shared templates, 10 line maintained); upgrade belongs to the skill for all three projects; wrong claim corrected                                                                                                                    | ADR 0015                                     |
+| 26  | minor    | Seed bypasses its production guard                                                               | `SEED_ALLOW=true` plus foreign-email guard; seed only in `demo` and `e2e` profiles                                                                                                                                                                        | ADR 0016                                     |
 
 Partially adopted, with the reason recorded in the ADR: #13 (no CJK/Arabic/Indic coverage, ADR 0005), #18 (semaphore
 instead of lower parameters, ADR 0009), #19 (email + subnet plus backstop rather than one of the two, ADR 0012), #25
 (version kept, ADR 0015). Rejected: none.
+
+### 23.1 Re-review after the consistency pass (2026-11-16)
+
+Adversarial re-review of these docs against `project-scaffold/references/conventions.md`, the CI cost rule and the new
+machine. All findings adopted; decisions in ADR 0018 and ADR 0019.
+
+| #   | Severity | Finding                                                                                                                                                                                                                                 | Resolution                                                                                                                                  | Where                                   |
+| --- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| R1  | blocker  | Phase 0 told agents to install fnm and fix `/usr/local/bin/git`, and bootstrap `~/Code/petition`; neither exists on this machine                                                                                                        | Phase 0 satisfied by `~/.devenv.sh`, every command sources it, bootstrap already done, no machine changes                | BUILD-ORDER Phase 0, ADR 0019 §1        |
+| R2  | blocker  | Gate 1a/1b required the release workflow to build the image on `main`; the CI cost rule skips it while the repo is private                                                                                                              | Gates check "skipped" plus actionlint; PR `e2e` proves the image; `RELEASE_SHA` for tags and deploy                                         | ADR 0018, BUILD-ORDER 1a/1b, section 18 |
+| R3  | blocker  | 1a skeleton could not run: `vitest.config.ts` referenced `test/setup-database.ts` (only in 1b), no DB client/migrate/schema entry for the drift check and the `migrate` service, no view engine or asset resolver for the rendered page | Complete 1a file list; 1b completes the files                                                                                               | BUILD-ORDER 1a, ADR 0019 §4             |
+| R4  | blocker  | `pnpm format:check` (first `verify` step) fails on 19 of the 25 doc files                                                                                                                                                               | 1a runs `pnpm format` once (layout only)                                                                                                    | BUILD-ORDER 1a, ADR 0019 §4             |
+| R5  | major    | knip in `pnpm lint` would flag dependencies the skeleton does not use yet; `assets:glyphs` pointed at a 2a file; `@vitest/coverage-v8` unused                                                                                           | dependencies staged 1a/1b (section 20 "From"), glyph script and data moved to 1b, `test:coverage`, `knip.jsonc` with commented ignores only | ADR 0019 §3                             |
+| R6  | major    | One working tree: a half-written sibling `index.ts` or partial turns every unit's integration tests red                                                                                                                                 | replace `index.ts` last, every saved file parses, sibling failures reported                                                                 | BUILD-ORDER rule 6, ADR 0019 §2         |
+| R7  | major    | "Frozen" (conventions §4, incl. layouts) contradicted units owning phase-1 files, e.g. `main.hbs` in phase 3; phase 3 had no step to apply requests                                                                                     | explicit frozen definition, layout stays frozen, new step 3b                                                                                | BUILD-ORDER rules 2, 3b; ADR 0019 §2    |
+| R8  | major    | Seed refused (exit 1) when non-demo users exist, so a second `pnpm demo` or `pnpm dev:setup` failed after any registration (conventions §5 idempotency)                                                                                 | skip with exit 0 and a warning; guard exported and tested                                                                                   | ADR 0016, 0019 §7, DATA-MODEL 6         |
+| R9  | major    | `setup:env` generated `POSTGRES_PASSWORD` while `DATABASE_URL` is a fixed key, and a new `.env` would lock out the existing volume                                                                                                      | fixed `local-only` like the template, `dev:setup` checks agreement; secrets = empty `SECRET`/`PASSWORD` keys                                | ADR 0015, 0019 §7, section 16           |
+| R10 | major    | e2e app port via `APP_PORT=$E2E_PORT`; compose concatenates `ports`, conventions put the port in the override                                                                                                                           | `!override` on `E2E_PORT`, resolved once by `run-e2e.mjs`, `--remove-orphans`                                                               | ADR 0017, 0019 §6                       |
+| R11 | major    | `webkit-iphone` ran `signature-pad.spec.ts` (which signs) in parallel with the `seed-readonly` totals                                                                                                                                   | `webkit-iphone` depends on `seed-readonly`                                                                                                  | ADR 0015, 0019 §6                       |
+| R12 | major    | `POST /__test/sign-in` expected JSON, but the app has only urlencoded parsers                                                                                                                                                           | router-scoped `express.json({ limit: '1kb' })`                                                                                              | ADR 0017, 0019 §5, section 5.1          |
+| R13 | major    | `no-restricted-imports` banned `test/**` from all of `src/**`, which every integration test needs                                                                                                                                       | ban applies to non-test sources only                                                                                                        | BUILD-ORDER 1a, section 7               |
+| R14 | major    | F-26 on the real login route was asserted nowhere: 1b's limiter test can only use a test-only route, 2a uses raised limits                                                                                                              | `src/__tests__/rate-limits.int.test.ts` in step 2b                                                                                          | ADR 0012, 0019 §9                       |
+| R15 | minor    | `pnpm demo` was a bare compose command that cannot print the URL and login; `stack:down -v` re-decided conventions §5                                                                                                                   | `demo` = `dev-setup.mjs --demo`; `stack:down` without `-v` covering the `demo` profile                                                      | ADR 0015, 0019 §8                       |
+| R16 | minor    | `SEED_ALLOW` and `E2E_BASE_URL` would have landed in `.env.example` ("keys from section 16")                                                                                                                                            | excluded explicitly                                                                                                                         | section 16, ADR 0019 §7                 |
+| R17 | minor    | `test/images.ts` digests could drift from compose (Dependabot updates compose only)                                                                                                                                                     | refs read from `docker-compose.yml`                                                                                                         | ADR 0017, 0019 §5                       |
+| R18 | minor    | `test-results/html/` outside a phase-5 unit's output dir could hold stale pages; four units with default workers oversubscribe one app container                                                                                        | HTML in the run's output dir, `validate-html.mjs [dir]`; `--workers=2` per unit, `workers: CI ? 2 : 4`                                      | BUILD-ORDER phase 5, ADR 0019 §6        |
+| R19 | minor    | CI upload missed `playwright-report/`; template CI steps "Stack logs"/"Tear down" target the dev project                                                                                                                                | upload both folders, drop the two steps                                                                                                     | BUILD-ORDER 1a                          |
+| R20 | minor    | Test titles without requirement ids (conventions §11), so the DoD check is manual                                                                                                                                                       | ids in titles, grep in 5e                                                                                                                   | BUILD-ORDER rule 9 and 5e               |
+| R21 | minor    | ADR 0007 and 0012 still listed skill follow-ups that the pass resolved; outdated `/Users/marina/Code` paths                                                                                                                             | marked resolved; paths corrected                                                                                                            | ADR 0007, 0012, section 1               |

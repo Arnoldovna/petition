@@ -1,0 +1,13 @@
+# Requires git >= 2.31 (lefthook 2 uses `git rev-parse --path-format`).
+pre-commit:
+  parallel: true
+  jobs:
+    - name: gitleaks
+      run: gitleaks git --staged --redact --no-banner
+    - name: lint-staged
+      run: pnpm exec lint-staged
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}

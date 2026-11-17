@@ -14,6 +14,7 @@ colours, magic numbers, IDs and duplicated blocks (B-76 to B-81).
 ## Decision
 
 **Views**
+
 - express-handlebars 9, extension `.hbs`, default layout `main` configured once (B-45), directories
   `src/views/{layouts,partials,pages}` resolved through `src/config/paths.ts`
   (`new URL('../../src/views', import.meta.url)`, valid from both `src/config` and `dist/config`).
@@ -21,7 +22,7 @@ colours, magic numbers, IDs and duplicated blocks (B-76 to B-81).
   `scripts/check-views.mjs` (part of `pnpm lint`) fails on `{{{`, on `target="_blank"`, on `style=` attributes and on
   inline `<script>` without `src`.
 - One layout with fixed slots: `<meta charset="utf-8">` first (B-64), viewport meta (B-63), `<title>{{title}} ·
-  Nonsense Petition</title>` (F-16), skip link, `site-header` partial, `<main id="main" tabindex="-1">`, flash region
+Nonsense Petition</title>` (F-16), skip link, `site-header` partial, `<main id="main" tabindex="-1">`, flash region
   `role="status"`, `site-footer` partial, then module scripts.
 - One navigation partial driven by `viewer` and `currentPath` with `aria-current="page"` (F-14, B-46). Logout is a
   POST form button in the nav (B-08). The maw header pattern allows 1 to 3 links, so the nav never has more than three
@@ -45,11 +46,12 @@ colours, magic numbers, IDs and duplicated blocks (B-76 to B-81).
   content, no exclamation marks). `design-taste-frontend`'s `copy-lint.mjs` runs as a review lens in Phase 4.
 
 **CSS** (skills `modular-css-tailwind4` and `maw-design-system`, binding)
+
 - `src/styles/main.css`: `@import "tailwindcss" source(none);` then `fonts.css`, `tokens.css`, `base.css`,
   `utilities.css`, then every `components/*.css` listed alphabetically. Built by the Tailwind CLI to one minified,
   hashed file (B-82).
 - `tokens.css` copied verbatim from `maw-design-system/templates/tokens.css`; only `--color-accent:
-  var(--color-vermilion)` changes (`#F85D33`). Default palette, shadows and radii are reset.
+var(--color-vermilion)` changes (`#F85D33`). Default palette, shadows and radii are reset.
 - One partial (or page-level block) = one BEM block = one file in `src/styles/components/`. No `@reference` in these
   files (recursion with main.css). `@layer components`, logical properties, container queries for components,
   `motion-safe` for every transition, global `:focus-visible` ring in `base.css` (B-66, B-83).

@@ -29,11 +29,11 @@ generators. The critique showed three problems:
 
 ```ts
 interface RateLimitConfig {
-  globalPerMinute: number;        // RATE_LIMIT_GLOBAL_MAX, default 300
-  authPer15Min: number;           // RATE_LIMIT_AUTH_MAX, default 10 (auth-ip, register-email, login-email-subnet)
-  loginEmailPerHour: number;      // 10 x authPer15Min (derived, default 100)
-  reauthPer15Min: number;         // fixed 5 in production
-  signPerHour: number;            // fixed 20 in production
+  globalPerMinute: number; // RATE_LIMIT_GLOBAL_MAX, default 300
+  authPer15Min: number; // RATE_LIMIT_AUTH_MAX, default 10 (auth-ip, register-email, login-email-subnet)
+  loginEmailPerHour: number; // 10 x authPer15Min (derived, default 100)
+  reauthPer15Min: number; // fixed 5 in production
+  signPerHour: number; // fixed 20 in production
 }
 ```
 
@@ -42,10 +42,13 @@ interface RateLimitConfig {
   `rate_limit.relaxed` warning at startup, so a relaxed production deployment is visible.
 - Windows are fixed in code (1 minute, 15 minutes, 1 hour). Only the maxima are configurable.
 - `createTestApp(overrides?)` defaults every limit to 10,000 and uses a **fresh store prefix per call**
-  (`test-${randomUUID()}`), so no file and no app instance shares counters. Only
-  `src/shared/security/__tests__/rate-limit.int.test.ts` passes the production defaults (`productionRateLimits` exported
-  from `security.ts`) and asserts the 11th attempt, the 429 page, `Retry-After` and the per-email behaviour across IPs
-  (Supertest sets `X-Forwarded-For` with `TRUST_PROXY=1` in that file only).
+  (`test-${randomUUID()}`), so no file and no app instance shares counters. Only the two limiter test files pass the
+  production defaults (`productionRateLimits` exported from `security.ts`), and only they set `trustProxy: 1` so
+  Supertest can vary the client IP with `X-Forwarded-For`:
+  - `src/shared/security/__tests__/rate-limit.int.test.ts` (phase 1b): limiter mechanics on a test-only route (the 11th
+    request, the 429 page, `Retry-After`, no `ERR_ERL_*` warning);
+  - `src/__tests__/rate-limits.int.test.ts` (step 2b, ADR 0019 §9): the real routes, the 11th failed `POST /login`,
+    per email across IPs, successful logins not counted, `register-email`, `reauth` and `sign`.
 - The E2E stack (`docker-compose.e2e.yml`, ADR 0017) sets `RATE_LIMIT_GLOBAL_MAX=100000` and
   `RATE_LIMIT_AUTH_MAX=100000`. The 429 page is asserted in integration tests only, never in E2E.
 
@@ -56,10 +59,9 @@ All key generators live in `src/shared/security/rate-limit-keys.ts` (pure, unit-
 ```ts
 import { ipKeyGenerator } from 'express-rate-limit';
 
-export const keyByIp = (req: Request) => ipKeyGenerator(req.ip ?? '', 56);   // IPv4 as is, IPv6 as its /56
+export const keyByIp = (req: Request) => ipKeyGenerator(req.ip ?? '', 56); // IPv4 as is, IPv6 as its /56
 export const keyByUser = (req: Request, res: Response) => `u:${res.locals.viewer!.userId}`;
-export const keyByEmail = (secret: Buffer) => (req: Request) =>
-  emailKey(secret, req.body?.email) ?? keyByIp(req);                         // HMAC, falls back to the subnet key
+export const keyByEmail = (secret: Buffer) => (req: Request) => emailKey(secret, req.body?.email) ?? keyByIp(req); // HMAC, falls back to the subnet key
 export const keyByEmailAndSubnet = (secret: Buffer) => (req: Request) =>
   `${emailKey(secret, req.body?.email) ?? 'none'}:${keyByIp(req)}`;
 ```
@@ -83,15 +85,15 @@ export const keyByEmailAndSubnet = (secret: Buffer) => (req: Request) =>
 `next(new TooManyRequestsError())`, which renders the 429 page ("Too many attempts. Please wait a few minutes, then
 try again.") with `Retry-After` (windows differ per limiter, so the text names no fixed duration).
 
-| Limiter | Applies to | Key | Counts | Limit (production) |
-|---|---|---|---|---|
-| `global` | every non-static request | `keyByIp` | all | `globalPerMinute` (300) per minute |
-| `auth-ip` | `POST /login`, `POST /register` | `keyByIp` | all | `authPer15Min` (10) per 15 minutes |
-| `register-email` | `POST /register` | `keyByEmail` | all | `authPer15Min` (10) per 15 minutes |
-| `login-email-subnet` | `POST /login` | `keyByEmailAndSubnet` | failed only (`skipSuccessfulRequests: true`) | `authPer15Min` (10) per 15 minutes |
-| `login-email` | `POST /login` | `keyByEmail` | failed only | `loginEmailPerHour` (100) per hour |
-| `reauth` | `POST /profile/edit` with a current password, `POST /account/delete` | `keyByUser` | all | `reauthPer15Min` (5) per 15 minutes |
-| `sign` | `POST /signature` | `keyByUser` | all | `signPerHour` (20) per hour |
+| Limiter              | Applies to                                                           | Key                   | Counts                                       | Limit (production)                  |
+| -------------------- | -------------------------------------------------------------------- | --------------------- | -------------------------------------------- | ----------------------------------- |
+| `global`             | every non-static request                                             | `keyByIp`             | all                                          | `globalPerMinute` (300) per minute  |
+| `auth-ip`            | `POST /login`, `POST /register`                                      | `keyByIp`             | all                                          | `authPer15Min` (10) per 15 minutes  |
+| `register-email`     | `POST /register`                                                     | `keyByEmail`          | all                                          | `authPer15Min` (10) per 15 minutes  |
+| `login-email-subnet` | `POST /login`                                                        | `keyByEmailAndSubnet` | failed only (`skipSuccessfulRequests: true`) | `authPer15Min` (10) per 15 minutes  |
+| `login-email`        | `POST /login`                                                        | `keyByEmail`          | failed only                                  | `loginEmailPerHour` (100) per hour  |
+| `reauth`             | `POST /profile/edit` with a current password, `POST /account/delete` | `keyByUser`           | all                                          | `reauthPer15Min` (5) per 15 minutes |
+| `sign`               | `POST /signature`                                                    | `keyByUser`           | all                                          | `signPerHour` (20) per hour         |
 
 - "Failed" for the login limiters means a response status of 400 or above (401 wrong credentials, 422 validation).
   A successful login (303) does not count, so the owner of an account never consumes their own budget.
@@ -119,6 +121,8 @@ try again.") with `Retry-After` (windows differ per limiter, so the text names n
 - `AppDeps` gains `rateLimits: RateLimitConfig`; every limiter in `app.ts` and in the feature routers reads its
   maximum from there.
 - `.env.example` documents the two keys with their production defaults; `scripts/setup-env.mjs` does not change them.
-- **Skill follow-up (outside this repository):** the `express-feature-module` template `security.ts` sets
-  `ipv6Subnet: 56` and the reference keys on raw `req.ip`. The template should export `keyByIp` as above. petition does
-  not copy that part of the template.
+- **Skill follow-up: resolved in the consistency pass (2026-11-15).** `project-scaffold/references/conventions.md` §8
+  now makes the rule binding for all three projects: a limiter with a custom `keyGenerator` builds its IP part with
+  `ipKeyGenerator(req.ip ?? '', 56)`, because `ipv6Subnet` is ignored as soon as a custom `keyGenerator` is set. The
+  template's `ipv6Subnet: 56` remains valid only for its default limiter without a custom key; petition does not copy
+  it, because every petition limiter has an explicit key generator.

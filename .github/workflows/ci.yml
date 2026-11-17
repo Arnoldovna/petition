@@ -1,0 +1,156 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege: every job only reads the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITLEAKS_VERSION: 8.30.1
+  GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb # linux_x64 tarball
+
+jobs:
+  lint:
+    name: lint + stylelint + utility check + schema drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm format:check
+      # ESLint (incl. import-x/no-cycle), knip and the view check (ADR 0015).
+      - run: pnpm lint
+      - run: pnpm lint:css
+      - run: pnpm check:utilities
+      # The committed SQL in drizzle/ must match the Drizzle schema (B-60, conventions §9): generating again must
+      # neither change a tracked file nor add an untracked one. `generate` works offline (drizzle.config.ts).
+      - name: Schema drift
+        run: |
+          pnpm exec drizzle-kit generate
+          git diff --exit-code -- drizzle
+          test -z "$(git status --porcelain -- drizzle)"
+
+  typecheck:
+    name: typecheck (server, client, e2e)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm typecheck
+
+  unit:
+    name: unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm test
+
+  integration:
+    name: integration tests (Testcontainers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      # Docker is preinstalled on ubuntu runners; Testcontainers starts Postgres and Redis itself and every test
+      # file gets its own database cloned from a migrated template (ADR 0017).
+      - run: pnpm test:integration
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+
+  # CI cost rule (ADR 0018): pull requests only. main cannot move between the PR run and the squash-merge, so a push
+  # run would test the same tree again. The PR run is also the proof that the production image builds and that
+  # @napi-rs/canvas works in it on linux/amd64 (canvas smoke check in run-e2e.mjs, ADR 0005).
+  e2e:
+    name: e2e (isolated compose project + Playwright + Nu validator)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Create a throwaway .env with random secrets
+        run: node scripts/setup-env.mjs
+      # Chromium for seed-readonly, desktop and mobile; WebKit for the webkit-iphone project (ADR 0015).
+      - run: pnpm exec playwright install --with-deps chromium webkit
+      # run-e2e.mjs starts the petition-e2e compose project, runs the canvas smoke check, Playwright and the Nu
+      # validator, writes test-results/compose.log on failure and always tears the project down.
+      - run: pnpm test:e2e
+        env:
+          CI: 'true'
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: playwright-report
+          # test-results/ includes html/ (the page snapshots the Nu validator checks) and compose.log.
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  # The README's developer setup, run twice (conventions §9, ADR 0015). The second run must succeed and leave .env
+  # byte-identical (setup:env never overwrites a value; migrate and seed are idempotent).
+  dev-setup-smoke:
+    name: dev:setup smoke (twice, idempotent)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm dev:setup
+      - name: Keep a copy of the generated .env
+        run: cp .env "$RUNNER_TEMP/env.first"
+      - run: pnpm dev:setup
+      - name: .env unchanged by the second run
+        run: cmp .env "$RUNNER_TEMP/env.first"
+
+  gitleaks:
+    name: secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install gitleaks (checksum verified)
+        run: |
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum --check --strict
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo install gitleaks /usr/local/bin/gitleaks
+      - name: Scan full history
+        run: gitleaks git --redact --no-banner --verbose .

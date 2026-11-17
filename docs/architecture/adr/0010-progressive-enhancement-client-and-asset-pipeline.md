@@ -48,15 +48,15 @@ its `sourceMappingURL`, and stale hashed files entered the Docker build context)
   Generated files never go there:
   - production build: `dist/public/{assets,fonts}/` and `dist/signature-fonts/` (ADR 0005);
   - development: `.dev/public/{assets,fonts}/` and `.dev/signature-fonts/`.
-  Both folders are gitignored and dockerignored (the image builds its own `dist/`). `pnpm build:assets` deletes
-  `dist/public/` and `dist/signature-fonts/` first, so no stale hashed file survives.
+    Both folders are gitignored and dockerignored (the image builds its own `dist/`). `pnpm build:assets` deletes
+    `dist/public/` and `dist/signature-fonts/` first, so no stale hashed file survives.
 - `pnpm build:css`: Tailwind CLI 4.3.5, `src/styles/main.css` to `dist/public/assets/app.css` (minified); then
   `scripts/hash-css.mjs` renames it to `app-<sha256-10>.css`. CSS has no source map, so renaming is safe.
 - `pnpm build:client`: `scripts/build-client.mjs` (esbuild API) bundles `src/client/form-guard.ts` and
   `src/client/signature-pad.ts` with `entryNames: '[name]-[hash]'`, `sourcemap: 'linked'` and `metafile: true`.
   esbuild names the `.js` and `.js.map` consistently and writes a correct `//# sourceMappingURL`.
 - `scripts/write-manifest.mjs` builds `dist/public/assets/manifest.json` (`{ "app.css": "app-<h>.css",
-  "form-guard.js": "form-guard-<h>.js", ... }`) from the esbuild metafile and the CSS hash step.
+"form-guard.js": "form-guard-<h>.js", ... }`) from the esbuild metafile and the CSS hash step.
 - `pnpm assets:fonts`: `scripts/copy-fonts.mjs <outDir>` copies `schibsted-grotesk-latin{,-ext}-{400,500}-normal.woff2`
   to `<outDir>/public/fonts/` and the signature fonts to `<outDir>/signature-fonts/`.
 - `src/shared/view/assets.ts` (`createAssetResolver({ mode, manifestPath })`): in `development` it **never reads a
@@ -64,7 +64,7 @@ its `sourceMappingURL`, and stale hashed files entered the Docker build context)
   (fail fast at startup if missing); tests inject a resolver that returns plain paths. The Handlebars helper
   `{{asset "app.css"}}` uses the injected resolver.
 - Static serving: `/assets` from the output folder of the current mode, hashed files with `Cache-Control: public,
-  max-age=31536000, immutable`; `/fonts` with 30 days; root icons and `site.webmanifest` from `public/` with 1 day.
+max-age=31536000, immutable`; `/fonts` with 30 days; root icons and `site.webmanifest` from `public/` with 1 day.
 - **Compression only for static text assets.** `compression()` is mounted only on the `/assets` and `/fonts` static
   routers. Dynamic HTML is sent uncompressed, because it contains the session-wide CSRF token next to reflected input
   (city heading, `returnTo`, re-rendered form values), which is the BREACH precondition. A reverse proxy in production

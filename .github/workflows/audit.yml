@@ -1,0 +1,36 @@
+name: Audit
+
+# `pnpm audit` lives outside ci.yml on purpose (conventions §9, ADR 0015): an upstream advisory without a fix must
+# never block a pull request gate. It runs weekly, when the lockfile changes on main, and on demand.
+on:
+  schedule:
+    # Cron is UTC. 03:00 UTC is 04:00 CET and 05:00 CEST, so it runs before Dependabot's Monday 06:00 Europe/Berlin
+    # run all year.
+    - cron: '0 3 * * 1'
+  push:
+    branches: [main]
+    paths: [pnpm-lock.yaml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: pnpm audit (production dependencies)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The audit reads the lockfile only; no install needed.
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - run: pnpm audit --prod --audit-level=high

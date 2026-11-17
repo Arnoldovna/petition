@@ -1,0 +1,17 @@
+/*
+ * Entry stylesheet, built by the Tailwind CLI into one minified, hashed app-<hash>.css (ADR 0010, 0014). Order matters.
+ *
+ * source(none): Tailwind never scans templates, so no utility class can be generated from markup; utilities exist
+ * only where a CSS file uses @apply (second line of defence after scripts/check-no-utilities.mjs).
+ * fonts.css comes before tokens.css (maw-design-system section 2).
+ */
+@import 'tailwindcss' source(none);
+@import './fonts.css';
+@import './tokens.css';
+@import './base.css';
+@import './utilities.css';
+
+/*
+ * Component files (OVERVIEW.md section 15.3) arrive in phase 1b: one @import per file in src/styles/components/,
+ * alphabetical, without @reference (they are part of this compilation).
+ */

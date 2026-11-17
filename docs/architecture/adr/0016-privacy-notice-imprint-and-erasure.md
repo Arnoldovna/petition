@@ -1,6 +1,7 @@
 # ADR 0016: Privacy notice, imprint link, demo-data guard and erasure on request
 
-- Status: Accepted (added after architecture critique, 2026-11-15)
+- Status: Accepted (added after architecture critique, 2026-11-15; demo-data guard amended by ADR 0019 §7,
+  2026-11-16)
 - Date: 2026-11-15
 - Covers: F-88 to F-91 (new), F-01, F-06, F-15, F-67, F-68
 
@@ -20,6 +21,7 @@ password.
 
 **Privacy notice (F-88).** `GET /privacy` in the `pages` module, no guard, no session for guests, title "Privacy".
 Content (plain prose, maw `prose` block):
+
 - who runs the site and how to reach them: the operator named "Arnoldovna" and the `CONTACT_URL` link;
 - what is stored: first and last name, email, password hash, optional age, city and homepage, the signature image,
   the signing time; no IP addresses in the database;
@@ -33,7 +35,7 @@ Content (plain prose, maw `prose` block):
 - how to delete: "delete signature" and "delete account" (links), and erasure on request without a password through
   the contact link;
 - rights: access, rectification (the edit page), erasure, complaint to a supervisory authority.
-The page is linked from the footer on every page and from the register and onboarding forms.
+  The page is linked from the footer on every page and from the register and onboarding forms.
 
 **Imprint (F-89).** Optional env key `IMPRINT_URL` (`https://` URL). When set, the footer shows "imprint" linking to
 it (same tab). The app does not host the imprint text, so no personal address lands in the repository. While the repo
@@ -46,6 +48,7 @@ homepage are optional. If you add them, they appear next to your name on the sup
 
 **Erasure on request (F-91).** No password-reset flow: it needs outbound email, which the app deliberately does not
 have (no outbound calls, OVERVIEW.md section 3). Instead:
+
 - the privacy page names the contact channel for erasure and access requests;
 - the operator verifies the request comes from the address's owner (reply from that address), then runs
   `pnpm admin:erase -- --email <address> --confirm` (`src/tools/erase-user.ts`, ADR 0013), which deletes the user with
@@ -53,13 +56,20 @@ have (no outbound calls, OVERVIEW.md section 3). Instead:
 - the procedure is documented in `docs/OPERATIONS.md` (written in the presentation phase together with the README).
 
 **Demo-data guard.**
-- `src/tools/seed.ts` runs only when `SEED_ALLOW=true` is set explicitly, whatever `NODE_ENV` is, and additionally
-  refuses when the `users` table contains any email outside the reserved `@petition.test` domain. The error message
-  names the variable, never its value.
+
+- `src/tools/seed.ts` runs only when `SEED_ALLOW=true` is set explicitly, whatever `NODE_ENV` is (exported guard
+  `assertSeedAllowed(env)`; without it the seed exits 1 and the message names the variable, never its value).
+  `SEED_ALLOW` is never stored in `.env` or `.env.example` (ADR 0019 §7).
+- When the `users` table contains any email outside the reserved `@petition.test` domain, the seed **writes nothing,
+  logs `seed.skipped {reason: 'foreign-users'}` and exits 0** (amended by ADR 0019 §7; the first version exited 1, which
+  made a second `pnpm demo` or `pnpm dev:setup` fail after any registration). Either way, no demo account with the
+  shared password ever lands in a database that holds real users.
+- The seed only inserts (`onConflictDoNothing`, profile upsert for seed users); there is no destructive reset to
+  refuse (conventions §8).
 - The compose `seed` service no longer overrides `NODE_ENV`; it sets `SEED_ALLOW: 'true'` and belongs only to the
-  profiles `demo` and `e2e`. The `app` profile (migrate plus app) does not include or depend on it; `app` declares
+  profiles `demo` and `e2e`. The `app` profile (migrate plus app) does not include it; `app` declares
   `depends_on: seed: { condition: service_completed_successfully, required: false }`, so in `demo` and `e2e` it waits
-  for the seed and in `app` it starts without it.
+  for the seed and in `app` it starts without it (verified with Compose 5.5 on 2026-11-16, ADR 0019 §6).
 - `pnpm db:seed` sets `SEED_ALLOW=true` for the local development database.
 
 ## Alternatives considered
@@ -76,4 +86,5 @@ have (no outbound calls, OVERVIEW.md section 3). Instead:
 - FEATURES gains F-88 to F-91 (section 18 of FEATURES.md).
 - Tests: `pages.int.test.ts` (privacy page renders for guests without creating a session, footer links, imprint link
   only when configured), `register.int.test.ts` and `onboarding.int.test.ts` (disclosure text present),
-  `seed.int.test.ts` (refuses without `SEED_ALLOW`, refuses on a foreign email), `erase-user.int.test.ts`.
+  `seed.int.test.ts` (refuses without `SEED_ALLOW`, writes nothing and reports "skipped" when a foreign email
+  exists, idempotent on a second run), `erase-user.int.test.ts`.

@@ -28,10 +28,10 @@ field and an empty logout form: the user fixed the error, resubmitted and got th
   `res.status(status).render(...)`. `csrfToken` is generated (`generateCsrfToken(req, res)`) when:
   - a viewer exists (the nav contains the logout form), or
   - the session is bound (`req.session.csrfBound`), which guest form pages ensure.
-  Guest GET handlers that render a form (`/login`, `/register`) call `await bindAnonymousSession(req)` (sets
-  `csrfBound`, saves) before `renderPage`. Their POST re-renders already have a bound session, because the CSRF check
-  passed. Home, about, privacy and error pages never create sessions for guests.
-  So every 422 and 401 re-render, and every error page shown to a signed-in user, carries a valid token.
+    Guest GET handlers that render a form (`/login`, `/register`) call `await bindAnonymousSession(req)` (sets
+    `csrfBound`, saves) before `renderPage`. Their POST re-renders already have a bound session, because the CSRF check
+    passed. Home, about, privacy and error pages never create sessions for guests.
+    So every 422 and 401 re-render, and every error page shown to a signed-in user, carries a valid token.
 - After `establishSession` or `endSession` the next GET renders a fresh token (PRG). The old token is invalid
   because the session id changed (tested).
 - Every state change is a POST: logout, signature delete, account delete, profile updates, sign. GET handlers never

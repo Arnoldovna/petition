@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+**/dist
+**/coverage
+**/drizzle/meta
+playwright-report
+test-results
+docs/media
+# Prettier's Handlebars (glimmer) parser deletes `<!doctype html>` and cannot parse express-handlebars partials
+# (`{{> partial}}`), so views are not formatted (OVERVIEW.md section 6).
+*.hbs

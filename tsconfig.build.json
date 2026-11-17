@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true
+  },
+  "include": ["src"],
+  // `exclude` replaces the inherited list, so src/client (bundled by esbuild, ADR 0010) is repeated here.
+  "exclude": ["src/client", "src/**/*.test.ts", "src/**/__tests__/**"]
+}
