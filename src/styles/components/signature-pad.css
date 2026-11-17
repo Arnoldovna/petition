@@ -1,56 +1,91 @@
 /*
  * signature-pad: partial signature-pad.hbs, the drawing form of the sign page (F-38 to F-41, F-83, ADR 0010).
- * Structure and states (phase 3): hidden until enhanced, a 3:1 pad that scales with its container, touch strokes
- * kept off the page scroll, and the accent field with on-accent ink that the drawing needs to stay visible in light and
- * dark mode. Phase 4 adds the rest of the maw design. Part of main.css: no @reference.
+ * The form is hidden until signature-pad.js enhances it. The pad is a flat vermilion field with black on-accent ink,
+ * which keeps the drawing visible in light and dark mode (maw-design-system section 4, OVERVIEW.md section 15.4).
+ * The section shares one 56rem column with typed-signature: titled with a 1px muted rule (maw "section label"),
+ * tight rhythm inside, generous space before the typed-name section. Part of main.css: no @reference.
  */
 @layer components {
   .signature-pad {
-    @apply grid gap-4;
+    @apply grid max-inline-wide;
   }
 
+  /*
+   * Tight inside the section (title, text, pad: 20px, 24px), more air before the buttons (32px). The rhythm is set by
+   * each item's block-start margin, not by a grid gap: the alert region below is always in the grid, and a gap would
+   * add a second 20px row above the buttons while it is empty. The generous gap before the typed-name form sits on
+   * the form, not the wrapper, so nothing is added when the drawing form stays hidden.
+   */
   .signature-pad__form {
-    @apply grid gap-4;
+    @apply grid mbe-16;
+
+    @variant sm {
+      @apply mbe-20;
+    }
   }
 
-  /* Hidden state: the form stays hidden until signature-pad.js enhances it; the grid rule must not undo the attribute. */
+  /* The grid rule must not undo the attribute: the form stays hidden until signature-pad.js enhances it. */
   .signature-pad__form[hidden] {
     display: none;
   }
 
+  /*
+   * Section title in the 24px step with a muted rule underneath (maw "section label", components section 5, which
+   * maw keeps as an element of each block); the same declarations as .typed-signature__title, the two sections of
+   * the sign page.
+   */
   .signature-pad__title {
-    display: block;
+    @apply m-0 pbe-2 text-title-s font-medium border-be border-ink-muted;
   }
 
   .signature-pad__instructions {
-    @apply max-inline-prose;
+    @apply m-0 mbs-5 max-inline-prose text-body;
   }
 
   /*
-   * Scales with its container at the export ratio 720 x 240 (F-83, B-38) up to the wide container, so the line stays
-   * in proportion; the backing store follows the CSS size (signature-pad.ts). touch-action keeps touch and pen strokes
-   * off the page scroll and zoom (F-38, B-37); user-select stops a long press from selecting text around the pad.
-   * The ink colour is read by signature-pad.ts for the strokes on screen: black on the accent field (ADR 0010).
+   * The pad: scales with its container at the export ratio 720 x 240 up to the wide column (F-83, B-38, B-63); the
+   * backing store follows the CSS size, read with getBoundingClientRect (signature-pad.ts), so the pad has no border or
+   * padding that would offset the strokes from the pointer. touch-action keeps touch and pen strokes off page scroll
+   * and zoom (F-38, B-37); user-select stops a long press from selecting text around the pad.
+   * The ink is read by signature-pad.ts from `color`: on-accent black on the accent field, in both colour schemes
+   * (ADR 0010). forced-color-adjust keeps field and ink in Windows high-contrast mode, where a forced paper colour
+   * could otherwise match the ink and hide the drawing.
    */
   .signature-pad__canvas {
-    @apply block inline-full max-inline-wide bg-accent text-on-accent;
+    @apply block inline-full bg-accent text-on-accent mbs-6;
 
     block-size: auto;
     aspect-ratio: 3 / 1;
+    cursor: crosshair;
     touch-action: none;
     user-select: none;
+    forced-color-adjust: none;
   }
 
-  /* The alert is focused by the blank check (tabindex="-1"); its text is ink, the error rule comes in phase 4. */
+  /*
+   * The alert region (role="alert", focused by the blank check with tabindex="-1"). It is in the markup at all times,
+   * so assistive technology knows the live region before a message arrives; empty, it has no height and no margin,
+   * so it takes no space. A message is ink text beside a 2px error rule (maw section 4: colour is never the only
+   * signal), 20px below the pad. Server and client both write the hidden "Error: " prefix as the first child, which
+   * is what marks a filled region (the empty one still holds template whitespace, so :empty would not match).
+   */
   .signature-pad__message {
-    @apply max-inline-prose;
+    @apply m-0 max-inline-prose text-body text-ink;
+
+    &:has(> .visually-hidden) {
+      @apply mbs-5 ps-3;
+
+      border-inline-start: var(--rule-width-strong) solid var(--color-error);
+    }
   }
 
+  /* Buttons on one line, wrapping below each other at 320px; "clear" first, the primary submit after it. */
   .signature-pad__actions {
-    @apply flex flex-wrap items-center gap-4;
+    @apply flex flex-wrap items-center gap-x-8 gap-y-4 mbs-8;
   }
 
+  /* No-JS note: muted meta that leads straight into the typed-name form it points to. */
   .signature-pad__noscript {
-    @apply max-inline-prose;
+    @apply m-0 mbe-10 max-inline-prose text-meta text-ink-muted;
   }
 }

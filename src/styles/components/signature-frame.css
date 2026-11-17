@@ -1,18 +1,31 @@
 /*
  * signature-frame: partial signature-frame.hbs, the viewer's own signature on the thank-you page (F-46).
- * Structure (phase 3); phase 4c refines the field. The black-on-transparent PNG needs its flat accent field from the
- * start: on dark paper the ink would be invisible (OVERVIEW.md section 15.4). The field is as wide as the text column
- * at most, so the 720px export is never scaled up. Part of main.css: no @reference.
+ * The black-on-transparent PNG sits on a flat accent field, the same vermilion as the pad it was drawn on, so the ink
+ * stays visible on dark paper (OVERVIEW.md section 15.4). No border, radius or shadow: the field is the frame. It is
+ * as wide as the text column at most, so the 720px export is never scaled up. The page heading's bottom margin
+ * spaces it from the lead. Part of main.css: no @reference.
  */
 @layer components {
+  /* forced-color-adjust keeps the field in Windows high-contrast mode, where a forced black page would hide the ink. */
   .signature-frame {
-    @apply bg-accent p-4 mbs-8 max-inline-prose;
+    @apply m-0 p-4 max-inline-prose bg-accent;
+
+    forced-color-adjust: none;
+
+    @variant sm {
+      @apply p-6;
+    }
   }
 
-  /* The 720 x 240 image scales down with its container and keeps its 3:1 ratio (F-83). */
+  /*
+   * The 720 x 240 image scales down with its container and keeps its 3:1 ratio (F-83). It fades in with the page
+   * (motion-safe only, F-85). A CSS animation starts when the box is rendered, not when the image has loaded: a cached
+   * or fast image fades in, a slow one appears without the fade on the already reserved accent field, which never
+   * shifts the layout. A fade on the load event would need page JavaScript for a purely decorative effect.
+   */
   .signature-frame__image {
-    display: block;
-    inline-size: 100%;
+    @apply block inline-full motion-safe:animate-fade-in;
+
     block-size: auto;
     aspect-ratio: 3 / 1;
   }

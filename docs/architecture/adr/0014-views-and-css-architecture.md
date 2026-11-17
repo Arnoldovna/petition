@@ -34,7 +34,7 @@ Nonsense Petition</title>` (F-16), skip link, `site-header` partial, `<main id="
   a shared-file change request (BUILD-ORDER.md rule 2), because pages owned by other modules render these partials.
 - Controllers pass a typed view model (`title`, page data, `form` with `values`, `errors`, `errorList`). Never DB rows.
 - Handlebars helpers (registered once in `src/shared/view/engine.ts`): `asset`, `eq`, `plural count singular plural`,
-  `formatCount` (en-GB grouping), `formatDate` (en-GB `15 Nov 2026`, zone `APP_TIME_ZONE`), `cityPath`,
+  `formatCount` (en-GB grouping), `formatDate` (`15 Nov 2026` with fixed three-letter months, zone `APP_TIME_ZONE`), `cityPath`,
   `pagePath basePath page`, `fieldId form name`, `currentAttr path` (returns `page` or empty).
 - External user links (`homepage_url`) open in the **same tab** with `rel="noopener noreferrer nofollow ugc"`;
   internal links never use `_blank` (B-17, F-52).
@@ -58,8 +58,13 @@ var(--color-vermilion)` changes (`#F85D33`). Default palette, shadows and radii 
 - `scripts/check-no-utilities.mjs` (copied verbatim) and `stylelint.config.mjs` (copied) enforce: no utility classes
   in markup, every class defined, no hex outside tokens, no IDs, no `!important`, no physical properties, nesting at
   most 2, no duplicate or overridden declarations (B-76 to B-80).
-- Layout: one 1280 px column, gutters 12/20 px, sticky header from 640 px with `scroll-padding-top` from a token,
-  `width: 100%` never `100vw` (B-78, B-81). Body text 16 px, contrast per maw section 4 (B-74).
+- Layout: one 1280 px column, gutters 12/20 px, sticky header from 768 px with `scroll-padding-block-start` of 128 px
+  from the spacing scale, `width: 100%` never `100vw` (B-78, B-81). Phase 4 moved the sticky breakpoint from 640 px to
+  768 px: between 640 and 767 px the long wordmark wraps the signed-in nav into a second row, and a 158 px sticky
+  header covers too much of a small screen and exceeds the scroll padding (OVERVIEW.md section 15.4). The sticky header
+  is opaque paper with the `--header-fade` gradient as a 16 px strip below it rather than on the header box, so the
+  links never sit on see-through paper over scrolled text (WCAG 1.4.3). The current page is marked by a 2px ink
+  underline only (maw header pattern). Body text 16 px, contrast per maw section 4 (B-74).
 - The full block inventory and file list is in OVERVIEW.md section 15.
 
 ## Consequences

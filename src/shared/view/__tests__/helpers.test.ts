@@ -54,6 +54,22 @@ describe('formatDate', () => {
     expect(helpers.formatDate('2026-01-02T09:00:00.000Z')).toBe('2 Jan 2026');
   });
 
+  it('F-52: every month has its fixed three-letter name, never the ICU "Sept" of en-GB', () => {
+    const months = Array.from(
+      { length: 12 },
+      (_, index) => helpers.formatDate(new Date(Date.UTC(2026, index, 15, 12))).split(' ')[1],
+    );
+
+    expect(months).toEqual(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+    expect(helpers.formatDate(new Date('2026-09-02T12:00:00Z'))).toBe('2 Sep 2026');
+  });
+
+  it('F-52: the month and year roll over in APP_TIME_ZONE too', () => {
+    const newYearsEve = new Date('2026-12-31T23:30:00Z'); // 00:30 on 1 Jan 2027 in Berlin
+
+    expect(helpers.formatDate(newYearsEve)).toBe('1 Jan 2027');
+  });
+
   it('F-52: the day is the day in APP_TIME_ZONE, not in UTC', () => {
     const lateEvening = new Date('2026-11-15T23:30:00Z'); // 00:30 on 16 Nov in Berlin
 
@@ -65,6 +81,23 @@ describe('formatDate', () => {
     expect(() => helpers.formatDate('not a date')).toThrow(TypeError);
     expect(() => helpers.formatDate(undefined)).toThrow(TypeError);
     expect(() => helpers.formatDate(1_763_200_000_000)).toThrow(TypeError);
+  });
+
+  it('F-09: calendar parts that are not plain digits throw instead of printing "NaN Nov 2026"', () => {
+    // ICU with another numbering system (here Arabic-Indic digits for the day) must never reach the page.
+    const formatToParts = vi.spyOn(Intl.DateTimeFormat.prototype, 'formatToParts').mockReturnValue([
+      { type: 'day', value: '١٥' },
+      { type: 'literal', value: '/' },
+      { type: 'month', value: '11' },
+      { type: 'literal', value: '/' },
+      { type: 'year', value: '2026' },
+    ]);
+
+    try {
+      expect(() => helpers.formatDate(new Date('2026-11-15T12:00:00Z'))).toThrow(RangeError);
+    } finally {
+      formatToParts.mockRestore();
+    }
   });
 });
 

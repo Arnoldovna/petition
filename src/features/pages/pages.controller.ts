@@ -20,15 +20,16 @@ interface RowModel {
 /**
  * The home page rows (F-12): every step of the petition, each pointing to its own route (B-42: the legacy page linked
  * to a route that never existed). Signed-in viewers see the same rows; the guards of the targets send them where
- * they belong (ROUTES.md section 1).
+ * they belong (ROUTES.md section 1). The titles are actions, so they are lowercase like nav links and buttons
+ * (OVERVIEW.md section 15.4), the same as the thank-you and edit rows.
  */
 const HOME_ROWS: readonly RowModel[] = [
-  { href: '/register', title: 'Register', meta: 'new here' },
-  { href: '/login', title: 'Log in', meta: 'have an account' },
-  { href: '/profile', title: 'Tell us about yourself', meta: 'optional details' },
-  { href: '/signature', title: 'Sign the petition', meta: 'draw or type' },
-  { href: '/supporters', title: 'See all supporters', meta: 'registered users' },
-  { href: '/account/delete', title: 'Delete your account', meta: 'removes everything' },
+  { href: '/register', title: 'register', meta: 'new here' },
+  { href: '/login', title: 'log in', meta: 'have an account' },
+  { href: '/profile', title: 'tell us about yourself', meta: 'optional details' },
+  { href: '/signature', title: 'sign the petition', meta: 'draw or type' },
+  { href: '/supporters', title: 'see all supporters', meta: 'registered users' },
+  { href: '/account/delete', title: 'delete your account', meta: 'removes everything' },
 ];
 
 /** The rebuild stack (F-13, B-62), in the order of ROUTES.md section 2: technology left, its role right. */

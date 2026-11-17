@@ -1,31 +1,47 @@
 /*
  * error-summary: partial error-summary.hbs (F-21, B-68, ADR 0008). It receives focus on page load (autofocus,
  * tabindex -1), so the global :focus-visible ring of base.css shows where the keyboard is.
- * Structure (phase 3): title and the list of field links, marked like every error with a 2px error rule beside ink
- * text (maw-design-system section 4). The list keeps its markers: removing them would drop the list semantics in
- * Safari. Phase 4b adds the maw type. Part of main.css: no @reference.
+ * Marked like every error in maw: ink text beside a 2px error rule (maw-design-system section 4), never a tinted box.
+ * The title reads at card-title size, the field links are pattern A links (1px underline, 2px on hover and focus).
+ * The list keeps visible markers: Tailwind's preflight removes them, and a list without markers loses its list
+ * semantics in Safari. Part of main.css: no @reference.
+ * The summary keeps clear space below it (design review 4e): the form's first label must never touch it, and the
+ * focus ring drawn 4px outside it on page load must not cover that label.
  */
 @layer components {
   .error-summary {
-    @apply flex flex-col gap-3 ps-4 max-inline-prose;
+    @apply flex flex-col gap-3 pbs-1 pbe-1 ps-4 mbe-10 max-inline-prose text-ink;
 
     border-inline-start: var(--rule-width-strong) solid var(--color-error);
+
+    @variant sm {
+      @apply mbe-12;
+    }
   }
 
   .error-summary__title {
-    @apply m-0;
+    @apply m-0 text-title-s font-medium;
   }
 
+  /* 8px between the stacked links, so neighbouring targets are easy to tell apart on a phone (design re-review 4e). */
   .error-summary__list {
-    @apply m-0 flex flex-col gap-1;
+    @apply m-0 ps-5 flex flex-col gap-2 text-body;
+
+    list-style-type: square;
   }
 
   .error-summary__item {
     display: list-item;
   }
 
-  /* Stacked links: at least 24px tall each (WCAG 2.5.8 target size). */
+  /*
+   * Stacked links: at least 24px tall each (WCAG 2.5.8 target size). Long messages wrap instead of overflowing.
+   * inline-flex, not inline-block: its baseline is the first line, so the marker stays beside a wrapped message's
+   * first line instead of dropping to its last. The underline and its hover and focus state are the base link rule.
+   */
   .error-summary__link {
-    @apply inline-block pbs-1 pbe-1;
+    @apply inline-flex pbs-1 pbe-1 text-ink;
+
+    overflow-wrap: break-word;
   }
 }

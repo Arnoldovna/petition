@@ -1,7 +1,7 @@
 /*
- * list-row: partial list-row.hbs (maw "list row": title left, meta right; stacked on narrow containers).
- * Structure only (phase 3): the container query, the two columns and wrapping. Title and meta type, the row rule that
- * turns ink on hover and focus, and the shake come in phase 4a. Part of main.css: no @reference.
+ * list-row: partial list-row.hbs (maw "list row", the signature pattern). Title left in the 31px title size, small
+ * tracked meta right in a fixed column; a 1px rule under each row that turns ink on hover and keyboard focus. On a
+ * narrow container the row stacks: title, then a 1px ink rule, then the meta. Part of main.css: no @reference.
  */
 @layer components {
   /* The row measures its own width, so it stacks in a narrow column on any screen (modular-css section 1.8). */
@@ -10,32 +10,74 @@
   }
 
   /*
-   * The link (or plain body) of a row. Narrow: title, then meta below. From the `row` container width (36rem): title
-   * left, meta in a fixed column on the right, sharing one baseline.
+   * The link (or plain body) of a row. Narrow: title, a clear gap, then the meta. From the `row` container width
+   * (36rem): title left, meta in a fixed column on the right, sharing one baseline.
    */
   .list-row__link,
   .list-row__body {
-    @apply flex flex-col gap-3 pbs-5 pbe-3;
+    @apply flex flex-col gap-8 pbs-5 pbe-3 text-ink no-underline border-be border-rule;
 
     @variant @row {
       @apply flex-row items-baseline justify-between gap-6 pbs-6;
     }
   }
 
-  /* The title takes the free width and wraps; a long word breaks instead of overflowing the row (F-83). */
+  /*
+   * A row link: the rule turns ink on hover and on keyboard focus alike (F-81, B-83); the global focus ring is drawn
+   * around the row as well. The colour change is instant under reduced motion.
+   */
+  .list-row__link {
+    &:hover,
+    &:focus-visible {
+      @apply border-rule-strong;
+    }
+
+    @variant motion-safe {
+      transition: border-color var(--duration-fast) var(--ease-standard);
+    }
+  }
+
+  /*
+   * The title takes the free width and wraps; a long word breaks instead of overflowing the row (F-83). 31px on a
+   * narrow row, 24px once the meta column sits beside it, 31px again on a wide row (maw list row).
+   */
   .list-row__title {
-    @apply block;
+    @apply block text-title font-regular;
 
     min-inline-size: 0;
     overflow-wrap: anywhere;
-  }
-
-  /* The meta column starts at the same position in every row of a list (maw list row). */
-  .list-row__meta {
-    @apply block;
 
     @variant @row {
-      @apply shrink-0;
+      @apply text-title-s;
+    }
+
+    @variant @wide {
+      @apply text-title;
+    }
+  }
+
+  /* The maw shake on the title of the hovered row: pointer devices only, never under reduced motion. */
+  @media (hover: hover) {
+    .list-row__link:hover .list-row__title {
+      @apply motion-safe:animate-shake;
+    }
+  }
+
+  /*
+   * Primary meta, so ink (not muted): 14px with 0.05em tracking. Stacked, an ink rule sits above it. Beside the
+   * title it has no rule and starts at the same position in every row of a list. .supporter-row__meta repeats the
+   * row-layout column (--container-row, at most 45%), so home, about and supporters share one grid line: change
+   * both together. Proportional figures on purpose:
+   * Schibsted Grotesk's tabular set also widens the comma (9.6px instead of 4.5px at 14px), so "1,284" would read
+   * as "1 , 284"; the meta is one line of text per row, not a column of figures.
+   */
+  .list-row__meta {
+    @apply block pbs-3 text-meta border-bs border-ink;
+
+    overflow-wrap: anywhere;
+
+    @variant @row {
+      @apply shrink-0 pbs-0 border-0;
 
       inline-size: var(--container-row);
       max-inline-size: 45%;

@@ -1,13 +1,15 @@
 /*
  * supporter-row: partial supporter-row.hbs (one supporter: name left; age, city and date as meta right; F-52).
- * Structure (phase 3); the maw design (row rule, type, hover) follows in phase 4d (OVERVIEW.md section 15). Rows
- * stack on narrow containers and become one line from the `row` container width of supporter-list. Absent values
- * render no element, and the meta items are separated by gaps, never by separator characters (F-52, B-73).
+ * maw "list row": the name in title type, the meta in tracked small type, a 1px rule under every row that turns ink
+ * on hover and keyboard focus. Narrow lists stack the row (name, then an ink rule, then the meta line); from the `row`
+ * container width of supporter-list the meta moves into a fixed column on the right, so it starts at the same
+ * position in every row. Absent values render no element, and the meta items are separated by gaps, never by
+ * separator characters (F-52, B-73). Everything is ink on paper, so dark mode is the token swap (maw section 5).
  * Part of main.css: no @reference.
  */
 @layer components {
   .supporter-row {
-    @apply flex flex-col gap-1 pbs-3 pbe-3;
+    @apply flex flex-col gap-4 pbs-5 pbe-3 border-be border-rule;
 
     /*
      * Names, cities and homepages are user input up to 100 characters without a space; they break inside the row
@@ -17,36 +19,141 @@
     overflow-wrap: anywhere;
 
     @variant @row {
-      @apply flex-row flex-wrap items-baseline justify-between gap-4;
+      @apply flex-row items-baseline justify-between gap-6 pbs-6;
+    }
+
+    /* The row rule follows the pointer, and keyboard focus on either link in the row (F-81: hover = focus). */
+    @variant hover {
+      @apply border-rule-strong;
+    }
+
+    &:has(:focus-visible) {
+      @apply border-rule-strong;
+    }
+
+    @variant motion-safe {
+      transition: border-color var(--duration-fast) var(--ease-standard);
     }
   }
 
-  /* The homepage link around the name; neighbouring targets are at least 24px tall (WCAG 2.5.8 target size). */
+  /*
+   * The homepage link around the name: underlined by the base link rule (2px on hover and focus, base.css), because
+   * colour cannot tell it apart from an unlinked name (all text is ink, WCAG 1.4.1). Its own width only, so the hover
+   * target is the name, not the empty row. At least 24px tall (WCAG 2.5.8 target size). The maw shake runs on pointer
+   * hover only and never under reduced motion (F-85).
+   */
   .supporter-row__link {
-    @apply inline-block pbs-1 pbe-1;
+    @apply inline-block self-start pbs-1 pbe-1 motion-safe:hover:animate-shake;
+
+    min-inline-size: 0;
+
+    /*
+     * The padding makes the target, the negative margin gives the space back: a row with a homepage is exactly as
+     * tall as one without (design review 4e: rows of one list keep one rhythm).
+     */
+    margin-block: calc(--spacing(1) * -1);
+
+    /* Side by side with the meta, the name shares the row's baseline again. */
+    @variant @row {
+      @apply self-baseline;
+    }
   }
 
+  /*
+   * Row title type: 24px on narrow lists, where 50 rows on a phone would otherwise read as a poster, and the 31px
+   * list-row title from the `wide` container width. Regular weight, as maw row titles are (two weights only).
+   * Inline, not inline-block: a link's underline is not drawn on atomic inline children, so an inline-block name
+   * inside the homepage link would lose the underline that marks it as a link. Unlinked, the name is a flex item
+   * and blockified anyway.
+   */
   .supporter-row__name {
-    @apply inline-block;
+    @apply inline text-title-s font-regular;
+
+    min-inline-size: 0;
+
+    @variant @wide {
+      @apply text-title;
+    }
   }
 
+  /*
+   * The meta line. Stacked: a 1px ink rule above it (maw stacked row), the date pushed to the inline end. Row layout:
+   * a fixed column of the same width as .list-row__meta (list-row.css), so home, about and supporters share one grid
+   * line: change both together.
+   * Primary meta stays ink (maw meta line); numbers are tabular so ages and dates line up from row to row.
+   * From the `wide` container width the meta column is a grid with one track per value (design review 4e): age in a
+   * fixed 64px track ("age 120" fits), the city in the free track, the date at the end. A city without an age then
+   * still starts on the city line instead of jumping to the age position, so the columns align from row to row
+   * (maw list row: meta in a fixed column). Narrower, the free track would be too small for a long city name, so the
+   * items stay a wrapping line; there the age keeps the same 64px minimum and a city without an age starts after that
+   * slot (`.supporter-row__city` below), so cities still line up while they fit on the first line (design re-review
+   * 4e, 768px). The meta holds no grouped numbers (ages, `15 Nov 2026`), so the wide tabular comma never shows.
+   */
   .supporter-row__meta {
-    @apply flex flex-wrap gap-x-3 gap-y-1;
+    @apply flex flex-wrap items-baseline gap-x-4 gap-y-1 pbs-2 text-meta text-ink tabular-nums border-bs border-ink;
+
+    @variant @row {
+      @apply shrink-0 pbs-0 border-0;
+
+      inline-size: var(--container-row);
+      max-inline-size: 45%;
+    }
+
+    @variant @wide {
+      @apply grid;
+
+      grid-template-columns: --spacing(16) minmax(0, 1fr) auto;
+    }
   }
 
   .supporter-row__age {
     @apply inline-block;
+
+    grid-column: 1;
+
+    @variant @row {
+      min-inline-size: --spacing(16);
+    }
   }
 
+  /*
+   * Without an age the city is the first item. In the wrapping line it skips the age slot (64px plus the 16px gap),
+   * so it starts where the cities of the other rows start; in the grid its own track places it, so the offset ends.
+   */
   .supporter-row__city {
     @apply inline-block;
+
+    grid-column: 2;
+
+    &:first-child {
+      @variant @row {
+        @apply ms-20;
+      }
+
+      @variant @wide {
+        @apply ms-0;
+      }
+    }
   }
 
+  /*
+   * The city link (list page only): underlined like every inline link, 2px on hover and focus (base.css); at least
+   * 24px tall. The negative margin gives the padding back, so a row with a city link is as tall as one without.
+   */
   .supporter-row__city--link {
     @apply pbs-1 pbe-1;
+
+    margin-block: calc(--spacing(1) * -1);
   }
 
+  /*
+   * The one value every row has; it sits at the inline end, so dates form a right-aligned column (maw list row): by
+   * an auto margin in the wrapping line, by its own end-aligned track in the grid.
+   */
   .supporter-row__date {
-    @apply inline-block;
+    @apply inline-block ms-auto;
+
+    grid-column: 3;
+    justify-self: end;
   }
 }

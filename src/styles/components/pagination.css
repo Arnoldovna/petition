@@ -1,20 +1,22 @@
 /*
  * pagination: partial pagination.hbs (F-54, F-59).
- * Structure (phase 3); the maw design follows in phase 4d (OVERVIEW.md section 15). "page 2 of 6" above one wrapping
- * line of links, so the navigation never scrolls sideways at 320px (F-83). Part of main.css: no @reference.
+ * "page 2 of 6" as a tracked meta line above one wrapping line of underlined text links (maw button A), so the
+ * navigation never scrolls sideways at 320px (F-83). No boxes, no accent: the current page is ink, weight and a 2px
+ * underline. Proportional figures: the tabular set of Schibsted Grotesk widens the comma ("1 , 284", see list-row.css),
+ * and the minimum link width below already gives one- and two-digit numbers one pitch. Part of main.css: no @reference.
  */
 @layer components {
   .pagination {
-    @apply flex flex-col gap-2 mbs-8;
+    @apply flex flex-col gap-2 mbs-10;
   }
 
   .pagination__status {
-    @apply m-0;
+    @apply m-0 text-meta text-ink-muted;
   }
 
   /* Inside <nav>, WebKit keeps the list role even without markers. */
   .pagination__list {
-    @apply flex flex-wrap items-baseline gap-x-2 gap-y-1 m-0 p-0;
+    @apply flex flex-wrap items-baseline gap-x-3 gap-y-1 m-0 p-0 text-body;
 
     list-style: none;
   }
@@ -23,17 +25,26 @@
     @apply block;
   }
 
-  /* The ellipsis sits on the links' baseline and padding, so the line does not jump. */
+  /*
+   * The ellipsis sits on the links' baseline and padding and takes a page number's minimum width, so the line does
+   * not jump.
+   */
   .pagination__item--gap {
-    @apply pbs-1 pbe-1;
+    @apply pbs-1 pbe-1 text-ink-muted;
+
+    min-inline-size: --spacing(6);
   }
 
   /*
    * Neighbouring targets: at least 24px in both directions (WCAG 2.5.8 target size, axe target-size), also for a
-   * one-digit page number. Keep this in later phases.
+   * one-digit page number. The minimum width replaces inline padding, so the first link hangs from the column's left
+   * edge like every other line of the page (maw rule 5), and one- and two-digit numbers share one pitch. The
+   * underline and its 2px hover and focus state are the base link rule (base.css).
    */
   .pagination__link {
-    @apply inline-block pbs-1 pbe-1 ps-2 pe-2;
+    @apply inline-block pbs-1 pbe-1 text-ink text-start;
+
+    min-inline-size: --spacing(6);
   }
 
   /* "← previous page" and "next page →" stay on one line. */

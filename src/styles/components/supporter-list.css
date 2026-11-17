@@ -1,13 +1,15 @@
 /*
  * supporter-list: the ordered list of supporter-row partials on pages/supporters/{list,city}.hbs (F-54, B-67).
- * Structure (phase 3); the maw design follows in phase 4d (OVERVIEW.md section 15). The list is the container its
- * rows query, so a row switches to "name left, meta right" by the list's width, not the viewport's.
+ * maw "list rows": the rows carry their own spacing and 1px rules, so the list itself only removes the browser's
+ * margins and indent. The space above it comes from page-heading (one owner per gap, B-80). The list is the container
+ * its rows query, so a row switches to "name left, meta right" by the list's width, not the viewport's.
  * No `list-style: none` here on purpose: WebKit (VoiceOver) drops the list role of a list styled that way outside a
- * <nav>, and the rows are flex boxes, so no marker is drawn anyway. Part of main.css: no @reference.
+ * <nav>, and the rows are flex boxes, so no marker is drawn anyway. The <ol start> numbering stays available to
+ * assistive technology across pages. Part of main.css: no @reference.
  */
 @layer components {
   .supporter-list {
-    @apply m-0 mbs-6 p-0;
+    @apply m-0 p-0;
 
     container-type: inline-size;
   }

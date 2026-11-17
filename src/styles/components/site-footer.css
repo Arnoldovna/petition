@@ -1,12 +1,15 @@
 /*
- * site-footer: partial site-footer.hbs (maw "footer": lowercase meta links and the credit with the year; F-14, F-15,
- * F-88, F-89). Structure only (phase 3): a wrapping row inside the page gutters. The top rule, meta type and shake come
- * in phase 4a. Part of main.css: no @reference.
+ * site-footer: partial site-footer.hbs (maw "footer": a muted rule on top, lowercase meta links and the credit with the
+ * year; F-14, F-15, F-88, F-89). Part of main.css: no @reference.
  */
 @layer components {
-  /* Links left, credit right; on narrow screens the credit wraps below the links. */
+  /*
+   * Links left, credit right; on narrow screens the credit wraps below the links. The rule uses ink-muted like the
+   * maw footer. No fixed height and no overflow clipping, so zoomed text grows the footer instead of being cut off
+   * (WCAG 1.4.4, B-74).
+   */
   .site-footer {
-    @apply flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 mx-3 pbs-6 pbe-8;
+    @apply flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 mx-3 pbs-6 pbe-8 text-meta border-bs border-ink-muted;
 
     @variant sm {
       @apply mx-5;
@@ -28,12 +31,29 @@
     @apply block;
   }
 
-  /* Neighbouring targets: at least 24px tall (WCAG 2.5.8 target size, axe target-size). Keep this in later phases. */
+  /*
+   * Ink meta links without underline at rest; hover and keyboard focus show a 1px underline (F-81, B-83), the current
+   * page a 2px one (same rule as the header). Neighbouring targets: at least 24px tall (WCAG 2.5.8, axe target-size).
+   */
   .site-footer__link {
-    @apply inline-block pbs-1 pbe-1;
+    @apply inline-block pbs-1 pbe-1 text-ink no-underline motion-safe:hover:animate-shake;
+
+    text-decoration-thickness: var(--rule-width);
+
+    &:hover,
+    &:focus-visible {
+      @apply underline;
+    }
   }
 
+  .site-footer__link[aria-current='page'] {
+    @apply underline;
+
+    text-decoration-thickness: var(--rule-width-strong);
+  }
+
+  /* Secondary meta: muted ink (6.29:1 light, 7.46:1 dark), never on an accent field. */
   .site-footer__credit {
-    @apply m-0;
+    @apply m-0 text-ink-muted;
   }
 }

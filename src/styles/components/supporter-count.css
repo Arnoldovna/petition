@@ -1,21 +1,38 @@
 /*
- * supporter-count: the supporter count on the thank-you page (F-46), the page's one display-size number.
- * Structure (phase 3): number and word on one baseline, wrapping below each other on narrow screens; phase 4c sets
- * the display type (OVERVIEW.md section 15.4). Part of main.css: no @reference.
+ * supporter-count: the supporter count on the thank-you page (F-46), the page's one hero number (OVERVIEW.md
+ * section 15.4, maw-design-system: one text-display-xl per page at most). Number and word share one baseline and wrap
+ * below each other when the column is narrow. The block measures its own width, so the number steps from the 49px
+ * display size to 72px only where it fits (F-83, B-63: no fixed pixel type). Ink on paper in both schemes.
+ * Part of main.css: no @reference.
  */
 @layer components {
   .supporter-count {
-    @apply flex flex-wrap items-baseline gap-x-3 gap-y-1 m-0 mbs-10 mbe-8;
+    @apply flex flex-wrap items-baseline gap-x-3 gap-y-1 m-0 mbs-12 mbe-10;
+
+    container-type: inline-size;
   }
 
-  /* Digits of equal width, so the number does not change width as it grows. */
+  /*
+   * Regular weight: big type, not heavy type. A very long count breaks instead of widening the page at 320px.
+   * Proportional figures on purpose: Schibsted Grotesk's tabular set also widens the comma, so "1,284" would read as
+   * "1 , 284" at display size (design review 4e; list-row.css measures it). One number has no column to align.
+   */
   .supporter-count__number {
-    @apply leading-none;
+    @apply text-display font-regular leading-none;
 
-    font-variant-numeric: tabular-nums;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+
+    @variant @row {
+      @apply text-display-xl;
+    }
   }
 
   .supporter-count__label {
-    @apply leading-none;
+    @apply text-lead leading-none;
+
+    @variant @row {
+      @apply text-title-s;
+    }
   }
 }

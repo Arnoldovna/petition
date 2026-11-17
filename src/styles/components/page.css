@@ -1,40 +1,79 @@
 /*
  * page: the page shell of the layout (body.page, main.page__main; maw "page shell") and the next-step paragraph of
- * pages/error.hbs. Structure only (phase 3): one column of at most 1280px, centred, with the footer at the bottom of
- * short pages; type and colour come in phase 4a. Part of main.css: no @reference.
+ * pages/error.hbs. One column of at most 1280px, centred, left-aligned inside, with the footer at the bottom of short
+ * pages. Part of main.css: no @reference.
  */
 @layer components {
   /*
-   * header, main and footer stack in one column. The skip link is absolutely positioned (utilities.css), so it is
-   * not a flex item. `inline-size` stays auto (never 100vw, B-81), so a vertical scrollbar cannot cause sideways
-   * scrolling.
+   * header, main and footer stack in one column. `inline-size` stays auto (never 100vw, B-81), so a vertical
+   * scrollbar cannot cause sideways scrolling. The page is the positioning context of the skip link (utilities.css),
+   * which therefore lines up with the column gutter on wide screens.
    */
   .page {
-    @apply flex flex-col mx-auto max-inline-page;
+    @apply relative flex flex-col mx-auto max-inline-page;
   }
 
   /*
    * The main landmark takes the free height, so the footer sits at the bottom of a short page. Gutters 12px, 20px
    * from 640px (maw page shell). `min-inline-size: 0` lets long words and wide content shrink inside the flex
-   * column instead of widening the page at 320px (F-83).
+   * column instead of widening the page at 320px (F-83). From 768px it starts 16px lower: that is the room the
+   * sticky header's fade strip covers at the top of the page (site-header.css), so the first heading never sits
+   * under the fade.
    */
   .page__main {
     @apply flex-1 ps-3 pe-3 pbe-16;
 
     min-inline-size: 0;
 
+    /*
+     * The skip link moves focus here (tabindex="-1"). The ring is drawn inside the edge, so it stays on screen
+     * at 320px where main is as wide as the viewport.
+     */
+    &:focus-visible {
+      outline-offset: calc(var(--focus-width) * -1);
+    }
+
     @variant sm {
       @apply ps-5 pe-5 pbe-24;
     }
+
+    @variant md {
+      @apply pbs-4;
+    }
   }
 
-  /* The error page's one next step, below its heading. */
+  /*
+   * A page's one next step: below the heading of the error page, below the list of a city page. The 40px above it
+   * keeps it off the last row's rule (design review 4e); `.page__main` is a block, so after the heading this margin
+   * collapses into the heading's larger one and adds nothing.
+   */
   .page__next {
-    @apply m-0;
+    @apply m-0 mbs-10 text-lead;
   }
 
-  /* A lone link: at least 24px tall (WCAG 2.5.8 target size). */
+  /*
+   * A titled section of a page outside a form or long text (the deletion links below the edit form): 48px above it,
+   * 64px from 640px, and the maw section label as its title (lowercase caption in medium over a 1px ink-muted rule).
+   * The rows below the title carry their own rules.
+   */
+  .page__section {
+    @apply flex flex-col gap-4 mbs-12;
+
+    @variant sm {
+      @apply mbs-16;
+    }
+  }
+
+  /* The same section label as .long-text__heading: 20px (gap plus 4px) before the rows, as on the about page. */
+  .page__section-title {
+    @apply m-0 mbe-1 pbe-1 text-caption font-medium text-ink border-be border-ink-muted;
+  }
+
+  /*
+   * A lone text link (maw button A): ink, with the base 1px underline that turns 2px on hover and focus (base.css).
+   * At least 24px tall (WCAG 2.5.8 target size).
+   */
   .page__next-link {
-    @apply inline-block pbs-1 pbe-1;
+    @apply inline-block pbs-1 pbe-1 text-ink;
   }
 }

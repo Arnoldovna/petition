@@ -1,16 +1,28 @@
 /*
- * button: partial button.hbs (pattern A text, B outlined, B + accent primary; maw-design-system section 6).
- * Structure (phase 3): target size, native font, and the states that src/client/form-guard.ts sets after the first
- * submit (aria-busy="true" and disabled, F-75). Phase 4b gives the modifiers the maw patterns.
+ * button: partial button.hbs, the three maw button patterns (maw-design-system section 6, OVERVIEW.md 15.2):
+ *   button--text      pattern A, text with a 1px underline that grows to 2px on hover and focus ("clear").
+ *   button--outlined  pattern B, a 1px ink rectangle, no radius, that inverts on hover and focus.
+ *   button--primary   pattern B + accent, the vermilion field with ink text and border, at most once per view.
+ * The bare block is pattern A, so a button without a modifier still looks like an action.
+ * States: src/client/form-guard.ts sets aria-busy="true" and disabled after the first submit (F-75). A busy or
+ * disabled button keeps its colours (muted text on the accent field would fail contrast, section 4) and only loses
+ * its hover; the cursor says why. Focus is the global 2px ink ring of base.css, visible on paper and on the accent.
+ * Font, colour, transparent background, no border and no radius come from Tailwind's preflight for every <button>.
  * Part of main.css: no @reference.
  */
 @layer components {
   /* Neighbouring targets: at least 24px tall (WCAG 2.5.8 target size, axe target-size). Keep this in later phases. */
   .button {
-    @apply inline-block m-0 pbs-1 pbe-1;
+    @apply inline-block m-0 pbs-1 pbe-1 ps-0 pe-0 max-inline-full text-body font-regular text-ink text-start underline;
 
-    font: inherit;
+    text-decoration-thickness: var(--rule-width);
+    text-underline-offset: var(--underline-offset);
     cursor: pointer;
+
+    &:hover:enabled,
+    &:focus-visible {
+      text-decoration-thickness: var(--rule-width-strong);
+    }
 
     &:disabled {
       cursor: not-allowed;
@@ -20,18 +32,59 @@
     &[aria-busy='true'] {
       cursor: progress;
     }
+
+    @variant motion-safe {
+      transition-property: color, background-color, text-decoration-thickness;
+      transition-duration: var(--duration-fast);
+      transition-timing-function: var(--ease-standard);
+    }
   }
 
-  /* The three modifiers the partial accepts (OVERVIEW.md section 15.2); phase 4b gives them the maw patterns. */
+  /* Pattern A, named explicitly where a view mixes patterns (signature pad: "clear" next to the primary). */
+  .button--text {
+    @apply text-ink;
+  }
+
+  .button--text:disabled {
+    @apply text-ink-muted;
+  }
+
+  /*
+   * Pattern B, shared by outlined and primary: a 1px rectangle without underline that inverts to ink on hover, with a
+   * focus equivalent (F-81; paper on ink is 21:1 in both themes). The modifiers below only set the resting colours.
+   */
+  .button--outlined,
   .button--primary {
-    display: inline-block;
+    @apply pbs-3 pbe-3 ps-6 pe-6 no-underline;
+
+    border: var(--rule-width) solid var(--color-ink);
+
+    &:hover:enabled,
+    &:focus-visible {
+      @apply bg-ink text-paper;
+
+      border-color: var(--color-ink);
+    }
   }
 
   .button--outlined {
-    display: inline-block;
+    @apply bg-paper text-ink;
+
+    /* Ink-muted on paper is 6.29:1 (light) and 7.46:1 (dark): still readable, clearly inactive. */
+    &:disabled {
+      @apply text-ink-muted;
+
+      border-color: var(--color-ink-muted);
+    }
   }
 
-  .button--text {
-    display: inline-block;
+  /*
+   * Pattern B + accent: black on vermilion is 6.60:1 and does not swap in dark mode (--color-on-accent), so neither
+   * does the border. The busy state keeps the accent field.
+   */
+  .button--primary {
+    @apply bg-accent text-on-accent;
+
+    border-color: var(--color-on-accent);
   }
 }

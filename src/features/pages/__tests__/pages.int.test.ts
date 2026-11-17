@@ -128,12 +128,12 @@ describe('GET /', () => {
     // Every link in the page body is one of those routes; the legacy page linked to a route that never existed.
     expect(hrefs(page, 'main a')).toEqual(HOME_TARGETS);
     expect(page.texts('main .list-row__title')).toEqual([
-      'Register',
-      'Log in',
-      'Tell us about yourself',
-      'Sign the petition',
-      'See all supporters',
-      'Delete your account',
+      'register',
+      'log in',
+      'tell us about yourself',
+      'sign the petition',
+      'see all supporters',
+      'delete your account',
     ]);
     // The list has an accessible name (a visually hidden h2), so the page outline is h1 > h2.
     expect(page.attr('main section', 'aria-labelledby')).toBe('home-steps');

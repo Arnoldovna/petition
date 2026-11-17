@@ -1,9 +1,11 @@
 /*
- * row-list: partial row-list.hbs, the list around list-row (maw "list rows"; B-67). Structure only (phase 3).
- * Part of main.css: no @reference.
+ * row-list: partial row-list.hbs, the list around list-row (maw "list rows"; B-67). Part of main.css: no @reference.
  */
 @layer components {
-  /* The rows carry their own spacing and rules; the list adds no markers and no indent. */
+  /*
+   * The rows carry their own spacing and rules; the list adds no markers, no indent and no box (maw: rules, not
+   * boxes). Each row draws the rule under itself, so the list needs no separator of its own.
+   */
   .row-list {
     @apply flex flex-col m-0 p-0;
 

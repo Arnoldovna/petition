@@ -569,16 +569,25 @@ global `:focus-visible` ring, `scroll-padding-top`), `utilities.css` (`.visually
 
 - Paper and ink, rules not boxes. Accent vermilion appears only as flat fields: the signature pad surface, the
   thank-you signature frame, the primary button (`button--primary`, at most once per view; on the sign page only
-  "sign the petition", the typed-name submit is `button--outlined`) and the current-page underline marker (paired with
-  a 2px ink underline, contrast rule section 4).
+  "sign the petition", the typed-name submit is `button--outlined`), the flash message (maw "success" on an accent
+  field, black on-accent text, as wide as its sentence; decided in phase 4) and text selection. The current page in
+  the nav and footer is marked by a 2px ink underline only, without an accent underline (maw header pattern; decided
+  in phase 4).
 - Home and about are list rows (title left in `text-title`, meta right in `text-meta`); supporters are list rows with
   the name left and age, city and date as tracked meta right; they stack on narrow containers.
 - The thank-you page carries the one `text-display-xl` hero number per page: the supporter count.
 - Wordmark "nonsense petition" left in the header, lowercase nav links right (guest: about, log in, register;
   signed in: supporters, profile, log out). Never more than 3 links (maw header pattern 1 to 3), so no hamburger;
   "about" is always in the footer, next to privacy, contact and imprint (F-14 amended). Links wrap on 320px.
+  The header is sticky from 768px (not 640px): the long wordmark makes the signed-in nav wrap under it between 640 and
+  767px, and a two-row sticky header would cover too much of a small screen and exceed the 128px
+  `scroll-padding-block-start`. For the same reason the display-size wordmark (49px) and the 31px nav links start at
+  1024px. The sticky header is opaque paper and `--header-fade` is a 16px strip below it, so scrolled text never runs
+  behind the wordmark or the links (decided in phase 4, `site-header.css`).
 - Copy: lowercase for nav, buttons and labels; sentence case for content; no exclamation marks except the F-55 text
-  "No supporters yet. Be the first!", which FEATURES fixes literally. Dates `15 Nov 2026`, counts `1,284`.
+  "No supporters yet. Be the first!", which FEATURES fixes literally. Dates `15 Nov 2026` with fixed three-letter months
+  (`Sep`, never ICU's en-GB `Sept`), counts `1,284` in proportional figures (the tabular comma of Schibsted Grotesk is
+  too wide). Action rows (home, thank-you, edit) are lowercase like buttons.
 - Dark mode by token swap only; the signature stays visible because it sits on an accent field with black ink.
 - Every hover has a `:focus-visible` equivalent; the shake runs only under `motion-safe` and pointer hover (F-81, F-85).
 

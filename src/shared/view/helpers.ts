@@ -48,6 +48,39 @@ function currentPathOf(options: unknown): string | undefined {
   return typeof root.currentPath === 'string' ? root.currentPath : undefined;
 }
 
+/**
+ * The house month names (OVERVIEW.md section 15.4): always three letters. Current ICU abbreviates September as
+ * "Sept" in en-GB, so the month name never comes from `Intl`; only the calendar parts in the time zone do.
+ */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
+
+/** ASCII digits only: what en-GB `formatToParts` returns for a numeric day, month or year. */
+const DIGITS = /^\d+$/;
+
+/** A numeric calendar part as a number, or undefined when ICU returned anything but plain digits (never NaN). */
+function calendarNumber(value: string | undefined): number | undefined {
+  return value !== undefined && DIGITS.test(value) ? Number(value) : undefined;
+}
+
+/** Formats a date as `15 Nov 2026` in `timeZone`: day, month and year are the ones of that zone. */
+function createDateFormatter(timeZone: string): (date: Date) => string {
+  const partsFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric', timeZone });
+
+  return (date) => {
+    // en-GB pads numeric days ("02"); reading the parts as numbers gives the unpadded house day ("2 Sep 2026").
+    const parts = new Map(partsFormat.formatToParts(date).map(({ type, value }) => [type, value]));
+    const day = calendarNumber(parts.get('day'));
+    const monthNumber = calendarNumber(parts.get('month'));
+    const month = monthNumber === undefined ? undefined : MONTHS[monthNumber - 1];
+    const year = calendarNumber(parts.get('year'));
+    if (day === undefined || month === undefined || year === undefined) {
+      // A template bug in the sense of createHelpers: never print "NaN Sep 2026" or "undefined".
+      throw new RangeError('formatDate: the date has no numeric calendar parts');
+    }
+    return `${String(day)} ${month} ${String(year)}`;
+  };
+}
+
 const countFormat = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 });
 const pluralRules = new Intl.PluralRules('en-GB');
 
@@ -78,7 +111,7 @@ export function cityPath(city: string): string {
  * Formats are en-GB (OVERVIEW.md section 15.4): counts `1,284`, dates `15 Nov 2026` in `APP_TIME_ZONE`.
  */
 export function createHelpers({ assets, timeZone }: HelperDeps) {
-  const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone });
+  const formatDate = createDateFormatter(timeZone);
 
   return {
     /** `{{asset "app.css"}}` -> `/assets/app-<hash>.css` (production) or `/assets/app.css` (development). */
@@ -98,7 +131,7 @@ export function createHelpers({ assets, timeZone }: HelperDeps) {
     formatCount: (count: unknown): string => formatCount(requireCount('formatCount', count)),
 
     /** A signing date as `15 Nov 2026` in `APP_TIME_ZONE`, so a signature at 23:30 UTC shows the local day. */
-    formatDate: (value: unknown): string => dateFormat.format(toDate(value)),
+    formatDate: (value: unknown): string => formatDate(toDate(value)),
 
     /** The supporters-by-city link of a row (`cityPath` above). */
     cityPath: (city: unknown): string => cityPath(requireText('cityPath', city)),

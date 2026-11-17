@@ -1,41 +1,61 @@
 /*
- * form: the page-level <form> of the register, login, onboarding and edit pages (F-21, F-75, F-80).
- * Structure (phase 3): one column at the prose width, generous gaps between fields, tight ones inside a field
- * (form-field.css). Phase 4b adds the maw design. Part of main.css: no @reference.
+ * form: the page-level <form> of the register, login, onboarding and edit pages (F-21, F-75, F-80, B-77).
+ * One left-aligned column at the prose width. Rhythm is deliberately uneven (maw-design-system section 3): 32px
+ * between fields, 24px between the fields of one group, 48px between groups, and a follow-up link that sits right
+ * under its field. Groups are titled like the maw section label: lowercase caption with a 1px ink-muted rule.
+ * Part of main.css: no @reference.
  */
 @layer components {
+  /*
+   * The space below belongs to the form (design review 4e): what follows it on a page (the "log in" or "register"
+   * next step, the deletion links of the edit page) starts 40px below the submit button instead of touching it.
+   */
   .form {
-    @apply flex flex-col gap-8 max-inline-prose;
+    @apply flex flex-col gap-8 mbe-10 max-inline-prose;
   }
 
   /* Edit page groups. A fieldset's default min-inline-size is min-content, which would overflow at 320px (F-83). */
   .form__fieldset {
-    @apply flex flex-col gap-6 m-0 p-0;
+    @apply flex flex-col gap-6 m-0 p-0 pbe-4;
 
     border: 0;
     min-inline-size: 0;
   }
 
+  /*
+   * maw section label (caption over a 1px ink-muted rule, like .long-text__heading and .page__section-title); the
+   * rule is decorative, the legend text names the group. A rendered legend is not a flex item of its fieldset, so
+   * its space below is a margin (24px, the fieldset's gap) instead of the gap.
+   */
   .form__legend {
-    @apply p-0 mbe-6;
+    @apply p-0 pbe-1 mbe-6 inline-full text-caption font-medium text-ink border-be border-ink-muted;
+  }
+
+  /* Running text inside a form (the disclosures of F-90), body size and ink (F-82). */
+  .form__text {
+    @apply m-0 text-body text-ink;
   }
 
   /*
-   * Paragraphs inside a form: running text (the disclosures of F-90) and a follow-up right below one field ("log in
-   * instead" after the email-taken error, F-20).
+   * A follow-up right below one field ("log in instead" after the email-taken error, F-20). It pulls up into the
+   * field gap, 32px minus 24px, so it reads as part of that field and not as the next one.
    */
-  .form__text,
   .form__aside {
-    @apply m-0;
+    @apply m-0 text-body;
+
+    margin-block-start: calc(--spacing(6) * -1);
   }
 
   /* The submit button and an optional secondary link ("skip"); they wrap on narrow screens. */
   .form__actions {
-    @apply flex flex-wrap items-center gap-x-6 gap-y-4;
+    @apply flex flex-wrap items-center gap-x-6 gap-y-4 pbs-2;
   }
 
-  /* A standalone link next to a button: at least 24px tall (WCAG 2.5.8 target size). */
+  /*
+   * A standalone pattern A link next to a button: at least 24px tall (WCAG 2.5.8 target size). The underline and its
+   * hover and focus state are the base link rule (base.css).
+   */
   .form__link {
-    @apply inline-block pbs-1 pbe-1;
+    @apply inline-block pbs-1 pbe-1 text-body text-ink;
   }
 }

@@ -1,15 +1,19 @@
 /*
- * long-text: running text of the about and privacy pages (pages/about.hbs, pages/privacy.hbs).
- * Phase 2a: structure only (sections, line length, list markers). The maw design (section label type and rule,
- * link underline) is added in phase 4a (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * long-text: running text of the about and privacy pages (pages/about.hbs, pages/privacy.hbs). maw "section label"
+ * (lowercase caption in medium over a 1px ink-muted rule) above 16px body text at about 70 characters per line.
+ * Part of main.css: no @reference.
  *
  * Not called `prose`: that is a Tailwind Typography utility name, which scripts/check-no-utilities.mjs rejects in
  * markup (OVERVIEW.md section 15.3, ADR 0016).
  */
 @layer components {
-  /* The topics of one page, one after the other. */
+  /* The topics of one page, one after the other, with generous space between them (maw rhythm). */
   .long-text {
-    @apply flex flex-col gap-10;
+    @apply flex flex-col gap-12;
+
+    @variant sm {
+      @apply gap-16;
+    }
   }
 
   /* One topic: its label, then text, lists or a row-list, which may use the full column width. */
@@ -17,31 +21,42 @@
     @apply flex flex-col gap-4;
   }
 
+  /*
+   * The section label: the rule spans the column, like the maw "details" label; the text below keeps its measure.
+   * .page__section-title and .form__legend use the same declarations.
+   */
   .long-text__heading {
-    @apply m-0;
+    @apply m-0 mbe-1 pbe-1 text-caption font-medium border-be border-ink-muted;
   }
 
   /* Running text keeps a readable line length (--container-prose, about 70 characters). */
   .long-text__text {
-    @apply m-0 max-inline-prose;
+    @apply m-0 max-inline-prose text-body;
   }
 
   /* A block, not a flex column: list items keep their markers in every engine. */
   .long-text__list {
-    @apply m-0 ps-6 max-inline-prose;
+    @apply m-0 ps-5 max-inline-prose text-body;
 
     list-style-type: disc;
   }
 
   .long-text__item {
     display: list-item;
+
+    &::marker {
+      @apply text-ink;
+    }
   }
 
   .long-text__item + .long-text__item {
     @apply mbs-2;
   }
 
-  /* A long link text (a contact address) wraps instead of widening the page at 320px (F-83). */
+  /*
+   * Inline links: ink with the base 1px underline, 2px on hover and keyboard focus (base.css). A long link text
+   * (a contact address) wraps instead of widening the page at 320px (F-83).
+   */
   .long-text__link {
     overflow-wrap: anywhere;
   }

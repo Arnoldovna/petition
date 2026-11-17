@@ -191,6 +191,9 @@ describe('GET /profile/edit', () => {
     const unsignedPage = parse((await unsigned.agent.get('/profile/edit')).text);
     expect(unsignedPage.has('a[href="/signature/delete"]')).toBe(false);
     expect(unsignedPage.text('main a[href="/account/delete"] .list-row__title')).toBe('delete account');
+    // The links sit in their own labelled section after the form, titled like the form's section labels (F-80).
+    expect(unsignedPage.attr('main section.page__section', 'aria-labelledby')).toBe('profile-delete-title');
+    expect(unsignedPage.text('#profile-delete-title.page__section-title')).toBe('delete your data');
 
     const signed = await signedInAgent();
     await createSignature(testApp.db, signed.user.id);

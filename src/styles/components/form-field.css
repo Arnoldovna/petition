@@ -1,34 +1,68 @@
 /*
- * form-field: partial form-field.hbs (label above, input, hint, error; F-21, F-80, B-65, B-68).
- * Structure (phase 3): label, input, hint and error stacked tightly, the input as wide as the form. The error state
- * already carries the maw marker (a 2px error rule beside ink text, maw-design-system section 4), because the
- * message text and aria-invalid, not the colour, carry the meaning. Phase 4b adds the underlined input and the type.
+ * form-field: partial form-field.hbs, the maw underlined input (maw-design-system section 7; F-21, F-80, B-65, B-68).
+ * Label above in small muted meta, an input with only a bottom line, hint below, error message last.
+ * - The bottom line is a UI boundary (WCAG 1.4.11), so it is ink-muted (6.29:1 light, 7.46:1 dark), never --color-rule.
+ * - Hover darkens the line to ink; focus replaces the global outline with an equally visible 2px ink line (the one
+ *   stylelint exception for outline removal). The outline stays as a transparent line, which forced-colours mode
+ *   (Windows high contrast) paints in the system colour, so focus never disappears there.
+ * - Error: aria-invalid draws a 2px error line, and the message is ink text beside a 2px error rule. The text and
+ *   aria-invalid carry the meaning, the rust colour (4.16:1 light, 5.05:1 dark) only marks it (section 4).
+ * - The line grows from 1px to 2px without moving the content: the padding below shrinks by the same amount.
  * Part of main.css: no @reference.
  */
 @layer components {
   .form-field {
-    @apply flex flex-col gap-2;
+    @apply flex flex-col gap-2 max-inline-prose;
   }
 
   .form-field__label {
-    @apply self-start;
+    @apply self-start text-meta text-ink-muted;
   }
 
-  /* Native controls do not inherit the page font; min-inline-size 0 lets the input shrink to the column. */
+  /*
+   * min-inline-size 0 lets the input shrink to a 320px column; appearance none drops the iOS inset and rounding.
+   * Preflight already gives every input the page font, no border and no radius; only the bottom line is drawn here.
+   */
   .form-field__input {
-    @apply m-0 inline-full;
+    @apply m-0 pbs-2 ps-0 pe-0 inline-full text-lead font-regular text-ink bg-paper;
 
-    font: inherit;
     min-inline-size: 0;
+    appearance: none;
+    border-block-end: var(--rule-width) solid var(--color-ink-muted);
+    padding-block-end: calc(--spacing(2) + var(--rule-width-strong) - var(--rule-width));
+
+    @variant hover {
+      border-block-end-color: var(--color-ink);
+    }
+
+    &[aria-invalid='true'] {
+      padding-block-end: --spacing(2);
+      border-block-end: var(--rule-width-strong) solid var(--color-error);
+    }
+
+    /* After the invalid state on purpose: while the field has focus, the ink focus line wins. */
+    &:focus-visible {
+      padding-block-end: --spacing(2);
+      outline: var(--focus-width) solid transparent;
+      border-block-end: var(--rule-width-strong) solid var(--color-ink);
+    }
+
+    @variant motion-safe {
+      transition-property: border-color;
+      transition-duration: var(--duration-fast);
+      transition-timing-function: var(--ease-standard);
+    }
   }
 
   .form-field__hint {
-    @apply m-0;
+    @apply m-0 text-meta text-ink-muted;
   }
 
+  /* Body size: the message is what the user must read and act on (F-82); never coloured text (section 4). */
   .form-field__error {
-    @apply m-0 ps-3;
+    @apply m-0 ps-3 text-body text-ink;
 
     border-inline-start: var(--rule-width-strong) solid var(--color-error);
+    overflow-wrap: break-word;
   }
 }

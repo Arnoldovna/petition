@@ -1,19 +1,26 @@
 /*
  * confirm-panel: partial confirm-panel.hbs (signature delete, account delete; F-50, F-67, ADR 0013).
- * Structure (phase 3): what will happen, the optional fields (current password) and the actions, one column at the
- * prose width. Phase 4b adds the maw design. Part of main.css: no @reference.
+ * No box: the panel opens with a 1px ink-muted rule, then the question, what will happen as a plain list, the
+ * optional fields (current password) and the actions. The destructive action is the view's one accent button, the
+ * way out ("keep my signature") a pattern A link next to it. One column at the prose width.
+ * Part of main.css: no @reference.
  */
 @layer components {
   .confirm-panel {
-    @apply flex flex-col gap-6 max-inline-prose;
+    @apply flex flex-col gap-6 pbs-6 max-inline-prose text-ink;
+
+    border-block-start: var(--rule-width) solid var(--color-ink-muted);
   }
 
   .confirm-panel__title {
-    @apply m-0;
+    @apply m-0 text-title-s font-medium;
   }
 
+  /* Markers stay visible (preflight removes them; Safari drops list semantics without them). */
   .confirm-panel__list {
-    @apply m-0 flex flex-col gap-2;
+    @apply m-0 ps-5 flex flex-col gap-2 text-body;
+
+    list-style-type: square;
   }
 
   .confirm-panel__item {
@@ -33,8 +40,11 @@
     @apply flex flex-wrap items-center gap-x-6 gap-y-4;
   }
 
-  /* Neighbouring targets: at least 24px tall (WCAG 2.5.8 target size, axe target-size). Keep this in later phases. */
+  /*
+   * Neighbouring targets: at least 24px tall (WCAG 2.5.8 target size, axe target-size). Keep this in later phases.
+   * The underline and its 2px hover and focus state come from the base link rule (base.css).
+   */
   .confirm-panel__cancel {
-    @apply inline-block pbs-1 pbe-1;
+    @apply inline-block pbs-1 pbe-1 text-body text-ink;
   }
 }

@@ -39,8 +39,8 @@
     {{> button type="submit" label="save changes" modifier="button--primary"}}
   </div>
 </form>
-<section aria-labelledby="profile-delete-title">
-  <h2 id="profile-delete-title">Delete your data</h2>
+<section class="page__section" aria-labelledby="profile-delete-title">
+  <h2 class="page__section-title" id="profile-delete-title">delete your data</h2>
   {{#> row-list}}
     {{#if showDeleteSignature}}
       {{> list-row href="/signature/delete" title="delete signature" meta="removes you from the supporters list"}}

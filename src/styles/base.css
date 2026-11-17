@@ -3,19 +3,31 @@
  * The @font-face rules live in fonts.css; scripts/copy-fonts.mjs copies the font files (ADR 0010).
  */
 @layer base {
+  /*
+   * Paper and ink from tokens, so dark mode is a token swap (tokens.css) and needs nothing here. Body text is 16px
+   * (B-74, F-82). Only weights 400 and 500 are loaded: `font-synthesis: none` stops the browser from faking a bold
+   * from them (B-74 faux bold), and `strong`/`b` below map to the medium weight instead.
+   */
   html {
     @apply bg-paper text-ink font-sans font-regular text-body;
 
+    font-synthesis: none;
     -webkit-font-smoothing: antialiased;
     text-size-adjust: 100%;
 
     /*
-     * From 640px the site header is sticky (maw header pattern, ADR 0014). In-page targets (the error summary's
-     * #<field> links, the skip link's #main) must not land underneath it: 32 spacing steps = 128px, the header's
-     * height with the display-size wordmark.
+     * From 768px the site header is sticky (maw header pattern, ADR 0014; site-header.css says why not 640px).
+     * In-page targets (the error summary's #<field> links, the skip link's #main) must not land underneath it
+     * (WCAG 2.4.11, B-78, B-81): 32 spacing steps = 128px, at least the one-row header's height including its fade
+     * strip (115px at 768px, 124px with the display-size wordmark from 1024px).
      */
-    @variant sm {
+    @variant md {
       scroll-padding-block-start: --spacing(32);
+    }
+
+    /* Smooth in-page scrolling only when the viewer has not asked for reduced motion (F-85, B-83). */
+    @variant motion-safe {
+      scroll-behavior: smooth;
     }
   }
 
@@ -37,10 +49,29 @@
     text-wrap: pretty;
   }
 
+  strong,
+  b {
+    @apply font-medium;
+  }
+
+  /*
+   * Links are ink with a 1px underline (maw button A), so they never depend on colour alone (WCAG 1.4.1). The line
+   * is set explicitly: Tailwind's preflight resets links to `text-decoration: inherit`. Hover and keyboard focus
+   * both thicken it to 2px (F-81: every hover has a :focus-visible equivalent), so component links (error summary,
+   * pagination, supporter rows, empty state, ...) only add their layout and never repeat the underline. Components
+   * that drop the underline (nav, footer, list rows) give hover and focus their own equivalent.
+   * Form controls need no rule here: preflight already makes them inherit the page font, colour and tracking.
+   */
   a {
     color: inherit;
+    text-decoration-line: underline;
     text-decoration-thickness: var(--rule-width);
     text-underline-offset: var(--underline-offset);
+  }
+
+  a:hover,
+  a:focus-visible {
+    text-decoration-thickness: var(--rule-width-strong);
   }
 
   img,
@@ -50,6 +81,10 @@
     block-size: auto;
   }
 
+  /*
+   * The one focus indicator (B-66, F-81): 2px ink, 4px away from the element. Ink has at least 3:1 against paper
+   * and against every accent field, in light and dark mode (maw-design-system section 4).
+   */
   :focus-visible {
     outline: var(--focus-width) solid var(--color-ink);
     outline-offset: var(--focus-offset);
@@ -57,11 +92,5 @@
 
   ::selection {
     @apply bg-accent text-on-accent;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    html {
-      scroll-behavior: smooth;
-    }
   }
 }

@@ -1,15 +1,15 @@
 /*
  * page-heading: partial page-heading.hbs, the one h1 of every page and its optional lead (F-79, B-67).
- * Structure only (phase 3): spacing and wrapping. The title and lead sizes come in phase 4a.
- * Part of main.css: no @reference.
+ * maw "big type": the title in regular weight (the wordmark is the one medium display line), 31px, 39px from 640px;
+ * the lead in the 21px intro size. Part of main.css: no @reference.
  */
 @layer components {
   /* Title, then lead, then generous space before the page content (maw: tight inside, generous between). */
   .page-heading {
-    @apply flex flex-col gap-3 mbe-10;
+    @apply flex flex-col gap-4 mbe-10;
 
     @variant sm {
-      @apply mbe-12;
+      @apply mbe-16;
     }
   }
 
@@ -19,13 +19,18 @@
    * never grows to fit the unbroken word.
    */
   .page-heading__title {
-    @apply m-0;
+    @apply m-0 text-title font-regular;
 
     overflow-wrap: anywhere;
+
+    @variant sm {
+      @apply text-title-l;
+    }
   }
 
+  /* Primary text, so ink (not muted), at a readable line length. */
   .page-heading__lead {
-    @apply m-0 max-inline-prose;
+    @apply m-0 max-inline-prose text-lead;
 
     overflow-wrap: anywhere;
   }

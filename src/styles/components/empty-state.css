@@ -1,30 +1,47 @@
 /*
  * empty-state: partial empty-state.hbs (supporters list and city, F-55, F-58).
- * Structure (phase 3, maw components section 12): one left-aligned column of title, one line of text and one link;
- * the maw type follows in phase 4d (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * maw empty state (components section 12): one left-aligned column of a large sentence, one line of muted text and
+ * one text link (maw button A). No illustration, no box. The block is its own container, so the title size follows
+ * the column, not the viewport.
+ * Two deliberate departures from the maw sample, which shows the block mid-page: here it directly follows the page
+ * heading (whose bottom margin already separates the two) and is the last thing in <main>, so it adds only a small
+ * top offset and no closing rule; a rule there would run parallel to the footer's rule as a double line.
+ * Part of main.css: no @reference.
  */
 @layer components {
   .empty-state {
-    @apply flex flex-col items-start gap-4 pbs-16 pbe-16;
+    @apply flex flex-col items-start gap-3 pbs-4;
+
+    container-type: inline-size;
 
     /* The city page puts the requested city (up to 100 characters, maybe without a space) into the title (F-83). */
     overflow-wrap: anywhere;
   }
 
+  /* 31px in a narrow column, the maw empty-state 39px from the `row` container width; regular, like row titles. */
   .empty-state__title {
-    @apply m-0;
+    @apply m-0 text-title font-regular;
+
+    @variant @row {
+      @apply text-title-l;
+    }
   }
 
+  /* Secondary text: ink-muted on paper is 6.29:1 light and 7.46:1 dark (WCAG AA). */
   .empty-state__text {
-    @apply m-0 max-inline-prose;
+    @apply m-0 text-body text-ink-muted max-inline-prose;
   }
 
+  /* More room before the one next step than between the two sentences (maw: vary the rhythm). */
   .empty-state__action {
-    @apply m-0;
+    @apply m-0 mbs-3;
   }
 
-  /* At least 24px tall (WCAG 2.5.8 target size). */
+  /*
+   * maw button A: body size, ink, at least 24px tall (WCAG 2.5.8). The 1px underline that turns 2px on hover and
+   * keyboard focus is the base link rule (base.css).
+   */
   .empty-state__link {
-    @apply inline-block pbs-1 pbe-1;
+    @apply inline-block pbs-1 pbe-1 text-body text-ink;
   }
 }

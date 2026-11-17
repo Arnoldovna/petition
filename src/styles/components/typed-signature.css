@@ -1,26 +1,29 @@
 /*
  * typed-signature: partial typed-signature.hbs, the typed-name form of the sign page (F-45, ADR 0005). Always visible,
  * with and without JavaScript: the keyboard, screen-reader and no-JS way to sign.
- * Structure (phase 3); phase 4 adds the maw design. Part of main.css: no @reference.
+ * Same column and section title as signature-pad (56rem, 24px title over a muted 1px rule); the form itself keeps
+ * the prose measure so the underlined input does not run across the page. Part of main.css: no @reference.
  */
 @layer components {
   .typed-signature {
-    @apply grid gap-4;
+    @apply grid gap-5 max-inline-wide;
   }
 
+  /* The same declarations as .signature-pad__title (maw "section label" in the 24px step). */
   .typed-signature__title {
-    display: block;
+    @apply m-0 pbe-2 text-title-s font-medium border-be border-ink-muted;
   }
 
   .typed-signature__text {
-    @apply max-inline-prose;
+    @apply m-0 max-inline-prose text-body;
   }
 
+  /* Field, then more air before the submit (maw: vary the rhythm, never one gap everywhere). */
   .typed-signature__form {
-    @apply grid gap-4 max-inline-prose;
+    @apply grid gap-8 mbs-1 max-inline-prose;
   }
 
   .typed-signature__actions {
-    @apply flex flex-wrap items-center gap-4;
+    @apply flex flex-wrap items-center gap-x-8 gap-y-4;
   }
 }

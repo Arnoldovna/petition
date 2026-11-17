@@ -1,28 +1,66 @@
 /*
  * site-header: partial site-header.hbs (maw "site header": wordmark left, at most three lowercase links right; F-14).
- * Structure only (phase 3): wrapping row, gutters, sticky from 640px and the target sizes. The wordmark and link type,
- * the current-page underline, the paper fade and the shake come in phase 4a. Part of main.css: no @reference.
+ * Part of main.css: no @reference.
  */
 @layer components {
   /*
    * Wordmark and navigation share one row and wrap below each other when they do not fit (320px), never with a
-   * hamburger (at most three links, ADR 0014). From 640px the header is sticky; base.css reserves its height with
-   * scroll-padding, so in-page targets are not hidden underneath it. The paper background keeps the page from showing
-   * through; phase 4a replaces it with the --header-fade token.
+   * hamburger (at most three links, ADR 0014). The gutters follow the page shell (12px, 20px from 640px).
+   *
+   * Sticky from 768px, not 640px as in the maw pattern: "nonsense petition" is a long wordmark, and between 640px
+   * and 767px the signed-in links wrap below it, so a sticky header would cover about 160px of a small screen and
+   * more than the scroll-padding reserves. From 768px it is one row. base.css reserves its height with
+   * scroll-padding, so in-page targets are not hidden underneath it (WCAG 2.4.11, B-81).
+   *
+   * The sticky header is opaque paper, and the maw fade (--header-fade, paper to transparent, the only gradient maw
+   * allows; it follows dark mode through --color-paper) hangs below it as a 16px strip. On the header box itself the
+   * gradient would leave the wordmark and the links on see-through paper, so scrolled text would run behind them at
+   * low contrast (WCAG 1.4.3). To keep the 24px between the links and the page, the header ends 8px below the links
+   * and `.page__main` starts 16px lower from 768px (page.css), the room the strip covers at the top of the page.
    */
   .site-header {
     @apply flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 pbs-8 pbe-6 ps-3 pe-3;
 
     @variant sm {
-      @apply sticky inset-bs-0 bg-paper pbs-12 ps-5 pe-5;
+      @apply pbs-10 ps-5 pe-5;
+    }
+
+    @variant md {
+      @apply sticky inset-bs-0 pbe-2 bg-paper;
 
       z-index: var(--layer-header);
     }
   }
 
-  /* Wordmark and links are neighbouring targets: at least 24px tall (WCAG 2.5.8). Keep this in later phases. */
+  /* The fade strip below the sticky header; clicks pass through it to the page underneath. */
+  .site-header::after {
+    @variant md {
+      position: absolute;
+      inset-block-start: 100%;
+      inset-inline: 0;
+      block-size: --spacing(4);
+      content: '';
+      background-image: var(--header-fade);
+      pointer-events: none;
+    }
+  }
+
+  /*
+   * The wordmark: project name in medium, 31px, 39px from 640px, 49px from 1024px (one step later than the maw
+   * pattern, so wordmark and links share one row at 768px; see above). No underline; it is the identity,
+   * not a nav item, so it carries no current-page marker. At least 24px tall (WCAG 2.5.8). Like the links it shakes on
+   * pointer hover only (Tailwind's hover variant is @media (hover: hover)), never under reduced motion.
+   */
   .site-header__brand {
-    @apply inline-block pbs-1 pbe-1;
+    @apply inline-block pbs-1 pbe-1 text-title font-medium text-ink no-underline motion-safe:hover:animate-shake;
+
+    @variant sm {
+      @apply text-title-l;
+    }
+
+    @variant lg {
+      @apply text-display;
+    }
   }
 
   .site-header__nav {
@@ -44,8 +82,33 @@
     @apply block;
   }
 
+  /*
+   * Lowercase nav links: 21px, 31px from 1024px, medium, no underline at rest. Hover and keyboard focus both show a
+   * 1px underline, so the static feedback does not depend on the shake (F-81, B-83). At least 24px tall.
+   */
   .site-header__link {
-    @apply inline-block pbs-1 pbe-1;
+    @apply inline-block pbs-1 pbe-1 text-lead font-medium text-ink no-underline motion-safe:hover:animate-shake;
+
+    text-decoration-thickness: var(--rule-width);
+
+    @variant lg {
+      @apply text-title;
+    }
+
+    &:hover,
+    &:focus-visible {
+      @apply underline;
+    }
+  }
+
+  /*
+   * Current page: a 2px ink underline (maw header pattern). Ink, not the accent, carries the state, so it passes
+   * 3:1 in light and dark mode (maw-design-system section 4). Declared after :hover, so hovering keeps it at 2px.
+   */
+  .site-header__link[aria-current='page'] {
+    @apply underline;
+
+    text-decoration-thickness: var(--rule-width-strong);
   }
 
   /* The log-out form is only a wrapper for its button: no box of its own in the row. */
@@ -54,14 +117,11 @@
   }
 
   /*
-   * The log-out button (a POST form, B-08) sits among the nav links and looks like one: page font, no button box.
-   * It keeps the block padding of .site-header__link for its target size.
+   * The log-out button (a POST form, B-08) sits among the nav links and looks like one: the type and block padding
+   * of .site-header__link. Tailwind's preflight already strips the button box (inherited font and colour, no
+   * padding, border or background), so only the pointer is left to set.
    */
   .site-header__link--button {
-    @apply px-0 border-0 text-ink;
-
-    font: inherit;
-    background: none;
     cursor: pointer;
   }
 }

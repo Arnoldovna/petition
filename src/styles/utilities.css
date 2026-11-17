@@ -3,6 +3,7 @@
  * These are BEM blocks (used in markup), not Tailwind utilities.
  */
 @layer components {
+  /* Hidden on screen, still read by assistive technology (headings of sections that have a visible structure). */
   .visually-hidden {
     position: absolute;
     overflow: hidden;
@@ -13,17 +14,24 @@
     margin: calc(var(--rule-width) * -1);
   }
 
+  /*
+   * The first stop of the keyboard (F-79). Clipped away until it has focus, then it sits on top of the header in the
+   * page gutter: paper, ink text, a 1px ink border, and the global focus ring around it. `.page` is its positioning
+   * context, so it lines up with the column on wide screens. No slide-in: it appears instantly (F-85).
+   */
   .skip-link {
-    @apply bg-paper text-ink text-meta pbs-2 pbe-2 ps-4 pe-4;
+    @apply absolute inset-bs-3 inset-s-3 bg-paper text-ink text-body pbs-2 pbe-2 ps-3 pe-3;
 
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-start: 0;
     z-index: var(--layer-toast);
-    translate: 0 -100%;
-  }
+    border: var(--rule-width) solid var(--color-ink);
+    white-space: nowrap;
 
-  .skip-link:focus-visible {
-    translate: 0 0;
+    &:not(:focus) {
+      clip-path: inset(50%);
+    }
+
+    @variant sm {
+      @apply inset-bs-5 inset-s-5;
+    }
   }
 }

@@ -1,6 +1,6 @@
 /*
- * flash: partial flash.hbs, the role="status" region of the layout (F-17). Structure only (phase 3); the visual
- * treatment (maw "success": a plain sentence, optionally on the accent field) comes in phase 4a.
+ * flash: partial flash.hbs, the role="status" region of the layout (F-17). maw "success": a plain sentence on a flat
+ * accent field, black text (on-accent, 6.60:1 on vermilion in light and dark mode; never white, never muted).
  * Part of main.css: no @reference.
  */
 @layer components {
@@ -9,8 +9,14 @@
     @apply block;
   }
 
-  /* One sentence above the page heading, at most one line length wide. */
+  /*
+   * One sentence above the page heading. The field is as wide as its text and at most one line length wide, so a
+   * short message is not a full-width banner. It fades in once, only without reduced motion (F-85).
+   */
   .flash__message {
-    @apply m-0 mbe-8 pbs-3 pbe-3 max-inline-prose;
+    @apply m-0 mbe-8 pbs-3 pbe-3 ps-3 pe-3 max-inline-prose bg-accent text-on-accent text-body motion-safe:animate-fade-in;
+
+    inline-size: fit-content;
+    overflow-wrap: anywhere;
   }
 }
