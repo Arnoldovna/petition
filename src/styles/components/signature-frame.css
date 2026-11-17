@@ -1,13 +1,15 @@
 /*
  * signature-frame: partial signature-frame.hbs, the viewer's own signature on the thank-you page (F-46).
- * Structure only (phase 2a); phase 4 makes it the accent field. Part of main.css: no @reference.
+ * Structure (phase 3); phase 4c refines the field. The black-on-transparent PNG needs its flat accent field from the
+ * start: on dark paper the ink would be invisible (OVERVIEW.md section 15.4). The field is as wide as the text column
+ * at most, so the 720px export is never scaled up. Part of main.css: no @reference.
  */
 @layer components {
   .signature-frame {
-    display: block;
+    @apply bg-accent p-4 mbs-8 max-inline-prose;
   }
 
-  /* The 720 x 240 image scales down with its container and keeps its 3:1 ratio. */
+  /* The 720 x 240 image scales down with its container and keeps its 3:1 ratio (F-83). */
   .signature-frame__image {
     display: block;
     inline-size: 100%;

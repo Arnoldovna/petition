@@ -72,6 +72,21 @@ describe('GET /login', () => {
     expect(page.texts('main a[href="/register"]')).toContain('register');
   });
 
+  it('F-75, F-76, F-80: a plain guarded POST form, labels above the inputs, no placeholders, one accent button', async () => {
+    const page = parse((await request(testApp.app).get('/login').expect(200)).text);
+
+    expect(page.attr(FORM, 'action')).toBe('/login');
+    expect(page.has(`${FORM} input[type="hidden"][name="_csrf"]`)).toBe(true);
+    for (const field of page.root.querySelectorAll(`${FORM} .form-field`)) {
+      expect(field.firstElementChild?.tagName).toBe('LABEL');
+    }
+    expect(page.has(`${FORM} [placeholder]`)).toBe(false);
+    expect(page.has(`${FORM} .form__actions button[type="submit"].button--primary`)).toBe(true);
+    expect(page.texts('main .button--primary')).toEqual(['log in']);
+    // The way to the register page is not part of the form.
+    expect(page.has(`${FORM} a[href="/register"]`)).toBe(false);
+  });
+
   it('F-30: a safe returnTo becomes a hidden field', async () => {
     const page = parse((await request(testApp.app).get('/login?returnTo=%2Fsupporters%3Fpage%3D2').expect(200)).text);
 
@@ -168,6 +183,9 @@ describe('POST /login', () => {
     // Same session, same token, same markup: only the echoed email differs.
     expect(unknown.text.replace(user.email.replace('ada-', 'nobody-'), user.email)).toBe(wrong.text);
     expect(wrongPage.attr('.error-summary__link', 'href')).toBe('#main');
+    // F-21: the form-level message links to the main landmark, which exists and can take focus.
+    expect(wrongPage.attr('main#main', 'tabindex')).toBe('-1');
+    expect(wrongPage.has('main .error-summary[role="alert"][tabindex="-1"][autofocus]')).toBe(true);
     // Neither field is marked as the wrong one.
     expect(unknownPage.attr('#email', 'aria-invalid')).toBeUndefined();
     expect(unknownPage.attr('#password', 'aria-invalid')).toBeUndefined();

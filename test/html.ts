@@ -1,4 +1,4 @@
-import { parse as parseHtml, type HTMLElement } from 'node-html-parser';
+import { HTMLElement, parse as parseHtml, TextNode, type Node } from 'node-html-parser';
 
 /**
  * A parsed HTML response for assertions on rendered pages (ADR 0015). Selectors are CSS selectors as supported by
@@ -30,4 +30,17 @@ export function parse(html: string): Html {
     texts: (selector) => root.querySelectorAll(selector).map((element) => collapse(element.text)),
     attr: (selector, name) => root.querySelector(selector)?.getAttribute(name),
   };
+}
+
+/**
+ * What a screen reader announces for `node`: its text without `aria-hidden="true"` subtrees, whitespace collapsed;
+ * an empty string for a missing node.
+ */
+export function spoken(node: Node | null | undefined): string {
+  const text = (current: Node): string => {
+    if (current instanceof TextNode) return current.text;
+    if (!(current instanceof HTMLElement) || current.getAttribute('aria-hidden') === 'true') return '';
+    return current.childNodes.map(text).join('');
+  };
+  return node ? collapse(text(node)) : '';
 }

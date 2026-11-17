@@ -1,2 +1,14 @@
+# Nonsense Petition (ROUTES.md). The public content is the home, about and privacy pages. Every other route is a
+# form, needs a login or is an operations endpoint: a crawler would only get a redirect there or open a throwaway
+# session. This file is advice for well-behaved crawlers, not access control (the route guards are, ROUTES.md
+# section 1). Assets, fonts and icons stay allowed, so pages render for crawlers as they do for people.
 User-agent: *
-Allow: /
+Disallow: /register
+Disallow: /login
+Disallow: /logout
+Disallow: /account/
+Disallow: /profile
+Disallow: /signature
+Disallow: /thank-you
+Disallow: /supporters
+Disallow: /health/

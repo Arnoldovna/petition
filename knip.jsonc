@@ -7,8 +7,10 @@
   // the frozen e2e harness API in e2e/fixtures.ts (registerUser, signDrawn, signTyped, uniqueCity, E2eUser): it is
   // built in phase 1b, while its importers are the spec files of phases 2b and 5 (ADR 0019 section 3).
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
-  // src/server.ts and src/db/migrate.ts are entries through the package.json scripts that run them.
-  "entry": ["src/tools/*.ts", "src/client/*.ts", "scripts/*.mjs"],
+  // src/server.ts and src/db/migrate.ts are entries through the package.json scripts that run them. The client entries
+  // are exactly the esbuild entries (CLIENT_ENTRIES in scripts/build-client.mjs): a glob would make imported modules
+  // such as signature-pad.core.ts entries too, and knip never reports unused exports of an entry.
+  "entry": ["src/tools/*.ts", "src/client/{form-guard,signature-pad}.ts", "scripts/*.mjs"],
   "project": ["src/**/*.{ts,css}", "test/**/*.ts", "e2e/**/*.ts", "scripts/**/*.mjs"],
   "playwright": {
     // playwright.config.ts throws without E2E_BASE_URL (conventions §6), so knip must not load it; the specs are

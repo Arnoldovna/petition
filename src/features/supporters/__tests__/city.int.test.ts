@@ -5,7 +5,7 @@ import { profiles } from '../../../db/schema/index.js';
 import { signIn } from '../../../../test/auth.js';
 import { createSignature, createUser } from '../../../../test/factories.js';
 import type { Agent } from '../../../../test/forms.js';
-import { parse, type Html } from '../../../../test/html.js';
+import { parse, spoken, type Html } from '../../../../test/html.js';
 import { createTestApp, type TestApp } from '../../../../test/test-app.js';
 
 /**
@@ -89,6 +89,9 @@ describe('GET /supporters/city/:city: matching (ADR 0007)', () => {
     expect(rowNames(html)).toEqual(['Berta Citizen', 'Dora Citizen', 'Emil Citizen']);
     expect(html.attr('main a.page__next-link', 'href')).toBe('/supporters');
     expect(html.text('main a.page__next-link')).toBe('all supporters');
+    // Exactly one link back, and it comes after the list (F-56); the empty state is not rendered.
+    expect(html.root.querySelectorAll('main a[href="/supporters"]')).toHaveLength(1);
+    expect(html.has('.empty-state')).toBe(false);
   });
 
   it.each([['MÜNCHEN'], ['münchen'], ['mÜnChEn'], ['München']])(
@@ -133,7 +136,10 @@ describe('GET /supporters/city/:city: awkward names (F-57, B-32)', () => {
     'F-57, B-32: the list links %j with encodeURIComponent, and the link finds its supporter',
     async (city, index) => {
       const list = await cityPage('/supporters');
-      const link = list.root.querySelectorAll('a.supporter-row__city').find((anchor) => anchor.text.trim() === city);
+      // The link's text is the city after the visually hidden "supporters from " (F-84).
+      const link = list.root
+        .querySelectorAll('a.supporter-row__city')
+        .find((anchor) => spoken(anchor) === `supporters from ${city}`);
       expect(link?.getAttribute('href')).toBe(cityPath(city));
 
       const html = await cityPage(link?.getAttribute('href') ?? '');
@@ -149,12 +155,18 @@ describe('GET /supporters/city/:city: empty and invalid cities', () => {
 
     expect(html.text('title')).toBe('Supporters from Atlantis · Nonsense Petition');
     expect(html.texts('h1')).toEqual(['Supporters from Atlantis']);
-    expect(html.text('main .empty-state__title')).toBe('No supporters from Atlantis yet');
+    expect(html.text('main h2.empty-state__title')).toBe('No supporters from Atlantis yet');
+    expect(html.text('main .empty-state__text')).toBe(
+      'Check the spelling of the city, or see everyone who has signed so far.',
+    );
     expect(html.attr('main .empty-state__link', 'href')).toBe('/supporters');
     expect(html.text('main .empty-state__link')).toBe('all supporters');
     expect(html.has('.supporter-list')).toBe(false);
     expect(html.has('.page-heading__lead')).toBe(false);
     expect(html.has('nav.pagination')).toBe(false);
+    // The empty state carries the one link back; the list's link is not repeated (F-58).
+    expect(html.root.querySelectorAll('main a[href="/supporters"]')).toHaveLength(1);
+    expect(html.has('main .page__next')).toBe(false);
   });
 
   it('F-53, B-33: markup in the requested city is shown as text in the heading and the empty state', async () => {
@@ -201,7 +213,9 @@ describe('GET /supporters/city/:city: pagination (F-59)', () => {
     expect(first.text('.page-heading__lead')).toBe('51 supporters');
     expect(rowNames(first)).toHaveLength(PAGE_SIZE);
     expect(first.attr('ol.supporter-list', 'start')).toBe('1');
+    expect(first.text('nav.pagination .pagination__status')).toBe('page 1 of 2');
     expect(first.text('nav.pagination [aria-current="page"]')).toBe('page 1');
+    expect(first.attr('nav.pagination a[aria-current="page"]', 'href')).toBe(cityPath('köln'));
     expect(first.attr('nav.pagination a[rel="next"]', 'href')).toBe(`${cityPath('köln')}?page=2`);
 
     const second = await cityPage(`${cityPath('köln')}?page=2`);
@@ -209,6 +223,8 @@ describe('GET /supporters/city/:city: pagination (F-59)', () => {
     expect(second.attr('ol.supporter-list', 'start')).toBe('51');
     expect(rowNames(second)).toEqual(['Koeln51 Citizen']);
     expect(second.attr('nav.pagination a[rel="prev"]', 'href')).toBe(cityPath('köln'));
+    // The link back to all supporters follows the pagination on every page (F-56).
+    expect(second.attr('main a.page__next-link', 'href')).toBe('/supporters');
   });
 
   it.each([['3'], ['0'], ['x']])('F-59, ADR 0006: ?page=%j on a city page is the 404 page', async (value) => {

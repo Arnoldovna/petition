@@ -1,8 +1,10 @@
 {{!--
   pages/auth/register (ROUTES.md section 3, F-18 to F-21, F-90). Model: title, form (FormView), emailTaken.
   Labels are visible and the autocomplete tokens are the standard ones (F-80, B-71). The password is never echoed
-  back (form.ts). On "email taken" the email field carries the message and a link to log in follows it (F-20). The
-  disclosure sits next to the submit button, before anything is sent (F-90). The only accent button of the page.
+  back (form.ts). On "email taken" the email field carries the message and the "log in instead" link follows it
+  directly (F-20); it appears only then, never for a field-rule message about the email. The disclosure sits next to
+  the submit button, before anything is sent (F-90). The only accent button of the page. The way to the login page
+  for existing users stays outside the form: it is not part of what is submitted.
 --}}
 {{> page-heading title="Register" lead="Sign up to support a petition for absolutely nothing."}}
 {{> error-summary errorList=form.errorList}}
@@ -12,10 +14,12 @@
   {{> form-field form=form name="lastName" label="last name" autocomplete="family-name"}}
   {{> form-field form=form name="email" label="email" type="email" autocomplete="email"}}
   {{#if emailTaken}}
-    <p><a href="/login">log in instead</a></p>
+    <p class="form__aside"><a class="form__link" href="/login">log in instead</a></p>
   {{/if}}
   {{> form-field form=form name="password" label="password" type="password" autocomplete="new-password" hint="At least 12 characters"}}
-  <p>Your name appears on the supporters list, which registered users can see. Details: <a href="/privacy">privacy</a>.</p>
-  {{> button type="submit" label="register" modifier="button--primary"}}
+  <p class="form__text">Your name appears on the supporters list, which registered users can see. Details: <a href="/privacy">privacy</a>.</p>
+  <div class="form__actions">
+    {{> button type="submit" label="register" modifier="button--primary"}}
+  </div>
 </form>
 <p>Already registered? <a href="/login">log in</a></p>

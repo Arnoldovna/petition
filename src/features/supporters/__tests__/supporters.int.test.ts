@@ -1,3 +1,4 @@
+import { valid } from 'node-html-parser';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -5,7 +6,7 @@ import { profiles } from '../../../db/schema/index.js';
 import { signIn } from '../../../../test/auth.js';
 import { createSignature, createUser, type TestUser } from '../../../../test/factories.js';
 import type { Agent } from '../../../../test/forms.js';
-import { parse } from '../../../../test/html.js';
+import { parse, spoken } from '../../../../test/html.js';
 import { createTestApp, type TestApp } from '../../../../test/test-app.js';
 import { createSupportersModule } from '../index.js';
 
@@ -70,9 +71,19 @@ describe('GET /supporters: nobody has signed yet', () => {
     expect(html.text('title')).toBe('Supporters · Nonsense Petition');
     expect(html.texts('h1')).toEqual(['Supporters']);
     expect(html.text('main .empty-state__title')).toBe('No supporters yet. Be the first!');
+    expect(html.text('main .empty-state__text')).toBe('Your name appears here as soon as you sign.');
     expect(html.attr('main .empty-state__link', 'href')).toBe('/signature');
+    expect(html.text('main .empty-state__link')).toBe('sign the petition');
     expect(html.has('.supporter-list')).toBe(false);
     expect(html.has('nav.pagination')).toBe(false);
+    expect(html.has('.page-heading__lead')).toBe(false);
+  });
+
+  it('F-55, F-79, B-67: the empty state is a section whose sentence is an h2 below the one h1', async () => {
+    const { html } = await page('/supporters');
+
+    expect(html.root.querySelectorAll('main h1')).toHaveLength(1);
+    expect(html.has('main section.empty-state > h2.empty-state__title')).toBe(true);
   });
 
   it('F-54, ADR 0006: page 2 of an empty list is the 404 page', async () => {
@@ -181,15 +192,28 @@ describe('GET /supporters: 51 signers', () => {
     const first = await page('/supporters');
     const nav = 'nav.pagination[aria-label="Pagination"]';
 
-    expect(first.html.has(nav)).toBe(true);
+    expect(first.html.root.querySelectorAll(nav)).toHaveLength(1);
+    expect(first.html.text(`${nav} .pagination__status`)).toBe('page 1 of 2');
     expect(first.html.text(`${nav} [aria-current="page"]`)).toBe('page 1');
     expect(first.html.attr(`${nav} a[rel="next"]`, 'href')).toBe('/supporters?page=2');
     expect(first.html.has(`${nav} a[rel="prev"]`)).toBe(false);
 
     const second = await page('/supporters?page=2');
+    expect(second.html.text(`${nav} .pagination__status`)).toBe('page 2 of 2');
     expect(second.html.text(`${nav} [aria-current="page"]`)).toBe('page 2');
     expect(second.html.attr(`${nav} a[rel="prev"]`, 'href')).toBe('/supporters');
     expect(second.html.has(`${nav} a[rel="next"]`)).toBe(false);
+  });
+
+  it('F-54, F-84: every pagination link has a text name; the arrows are hidden from assistive technology', async () => {
+    const { html } = await page('/supporters?page=2');
+    const links = html.root.querySelectorAll('nav.pagination a');
+
+    expect(links.map((link) => spoken(link))).toEqual(['previous page', 'page 1', 'page 2']);
+    expect(html.root.querySelectorAll('nav.pagination [aria-hidden="true"]').map((glyph) => glyph.text)).toEqual(['←']);
+    // aria-current marks exactly one link, and it points to the page itself (its canonical URL).
+    expect(html.root.querySelectorAll('nav.pagination [aria-current]')).toHaveLength(1);
+    expect(html.attr('nav.pagination a[aria-current="page"]', 'href')).toBe('/supporters?page=2');
   });
 
   it.each([['3'], ['0'], ['-1'], ['abc'], ['1.5'], [''], ['10001'], ['123456'], ['1e1']])(
@@ -213,20 +237,33 @@ describe('GET /supporters: 51 signers', () => {
     const row = html.root.querySelectorAll('.supporter-row').find((li) => li.text.includes('Ada Lovelace'));
     expect(row).toBeDefined();
 
-    const name = row?.querySelector('a.supporter-row__name');
-    expect(name?.getAttribute('href')).toBe('https://ada.example.com/');
-    expect(name?.getAttribute('rel')).toBe('noopener noreferrer nofollow ugc');
-    expect(name?.hasAttribute('target')).toBe(false);
+    const link = row?.querySelector('a.supporter-row__link');
+    expect(link?.getAttribute('href')).toBe('https://ada.example.com/');
+    expect(link?.getAttribute('rel')).toBe('noopener noreferrer nofollow ugc');
+    expect(link?.hasAttribute('target')).toBe(false);
+    expect(link?.querySelector('.supporter-row__name')?.text).toBe('Ada Lovelace');
     expect(row?.querySelector('.supporter-row__age')?.text.trim()).toBe('age 36');
 
     const city = row?.querySelector('a.supporter-row__city');
-    expect(city?.text.trim()).toBe('Frankfurt/Main');
     expect(city?.getAttribute('href')).toBe('/supporters/city/Frankfurt%2FMain');
     expect(city?.hasAttribute('target')).toBe(false);
 
     const time = row?.querySelector('.supporter-row__date time');
     expect(time?.getAttribute('datetime')).toBe('2026-01-01T10:01:00.000Z');
     expect(time?.text.trim()).toBe('1 Jan 2026');
+  });
+
+  it('F-84, F-52: link names describe their destination: the homepage, and the supporters of the city', async () => {
+    const { html } = await page('/supporters');
+    const row = html.root.querySelectorAll('.supporter-row').find((li) => li.text.includes('Ada Lovelace'));
+
+    expect(spoken(row?.querySelector('a.supporter-row__link'))).toBe('Ada Lovelace (homepage)');
+    expect(spoken(row?.querySelector('a.supporter-row__city'))).toBe('supporters from Frankfurt/Main');
+    // The added words are visually hidden; what sighted users read is the name and the city (WCAG 2.5.3).
+    expect(row?.querySelectorAll('.visually-hidden').map((hidden) => hidden.text.trim())).toEqual([
+      '(homepage)',
+      'supporters from',
+    ]);
   });
 
   it('F-52, B-17: a supporter without a profile shows the plain name and the date, no empty slots', async () => {
@@ -237,6 +274,18 @@ describe('GET /supporters: 51 signers', () => {
     expect(row?.querySelector('.supporter-row__age')).toBeNull();
     expect(row?.querySelector('.supporter-row__city')).toBeNull();
     expect(row?.querySelector('.supporter-row__meta')?.text.replace(/\s+/g, ' ').trim()).toBe('signed 1 Jan 2026');
+  });
+
+  it('B-73: the rendered list is well-formed: every tag closed and every attribute separated by whitespace', async () => {
+    const { response } = await page('/supporters');
+    const list = /<ol class="supporter-list"[\s\S]*?<\/ol>/.exec(response.text)?.[0];
+    expect(list, 'the supporter list').toBeDefined();
+    const markup = list ?? '';
+
+    // The legacy rows emitted `<span>` where `</span>` belonged and glued attributes together (`"target=`).
+    expect(valid(markup), 'every element is closed').toBe(true);
+    expect(markup.match(/="[^"]*"(?=[^\s/>])/g) ?? []).toEqual([]);
+    expect(markup.split('<li').length - 1).toBe(markup.split('</li>').length - 1);
   });
 
   it('F-53, B-01: markup in every field is shown as text and never becomes an element or attribute', async () => {
@@ -253,8 +302,8 @@ describe('GET /supporters: 51 signers', () => {
 
     const row = html.root.querySelectorAll('.supporter-row').find((li) => li.text.includes(XSS.firstName));
     expect(row?.querySelector('.supporter-row__name')?.text).toBe(`${XSS.firstName} ${XSS.lastName}`);
-    expect(row?.querySelector('.supporter-row__name')?.getAttribute('href')).toBe(XSS.homepageUrl);
-    expect(row?.querySelector('.supporter-row__city')?.text).toBe(XSS.city);
+    expect(row?.querySelector('.supporter-row__link')?.getAttribute('href')).toBe(XSS.homepageUrl);
+    expect(spoken(row?.querySelector('.supporter-row__city'))).toBe(`supporters from ${XSS.city}`);
     expect(row?.querySelector('.supporter-row__city')?.getAttribute('href')).toBe(
       `/supporters/city/${encodeURIComponent(XSS.city)}`,
     );

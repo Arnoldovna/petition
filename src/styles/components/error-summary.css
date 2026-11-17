@@ -1,26 +1,31 @@
 /*
- * error-summary: partial error-summary.hbs (F-21).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * error-summary: partial error-summary.hbs (F-21, B-68, ADR 0008). It receives focus on page load (autofocus,
+ * tabindex -1), so the global :focus-visible ring of base.css shows where the keyboard is.
+ * Structure (phase 3): title and the list of field links, marked like every error with a 2px error rule beside ink
+ * text (maw-design-system section 4). The list keeps its markers: removing them would drop the list semantics in
+ * Safari. Phase 4b adds the maw type. Part of main.css: no @reference.
  */
 @layer components {
   .error-summary {
-    display: block;
+    @apply flex flex-col gap-3 ps-4 max-inline-prose;
+
+    border-inline-start: var(--rule-width-strong) solid var(--color-error);
   }
 
   .error-summary__title {
-    display: block;
+    @apply m-0;
   }
 
   .error-summary__list {
-    display: block;
+    @apply m-0 flex flex-col gap-1;
   }
 
   .error-summary__item {
     display: list-item;
   }
 
+  /* Stacked links: at least 24px tall each (WCAG 2.5.8 target size). */
   .error-summary__link {
-    display: inline;
+    @apply inline-block pbs-1 pbe-1;
   }
 }

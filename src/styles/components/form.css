@@ -1,10 +1,41 @@
 /*
- * form: page-level form block of the auth, profile and signature pages.
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * form: the page-level <form> of the register, login, onboarding and edit pages (F-21, F-75, F-80).
+ * Structure (phase 3): one column at the prose width, generous gaps between fields, tight ones inside a field
+ * (form-field.css). Phase 4b adds the maw design. Part of main.css: no @reference.
  */
 @layer components {
   .form {
-    display: block;
+    @apply flex flex-col gap-8 max-inline-prose;
+  }
+
+  /* Edit page groups. A fieldset's default min-inline-size is min-content, which would overflow at 320px (F-83). */
+  .form__fieldset {
+    @apply flex flex-col gap-6 m-0 p-0;
+
+    border: 0;
+    min-inline-size: 0;
+  }
+
+  .form__legend {
+    @apply p-0 mbe-6;
+  }
+
+  /*
+   * Paragraphs inside a form: running text (the disclosures of F-90) and a follow-up right below one field ("log in
+   * instead" after the email-taken error, F-20).
+   */
+  .form__text,
+  .form__aside {
+    @apply m-0;
+  }
+
+  /* The submit button and an optional secondary link ("skip"); they wrap on narrow screens. */
+  .form__actions {
+    @apply flex flex-wrap items-center gap-x-6 gap-y-4;
+  }
+
+  /* A standalone link next to a button: at least 24px tall (WCAG 2.5.8 target size). */
+  .form__link {
+    @apply inline-block pbs-1 pbe-1;
   }
 }

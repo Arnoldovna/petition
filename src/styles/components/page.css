@@ -1,22 +1,40 @@
 /*
- * page: page shell of the layout (body.page, main.page__main) and the next-step link of pages/error.hbs.
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * page: the page shell of the layout (body.page, main.page__main; maw "page shell") and the next-step paragraph of
+ * pages/error.hbs. Structure only (phase 3): one column of at most 1280px, centred, with the footer at the bottom of
+ * short pages; type and colour come in phase 4a. Part of main.css: no @reference.
  */
 @layer components {
+  /*
+   * header, main and footer stack in one column. The skip link is absolutely positioned (utilities.css), so it is
+   * not a flex item. `inline-size` stays auto (never 100vw, B-81), so a vertical scrollbar cannot cause sideways
+   * scrolling.
+   */
   .page {
-    display: block;
+    @apply flex flex-col mx-auto max-inline-page;
   }
 
+  /*
+   * The main landmark takes the free height, so the footer sits at the bottom of a short page. Gutters 12px, 20px
+   * from 640px (maw page shell). `min-inline-size: 0` lets long words and wide content shrink inside the flex
+   * column instead of widening the page at 320px (F-83).
+   */
   .page__main {
-    display: block;
+    @apply flex-1 ps-3 pe-3 pbe-16;
+
+    min-inline-size: 0;
+
+    @variant sm {
+      @apply ps-5 pe-5 pbe-24;
+    }
   }
 
+  /* The error page's one next step, below its heading. */
   .page__next {
-    display: block;
+    @apply m-0;
   }
 
+  /* A lone link: at least 24px tall (WCAG 2.5.8 target size). */
   .page__next-link {
-    display: inline;
+    @apply inline-block pbs-1 pbe-1;
   }
 }

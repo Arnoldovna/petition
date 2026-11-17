@@ -1,23 +1,31 @@
 /*
- * site-footer: partial site-footer.hbs (about, privacy, contact, imprint, year; F-15).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * site-footer: partial site-footer.hbs (maw "footer": lowercase meta links and the credit with the year; F-14, F-15,
+ * F-88, F-89). Structure only (phase 3): a wrapping row inside the page gutters. The top rule, meta type and shake come
+ * in phase 4a. Part of main.css: no @reference.
  */
 @layer components {
+  /* Links left, credit right; on narrow screens the credit wraps below the links. */
   .site-footer {
-    display: block;
+    @apply flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 mx-3 pbs-6 pbe-8;
+
+    @variant sm {
+      @apply mx-5;
+    }
   }
 
   .site-footer__nav {
-    display: block;
+    @apply block;
   }
 
+  /* about, privacy, contact and imprint in one row that wraps at 320px; the gap keeps neighbouring targets apart. */
   .site-footer__list {
-    display: block;
+    @apply flex flex-wrap gap-x-6 gap-y-1 m-0 p-0;
+
+    list-style: none;
   }
 
   .site-footer__item {
-    display: inline-block;
+    @apply block;
   }
 
   /* Neighbouring targets: at least 24px tall (WCAG 2.5.8 target size, axe target-size). Keep this in later phases. */
@@ -26,6 +34,6 @@
   }
 
   .site-footer__credit {
-    display: block;
+    @apply m-0;
   }
 }

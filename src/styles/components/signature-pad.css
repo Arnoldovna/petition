@@ -1,7 +1,8 @@
 /*
  * signature-pad: partial signature-pad.hbs, the drawing form of the sign page (F-38 to F-41, F-83, ADR 0010).
- * Structure only (phase 2a); phase 3 refines the pad states and phase 4 adds the maw design (the accent pad surface).
- * Part of main.css: no @reference.
+ * Structure and states (phase 3): hidden until enhanced, a 3:1 pad that scales with its container, touch strokes
+ * kept off the page scroll, and the accent field with on-accent ink that the drawing needs to stay visible in light and
+ * dark mode. Phase 4 adds the rest of the maw design. Part of main.css: no @reference.
  */
 @layer components {
   .signature-pad {
@@ -12,7 +13,7 @@
     @apply grid gap-4;
   }
 
-  /* The form stays hidden until signature-pad.js enhances it; the grid rule above must not undo the attribute. */
+  /* Hidden state: the form stays hidden until signature-pad.js enhances it; the grid rule must not undo the attribute. */
   .signature-pad__form[hidden] {
     display: none;
   }
@@ -22,20 +23,27 @@
   }
 
   .signature-pad__instructions {
-    display: block;
+    @apply max-inline-prose;
   }
 
-  /* Scales with its container at the export ratio 720 x 240; touch-action keeps touch strokes off the page scroll. */
+  /*
+   * Scales with its container at the export ratio 720 x 240 (F-83, B-38) up to the wide container, so the line stays
+   * in proportion; the backing store follows the CSS size (signature-pad.ts). touch-action keeps touch and pen strokes
+   * off the page scroll and zoom (F-38, B-37); user-select stops a long press from selecting text around the pad.
+   * The ink colour is read by signature-pad.ts for the strokes on screen: black on the accent field (ADR 0010).
+   */
   .signature-pad__canvas {
-    display: block;
-    inline-size: 100%;
+    @apply block inline-full max-inline-wide bg-accent text-on-accent;
+
     block-size: auto;
     aspect-ratio: 3 / 1;
     touch-action: none;
+    user-select: none;
   }
 
+  /* The alert is focused by the blank check (tabindex="-1"); its text is ink, the error rule comes in phase 4. */
   .signature-pad__message {
-    display: block;
+    @apply max-inline-prose;
   }
 
   .signature-pad__actions {
@@ -43,6 +51,6 @@
   }
 
   .signature-pad__noscript {
-    display: block;
+    @apply max-inline-prose;
   }
 }

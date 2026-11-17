@@ -1,26 +1,33 @@
 /*
  * supporter-row: partial supporter-row.hbs (one supporter: name left; age, city and date as meta right; F-52).
- * Structure only (phase 2a); the maw design follows in phase 4 (OVERVIEW.md section 15). Rows stack on narrow
- * containers and become one line from the `row` container width of supporter-list. Absent values render no element,
- * and the meta items are separated by gaps, never by separator characters (F-52, B-17).
+ * Structure (phase 3); the maw design (row rule, type, hover) follows in phase 4d (OVERVIEW.md section 15). Rows
+ * stack on narrow containers and become one line from the `row` container width of supporter-list. Absent values
+ * render no element, and the meta items are separated by gaps, never by separator characters (F-52, B-73).
  * Part of main.css: no @reference.
  */
 @layer components {
   .supporter-row {
     @apply flex flex-col gap-1 pbs-3 pbe-3;
 
+    /*
+     * Names, cities and homepages are user input up to 100 characters without a space; they break inside the row
+     * instead of widening the page (F-83, B-81: no horizontal scrolling at 320px or 400% zoom). Inherited by every
+     * element of the row.
+     */
+    overflow-wrap: anywhere;
+
     @variant @row {
       @apply flex-row flex-wrap items-baseline justify-between gap-4;
     }
   }
 
-  .supporter-row__name {
-    @apply inline-block;
+  /* The homepage link around the name; neighbouring targets are at least 24px tall (WCAG 2.5.8 target size). */
+  .supporter-row__link {
+    @apply inline-block pbs-1 pbe-1;
   }
 
-  /* Name and city links are neighbouring targets: at least 24px tall (WCAG 2.5.8 target size). */
-  .supporter-row__name--link {
-    @apply pbs-1 pbe-1;
+  .supporter-row__name {
+    @apply inline-block;
   }
 
   .supporter-row__meta {

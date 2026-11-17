@@ -2,14 +2,20 @@
   supporter-row (OVERVIEW.md section 15.2; parameters frozen): supporter, showCity.
   One <li> of the supporters list (F-52): the full name left, age, city and signing date as meta right. supporter is
   a SupporterView (src/features/supporters/supporters.schema.ts); every value is user input and printed escaped
-  (F-53, B-01). The homepage link opens in the same tab with rel="noopener noreferrer nofollow ugc" (B-17). Optional
-  values that are absent render nothing, so there are no stray separators (F-52). showCity=true links the city to its
-  page (same tab, encoded with cityPath, F-57); showCity=false (the city page) shows it as plain text (F-56).
+  (F-53, B-01). supporter-row__name always holds exactly the full name, linked or not.
+  - Homepage: the whole name is the link, same tab, rel="noopener noreferrer nofollow ugc" (B-17). A visually hidden
+    "(homepage)" tells screen-reader users that the link leaves the site for the supporter's own page (F-84).
+  - City: showCity=true links it to its city page (same tab, encoded with cityPath, F-57); the link's accessible name
+    is "supporters from <city>", so it names the destination, not just the place (F-84, WCAG 2.4.4). showCity=false
+    (the city page) prints it as plain text (F-56).
+  - Optional values that are absent render no element, and the meta items are separated by gaps in CSS, never by
+    characters, so there are no stray separators (F-52, B-73). Each item is labelled in words ("age 36",
+    "signed 1 Jan 2026"), so no value relies on its position alone.
   Usage: {{#each supporters}}{{> supporter-row supporter=this showCity=true}}{{/each}}
 --}}
 <li class="supporter-row">
   {{#if supporter.homepageUrl}}
-    <a class="supporter-row__name supporter-row__name--link" href="{{supporter.homepageUrl}}" rel="noopener noreferrer nofollow ugc">{{supporter.fullName}}</a>
+    <a class="supporter-row__link" href="{{supporter.homepageUrl}}" rel="noopener noreferrer nofollow ugc"><span class="supporter-row__name">{{supporter.fullName}}</span><span class="visually-hidden"> (homepage)</span></a>
   {{else}}
     <span class="supporter-row__name">{{supporter.fullName}}</span>
   {{/if}}
@@ -19,7 +25,7 @@
     {{/if}}
     {{#if supporter.city}}
       {{#if showCity}}
-        <a class="supporter-row__city supporter-row__city--link" href="{{cityPath supporter.city}}">{{supporter.city}}</a>
+        <a class="supporter-row__city supporter-row__city--link" href="{{cityPath supporter.city}}"><span class="visually-hidden">supporters from </span>{{supporter.city}}</a>
       {{else}}
         <span class="supporter-row__city">{{supporter.city}}</span>
       {{/if}}

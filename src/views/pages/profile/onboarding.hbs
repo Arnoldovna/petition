@@ -1,23 +1,23 @@
 {{!--
   pages/profile/onboarding (ROUTES.md section 4, GET and POST /profile): the optional fields after registration
   (F-33 to F-36). Model: title, form (FormView: prefilled values on GET, values and errors after a 422).
-  The disclosure (F-90) says before submitting where the values appear and links to the privacy page. "continue"
-  saves and goes to /signature; "skip" goes there without saving. Classes: only the defined `form` block until the
-  forms unit (phase 3) adds the element classes.
+  The disclosure (F-90) says before submitting where the values appear and links to the privacy page. Age is a text
+  field with a numeric keyboard, homepage a URL field (B-72). "continue" saves and goes to /signature; "skip" goes
+  there without saving.
 --}}
 {{> page-heading title=title}}
 {{> error-summary errorList=form.errorList}}
 <form class="form" method="post" action="/profile" novalidate data-guard>
   {{> csrf-field}}
-  <p>
+  <p class="form__text">
     Age, city and homepage are optional. If you add them, they appear next to your name on the supporters list.
     Details: <a href="/privacy">privacy</a>.
   </p>
   {{> form-field form=form name="age" label="age" inputmode="numeric" autocomplete="off"}}
   {{> form-field form=form name="city" label="city" autocomplete="address-level2"}}
   {{> form-field form=form name="homepage" label="homepage" type="url" autocomplete="url"}}
-  <div>
+  <div class="form__actions">
     {{> button type="submit" label="continue" modifier="button--primary"}}
-    <a href="/signature">skip</a>
+    <a class="form__link" href="/signature">skip</a>
   </div>
 </form>

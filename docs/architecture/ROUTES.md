@@ -249,7 +249,8 @@ Notes on the field rules (recorded in phase 1b, `fields.ts`):
 ### GET `/thank-you`
 
 - Guards: `requireAuth`, `requireSigned` (F-48, B-07).
-- View `pages/signature/thank-you`, title "Thank you". Heading "Thank you for your signature", the image
+- View `pages/signature/thank-you`, title "Thank you". Heading "Thank you for your signature" with the lead "Your name
+  is now on the supporters list.", the image
   `<img src="/signature/image.png" alt="Your signature" width="720" height="240">` on an accent field, the count
   "1 supporter" / "1,284 supporters" (`plural`, `formatCount`) from `countSupporters()` (F-46, F-47), link
   "see all supporters" to `/supporters`, link "delete signature" to `/signature/delete` (F-50).
@@ -273,10 +274,14 @@ Notes on the field rules (recorded in phase 1b, `fields.ts`):
 - Guards: `requireAuth` (F-51). Query `page`.
 - View `pages/supporters/list`, title "Supporters" (page 1) or "Supporters, page 2". Heading "Supporters", total
   "64 supporters". `<ol class="supporter-list" start="{{firstNumber}}">` of `supporter-row` partials (F-52, F-54):
-  full name (link to `homepageUrl`, same tab, `rel="noopener noreferrer nofollow ugc"`, when set), age when set, city
-  link to `/supporters/city/<encoded>` when set (same tab), signing date. Pagination
-  `<nav class="pagination" aria-label="Pagination">` with `aria-current="page"` (F-54). Empty state "No supporters
-  yet. Be the first!" with a link to `/signature` when the total is 0 (F-55).
+  full name (link to `homepageUrl`, same tab, `rel="noopener noreferrer nofollow ugc"`, when set; announced as
+  "<name> (homepage)" through visually hidden text), age when set, city link to `/supporters/city/<encoded>` when set
+  (same tab; visible text is the city, accessible name "supporters from <city>"), signing date. Pagination
+  `<nav class="pagination" aria-label="Pagination">` that starts with the status "page <current> of <last>", then a
+  list of links "previous page", "page <n>", "next page" (arrows `aria-hidden`), a gap announced as "more pages",
+  `aria-current="page"` on the current page (F-54). Empty state (a `<section>` with an `<h2>` title) "No supporters
+  yet. Be the first!", text "Your name appears here as soon as you sign." and the link "sign the petition" to
+  `/signature` when the total is 0 (F-55).
 - 200; 404 for invalid or out-of-range `page`.
 
 ### GET `/supporters/city/:city`
@@ -285,7 +290,9 @@ Notes on the field rules (recorded in phase 1b, `fields.ts`):
 - View `pages/supporters/city`, title "Supporters from {{city}}" (page 1) or "Supporters from {{city}}, page 2", so
   every title stays unique (F-16). Heading "Supporters from {{city}}" (escaped, never
   blank, B-33), count, list of rows without the city link (F-56), link "all supporters" to `/supporters`, pagination
-  like the list (F-59). Empty state "No supporters from {{city}} yet" with the link back (F-58).
+  like the list (F-59). Empty state "No supporters from {{city}} yet", text "Check the spelling of the city, or see
+  everyone who has signed so far." and the link back (F-58). The link "all supporters" appears exactly once, in the
+  empty state or after the pagination.
 - 200; 404 for invalid `city` or out-of-range `page`.
 
 ## 7. Operations and static files
@@ -307,8 +314,8 @@ build (and in a harness app with `testRoutes: false`) a POST that carries a vali
 and is the 404 page; one without a token (such as the harness's JSON body) is rejected by that check first with the 403
 page. Nobody is signed in either way (`route-matrix.int.test.ts`).
 
-`/icon-512.png` arrives with the phase-3 icons (`scripts/generate-icons.mjs`, ADR 0010); until then it is the 404 page,
-and nothing links it.
+The icons are generated from `public/favicon.svg` by `scripts/generate-icons.mjs` (ADR 0010) and listed in
+`site.webmanifest`.
 
 ## 8. Error responses
 

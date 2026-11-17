@@ -3,7 +3,8 @@
   form is the FormView of src/shared/http/form.ts ({ values, errors, errorList }). The input id is the field name,
   so the error summary links to #<name> (F-21). A visible label above the input, never a placeholder (F-80, B-65);
   the hint and the error message are tied to the input with aria-describedby, the error also with aria-invalid
-  (B-68). type defaults to "text". Values are escaped; form.ts never echoes passwords back.
+  (B-68); aria-invalid is also the styling hook of the error state, and the message text, never the colour alone,
+  carries the meaning. type defaults to "text". Values are escaped; form.ts never echoes passwords back.
   Usage: {{> form-field form=form name="email" label="email" type="email" autocomplete="email"}}
 --}}
 <div class="form-field">

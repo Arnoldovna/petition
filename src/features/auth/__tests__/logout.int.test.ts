@@ -51,6 +51,15 @@ describe('POST /logout', () => {
     expect(page.text(`header ${LOGOUT_FORM} button[type="submit"]`)).toBe('log out');
   });
 
+  it('F-75, F-76: the logout form works without JavaScript and is guarded against a double submit', async () => {
+    const { agent } = await signedInAgent();
+
+    const page = parse((await agent.get('/profile/edit').expect(200)).text);
+
+    expect(page.has(`header ${LOGOUT_FORM}[method="post"][novalidate][data-guard]`)).toBe(true);
+    expect(page.has(`header ${LOGOUT_FORM} button[type="submit"]`)).toBe(true);
+  });
+
   it('F-25, B-08: GET /logout does not log out; it is the 404 page', async () => {
     const { agent } = await signedInAgent();
 

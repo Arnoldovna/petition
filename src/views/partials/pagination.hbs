@@ -1,21 +1,27 @@
 {{!--
   pagination (OVERVIEW.md section 15.2; parameter frozen): pagination = PaginationView from
   src/shared/http/pagination.ts ({ current, last, previous, next, items }), or undefined when everything fits on one
-  page (then nothing is rendered). Numbered links with aria-current="page" on the current page, an ellipsis for gaps,
-  previous and next links (F-54, ADR 0006). Every link has a text name ("page 3", "previous page").
+  page (then nothing is rendered, not even an empty landmark). Accessible pagination (F-54, F-59, ADR 0006):
+  - one <nav aria-label="Pagination"> landmark with a plain list of links (B-67);
+  - "page 2 of 6" first, so the position is known before the links are read;
+  - aria-current="page" on the current page's link, shown by more than colour in CSS (F-81, maw section 4);
+  - every link has a text name: "previous page", "page 3", "next page"; the arrow glyphs are aria-hidden (F-84);
+  - a gap is the visible ellipsis, announced as "more pages" instead of the bare character;
+  - rel="prev" / rel="next" on the neighbours.
   Usage: {{> pagination pagination=pagination}}
 --}}
 {{#if pagination}}
   <nav class="pagination" aria-label="Pagination">
+    <p class="pagination__status">page {{pagination.current}} of {{pagination.last}}</p>
     <ul class="pagination__list">
       {{#with pagination.previous}}
         <li class="pagination__item">
-          <a class="pagination__link" href="{{href}}" rel="prev"><span aria-hidden="true">←</span> previous<span class="visually-hidden"> page</span></a>
+          <a class="pagination__link pagination__link--step" href="{{href}}" rel="prev"><span aria-hidden="true">←</span> previous<span class="visually-hidden"> page</span></a>
         </li>
       {{/with}}
       {{#each pagination.items}}
         {{#if gap}}
-          <li class="pagination__item pagination__item--gap">…</li>
+          <li class="pagination__item pagination__item--gap"><span aria-hidden="true">…</span><span class="visually-hidden">more pages</span></li>
         {{else}}
           <li class="pagination__item">
             <a class="pagination__link" href="{{href}}"{{#if current}} aria-current="page"{{/if}}><span class="visually-hidden">page </span>{{page}}</a>
@@ -24,7 +30,7 @@
       {{/each}}
       {{#with pagination.next}}
         <li class="pagination__item">
-          <a class="pagination__link" href="{{href}}" rel="next">next<span class="visually-hidden"> page</span> <span aria-hidden="true">→</span></a>
+          <a class="pagination__link pagination__link--step" href="{{href}}" rel="next">next<span class="visually-hidden"> page</span> <span aria-hidden="true">→</span></a>
         </li>
       {{/with}}
     </ul>

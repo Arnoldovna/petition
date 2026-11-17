@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import request, { type Response } from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
 import { signIn } from '../../test/auth.js';
 import { createSignature, createUser, type TestUser } from '../../test/factories.js';
@@ -30,6 +31,21 @@ beforeAll(async () => {
 afterAll(async () => {
   await testApp.close();
 });
+
+/** The fields of public/site.webmanifest the icon checks read (W3C Web App Manifest). */
+const WebManifest = z.object({
+  name: z.string(),
+  start_url: z.string(),
+  lang: z.string(),
+  icons: z.array(z.object({ src: z.string(), sizes: z.string(), type: z.string() })),
+});
+
+/** `<width>x<height>` from a PNG's IHDR chunk (bytes 16 to 23, big endian), or `not a PNG`. */
+function pngSize(bytes: Buffer): string {
+  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  if (bytes.length < 24 || !bytes.subarray(0, 8).equals(signature)) return 'not a PNG';
+  return `${String(bytes.readUInt32BE(16))}x${String(bytes.readUInt32BE(20))}`;
+}
 
 /** Every request must be answered quickly; a hanging request (B-20) fails here instead of at the test timeout. */
 const ANSWER_WITHIN_MS = 5_000;
@@ -111,6 +127,29 @@ describe('404', () => {
     for (const path of ['/apple-icon-57x57.png', '/favicon-32x32.png', '/ms-icon-144x144.png', '/manifest.json']) {
       const response = await request(testApp.app).get(path).expect(404);
       expect(response.headers['location']).toBeUndefined();
+    }
+  });
+
+  it('B-43: the manifest names the site and lists only real icons, each of the declared type and pixel size', async () => {
+    const manifest = WebManifest.parse((await request(testApp.app).get('/site.webmanifest').expect(200)).body);
+
+    expect(manifest).toMatchObject({ name: 'Nonsense Petition', start_url: '/', lang: 'en' });
+    expect(manifest.icons.map(({ src }) => src)).toEqual(['/favicon.svg', '/apple-touch-icon.png', '/icon-512.png']);
+    for (const icon of manifest.icons) {
+      // Supertest buffers every image/* body (SVG included) as raw bytes.
+      const response = await request(testApp.app).get(icon.src).expect(200);
+      expect(response.headers['content-type']?.split(';')[0], icon.src).toBe(icon.type);
+      const body: unknown = response.body;
+      if (!Buffer.isBuffer(body)) throw new TypeError(`${icon.src}: expected a binary body`);
+      if (icon.type === 'image/png') {
+        expect(pngSize(body), icon.src).toBe(icon.sizes);
+      } else {
+        // The vector source of the PNGs (scripts/generate-icons.mjs): a square drawing that needs no font, no
+        // embedded image and nothing from another origin (comments left out, they may mention such things).
+        const drawing = body.toString('utf8').replaceAll(/<!--[\s\S]*?-->/g, '');
+        expect(drawing, icon.src).toMatch(/<svg[^>]+viewBox="0 0 32 32"/);
+        expect(drawing, icon.src).not.toMatch(/<text\b|<image\b|https?:\/\/(?!www\.w3\.org\/2000\/svg")/);
+      }
     }
   });
 });

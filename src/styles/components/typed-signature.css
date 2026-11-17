@@ -1,6 +1,7 @@
 /*
- * typed-signature: partial typed-signature.hbs, the typed-name form of the sign page (F-45, ADR 0005).
- * Structure only (phase 2a); phase 3 and phase 4 add the rest. Part of main.css: no @reference.
+ * typed-signature: partial typed-signature.hbs, the typed-name form of the sign page (F-45, ADR 0005). Always visible,
+ * with and without JavaScript: the keyboard, screen-reader and no-JS way to sign.
+ * Structure (phase 3); phase 4 adds the maw design. Part of main.css: no @reference.
  */
 @layer components {
   .typed-signature {
@@ -12,11 +13,11 @@
   }
 
   .typed-signature__text {
-    display: block;
+    @apply max-inline-prose;
   }
 
   .typed-signature__form {
-    @apply grid gap-4;
+    @apply grid gap-4 max-inline-prose;
   }
 
   .typed-signature__actions {

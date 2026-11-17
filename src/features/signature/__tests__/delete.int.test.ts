@@ -60,6 +60,21 @@ describe('GET /signature/delete', () => {
     expect(page.text('.confirm-panel__cancel')).toBe('keep my signature');
   });
 
+  it('F-50, F-75, F-76: the confirmation works without JavaScript, is guarded and needs no extra field', async () => {
+    const { agent } = await viewer({ signed: true });
+
+    const page = parse((await agent.get('/signature/delete').expect(200)).text);
+
+    expect(page.has(`${CONFIRM_FORM}[novalidate][data-guard]`)).toBe(true);
+    expect(page.attr(`${CONFIRM_FORM} input[type="hidden"][name="_csrf"]`, 'value')).not.toBe('');
+    expect(page.has(`${CONFIRM_FORM} .confirm-panel__fields`)).toBe(false);
+    expect(page.has(`${CONFIRM_FORM} input:not([type="hidden"])`)).toBe(false);
+    expect(page.has(`${CONFIRM_FORM} .confirm-panel__actions button[type="submit"].button--primary`)).toBe(true);
+    expect(page.has(`${CONFIRM_FORM} .confirm-panel__actions .confirm-panel__cancel`)).toBe(true);
+    expect(page.attr('.confirm-panel', 'aria-labelledby')).toBe('confirm-panel-title');
+    expect(page.text('#confirm-panel-title')).toBe('Delete your signature?');
+  });
+
   it('F-50, B-47: a viewer who has not signed is never offered the delete step', async () => {
     const { agent } = await viewer({ signed: false });
 

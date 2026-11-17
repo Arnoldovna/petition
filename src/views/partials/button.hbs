@@ -1,7 +1,8 @@
 {{!--
   button (OVERVIEW.md section 15.2; parameters frozen): type, label, modifier.
   type defaults to "submit". modifier is one full BEM class: button--primary (accent field, at most once per view),
-  button--outlined or button--text (ADR 0014). Labels are lowercase and start with a verb.
+  button--outlined or button--text (ADR 0014). Labels are lowercase and start with a verb. Inside a form[data-guard],
+  src/client/form-guard.ts sets aria-busy="true" and disabled on the submit button after the first submit (F-75).
   Usage: {{> button type="submit" label="sign the petition" modifier="button--primary"}}
 --}}
 <button class="button{{#if modifier}} {{modifier}}{{/if}}" type="{{#if type}}{{type}}{{else}}submit{{/if}}">{{label}}</button>

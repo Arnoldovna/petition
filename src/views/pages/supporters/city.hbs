@@ -4,7 +4,8 @@
   Model (supporters.controller.ts): title, heading ("Supporters from <requested city>", never taken from a row, B-33),
   emptyTitle ("No supporters from <city> yet", F-58), lead, total, firstNumber, supporters, pagination.
   Rows show the city as plain text, not as a link to this same page (F-56). Exactly one link back to all supporters:
-  inside the empty state, or after the list.
+  inside the empty state, or after the list and its pagination (F-56, F-58). The requested city is user input and is
+  printed escaped everywhere (F-53).
 --}}
 {{> page-heading title=heading lead=lead}}
 {{#if supporters.length}}
@@ -18,5 +19,5 @@
     <a class="page__next-link" href="/supporters">all supporters</a>
   </p>
 {{else}}
-  {{> empty-state title=emptyTitle href="/supporters" linkLabel="all supporters"}}
+  {{> empty-state title=emptyTitle text="Check the spelling of the city, or see everyone who has signed so far." href="/supporters" linkLabel="all supporters"}}
 {{/if}}

@@ -271,7 +271,7 @@ petition/
 ├── .env.example                                 (tpl single-app + petition keys, section 16; no SEED_ALLOW, no E2E_BASE_URL)
 ├── .npmrc                                       (tpl) engine-strict=true
 ├── commitlint.config.js  lefthook.yml  lint-staged.config.js           (tpl)
-├── knip.jsonc                                   entry: src/tools/*.ts, src/client/*.ts, scripts/*.mjs (src/server.ts, src/db/migrate.ts come from package.json scripts); commented ignores only (ADR 0019)
+├── knip.jsonc                                   entry: src/tools/*.ts, src/client/{form-guard,signature-pad}.ts (the esbuild entries; signature-pad.core.ts is a module they import), scripts/*.mjs (src/server.ts, src/db/migrate.ts come from package.json scripts); commented ignores only (ADR 0019)
 ├── eslint.config.js                             (tpl single-app) + client and tools elements, sql.raw and res.render bans, no test imports in src
 ├── stylelint.config.mjs                         (tpl modular-css-tailwind4) + outline:none override for form-field.css
 ├── tsconfig.base.json  tsconfig.json  tsconfig.build.json              (tpl; tsconfig.json excludes src/client)

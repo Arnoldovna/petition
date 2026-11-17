@@ -1,11 +1,23 @@
 /*
- * site-header: partial site-header.hbs (wordmark and at most three nav links; F-14).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * site-header: partial site-header.hbs (maw "site header": wordmark left, at most three lowercase links right; F-14).
+ * Structure only (phase 3): wrapping row, gutters, sticky from 640px and the target sizes. The wordmark and link type,
+ * the current-page underline, the paper fade and the shake come in phase 4a. Part of main.css: no @reference.
  */
 @layer components {
+  /*
+   * Wordmark and navigation share one row and wrap below each other when they do not fit (320px), never with a
+   * hamburger (at most three links, ADR 0014). From 640px the header is sticky; base.css reserves its height with
+   * scroll-padding, so in-page targets are not hidden underneath it. The paper background keeps the page from showing
+   * through; phase 4a replaces it with the --header-fade token.
+   */
   .site-header {
-    display: block;
+    @apply flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 pbs-8 pbe-6 ps-3 pe-3;
+
+    @variant sm {
+      @apply sticky inset-bs-0 bg-paper pbs-12 ps-5 pe-5;
+
+      z-index: var(--layer-header);
+    }
   }
 
   /* Wordmark and links are neighbouring targets: at least 24px tall (WCAG 2.5.8). Keep this in later phases. */
@@ -14,27 +26,42 @@
   }
 
   .site-header__nav {
-    display: block;
+    @apply flex;
   }
 
+  /* The links in one row that wraps on the narrowest screens; the gap keeps neighbouring targets apart. */
   .site-header__list {
-    display: block;
+    @apply flex flex-wrap items-baseline gap-x-4 gap-y-1 m-0 p-0;
+
+    list-style: none;
+
+    @variant sm {
+      @apply gap-x-6;
+    }
   }
 
   .site-header__item {
-    display: inline-block;
+    @apply block;
   }
 
   .site-header__link {
     @apply inline-block pbs-1 pbe-1;
   }
 
+  /* The log-out form is only a wrapper for its button: no box of its own in the row. */
   .site-header__logout {
-    display: inline;
+    @apply m-0 inline;
   }
 
-  /* The log-out button sits among the nav links and uses the page font, not the browser's button font. */
+  /*
+   * The log-out button (a POST form, B-08) sits among the nav links and looks like one: page font, no button box.
+   * It keeps the block padding of .site-header__link for its target size.
+   */
   .site-header__link--button {
+    @apply px-0 border-0 text-ink;
+
     font: inherit;
+    background: none;
+    cursor: pointer;
   }
 }

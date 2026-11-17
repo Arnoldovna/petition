@@ -1,26 +1,34 @@
 /*
- * form-field: partial form-field.hbs (label above, underlined input, hint, error; F-80, F-21).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * form-field: partial form-field.hbs (label above, input, hint, error; F-21, F-80, B-65, B-68).
+ * Structure (phase 3): label, input, hint and error stacked tightly, the input as wide as the form. The error state
+ * already carries the maw marker (a 2px error rule beside ink text, maw-design-system section 4), because the
+ * message text and aria-invalid, not the colour, carry the meaning. Phase 4b adds the underlined input and the type.
+ * Part of main.css: no @reference.
  */
 @layer components {
   .form-field {
-    display: block;
+    @apply flex flex-col gap-2;
   }
 
   .form-field__label {
-    display: block;
+    @apply self-start;
   }
 
+  /* Native controls do not inherit the page font; min-inline-size 0 lets the input shrink to the column. */
   .form-field__input {
-    display: block;
+    @apply m-0 inline-full;
+
+    font: inherit;
+    min-inline-size: 0;
   }
 
   .form-field__hint {
-    display: block;
+    @apply m-0;
   }
 
   .form-field__error {
-    display: block;
+    @apply m-0 ps-3;
+
+    border-inline-start: var(--rule-width-strong) solid var(--color-error);
   }
 }

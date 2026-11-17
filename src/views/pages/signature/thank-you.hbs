@@ -1,10 +1,12 @@
 {{!--
   pages/signature/thank-you (ROUTES.md section 5, F-46 to F-48, F-50).
   Model (ThankYouView): supporterCount (the supporters module's total, F-47) and imageSrc (the private image route).
-  The count is the page's one display-size number ("1 supporter", "1,284 supporters"). The rows link to the list and
-  to the delete confirmation, which only signers can reach (B-47, ADR 0013).
+  Order: the thanks (h1) with one sentence that says what happened, the viewer's own signature on the accent field
+  (alt "Your signature", F-46), the count as the page's one display-size number ("1 supporter", "1,284 supporters",
+  OVERVIEW.md section 15.4), then the next steps as list rows. The rows are text links that name their destination
+  (F-84): the list, and the delete confirmation, which only signers can reach (F-50, B-47, ADR 0013).
 --}}
-{{> page-heading title="Thank you for your signature"}}
+{{> page-heading title="Thank you for your signature" lead="Your name is now on the supporters list."}}
 {{> signature-frame src=imageSrc alt="Your signature"}}
 <p class="supporter-count">
   <span class="supporter-count__number">{{formatCount supporterCount}}</span>

@@ -1,11 +1,13 @@
 {{!--
   row-list (OVERVIEW.md section 15.2; no parameters of its own): the list that holds list-row partials, used as a
   partial block (B-67: a real list instead of one paragraph per entry).
+  role="list" is deliberate, not redundant: the rows have no markers (list-style: none), and WebKit then drops the
+  list semantics, so VoiceOver would not announce "list, 6 items" (F-79). The Nu validator only warns about it.
   Usage:
     {{#> row-list}}
       {{#each rows}}{{> list-row href=href title=title meta=meta}}{{/each}}
     {{/row-list}}
 --}}
-<ul class="row-list">
+<ul class="row-list" role="list">
   {{> @partial-block}}
 </ul>

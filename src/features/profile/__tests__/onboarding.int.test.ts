@@ -104,6 +104,28 @@ describe('GET /profile', () => {
     expect(page.has('.error-summary')).toBe(false);
   });
 
+  it('F-33, F-75, F-80: labels above the inputs, no placeholders, continue and skip side by side in the actions', async () => {
+    const { agent } = await signedInAgent();
+
+    const page = parse((await agent.get('/profile').expect(200)).text);
+
+    const fields = page.root.querySelectorAll(`${FORM} .form-field`);
+    expect(fields.map((field) => field.querySelector('input')?.getAttribute('id'))).toEqual([
+      'age',
+      'city',
+      'homepage',
+    ]);
+    for (const field of fields) expect(field.firstElementChild?.tagName).toBe('LABEL');
+    expect(page.has(`${FORM} [placeholder]`)).toBe(false);
+    // F-90: the disclosure comes before the fields it is about.
+    expect(page.root.querySelector(`${FORM} .form__text`)?.nextElementSibling?.classList.contains('form-field')).toBe(
+      true,
+    );
+    expect(page.text(`${FORM} .form__actions .button--primary`)).toBe('continue');
+    expect(page.text(`${FORM} .form__actions a.form__link[href="/signature"]`)).toBe('skip');
+    expect(page.texts('main .button--primary')).toHaveLength(1);
+  });
+
   it('F-36, B-28: revisiting with a stored profile shows the form prefilled', async () => {
     const { agent, userId } = await signedInAgent();
     await testApp.db.insert(profiles).values({ userId, age: 33, city: 'Leipzig', homepageUrl: 'https://ada.example/' });
@@ -229,6 +251,8 @@ describe('POST /profile', () => {
       expect(page.attr(`#${field}`, 'aria-invalid')).toBe('true');
       expect(page.attr(`#${field}`, 'aria-describedby')).toBe(`${field}-error`);
       expect(page.text(`#${field}-error`)).toBe(`Error: ${message}`);
+      expect(page.has('main .error-summary[tabindex="-1"][autofocus]')).toBe(true);
+      expect(page.has(`${FORM} input#${field}`)).toBe(true);
       expect(readForm(response.text, FORM).values).toEqual(fields);
       await expect(storedProfile(userId)).resolves.toBeUndefined();
     },

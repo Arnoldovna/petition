@@ -154,6 +154,30 @@ describe('GET /profile/edit', () => {
     expect(page.has(`${FORM} a[href="/privacy"]`)).toBe(true);
   });
 
+  it('F-60, F-80: the controls are grouped in three fieldsets with visible legends, labels above, no placeholders', async () => {
+    const { agent } = await signedInAgent();
+
+    const page = parse((await agent.get('/profile/edit').expect(200)).text);
+
+    const groups = page.root.querySelectorAll(`${FORM} fieldset.form__fieldset`).map((fieldset) => ({
+      legend: fieldset.querySelector('legend.form__legend')?.text.trim(),
+      fields: fieldset.querySelectorAll('.form-field input').map((input) => input.getAttribute('id')),
+    }));
+    expect(groups).toEqual([
+      { legend: 'name and email', fields: ['firstName', 'lastName', 'email'] },
+      { legend: 'about you', fields: ['age', 'city', 'homepage'] },
+      { legend: 'password', fields: ['newPassword', 'currentPassword'] },
+    ]);
+    for (const field of page.root.querySelectorAll(`${FORM} .form-field`)) {
+      expect(field.firstElementChild?.tagName).toBe('LABEL');
+    }
+    expect(page.has(`${FORM} [placeholder]`)).toBe(false);
+    expect(page.text(`${FORM} .form__actions .button--primary`)).toBe('save changes');
+    expect(page.texts('main .button--primary')).toHaveLength(1);
+    // The delete links lead to their own confirmation pages and are not part of the form (ADR 0013).
+    expect(page.has(`${FORM} a[href="/account/delete"]`)).toBe(false);
+  });
+
   it('B-55: a user who skipped onboarding (no profile row) can open the page with empty optional fields', async () => {
     const { agent } = await signedInAgent();
 
@@ -245,6 +269,26 @@ describe('POST /profile/edit: names and profile', () => {
       await expect(storedProfile(user.id)).resolves.toBeUndefined();
     },
   );
+
+  it('F-21, B-68: several errors are listed in form order; every link and aria-describedby id resolves', async () => {
+    const { agent } = await signedInAgent();
+
+    const response = await submit(agent, { firstName: '', age: 'old', newPassword: 'too short' });
+
+    expect(response.status).toBe(422);
+    const page = parse(response.text);
+    expect(page.has('main .error-summary[role="alert"][tabindex="-1"][autofocus]')).toBe(true);
+    const hrefs = page.root.querySelectorAll('.error-summary__link').map((link) => link.getAttribute('href') ?? '');
+    expect(hrefs).toEqual(['#firstName', '#age', '#newPassword']);
+    for (const href of hrefs) {
+      const input = page.root.querySelector(`${FORM} input${href}`);
+      expect(input?.getAttribute('aria-invalid')).toBe('true');
+      for (const id of (input?.getAttribute('aria-describedby') ?? '').split(' '))
+        expect(page.has(`#${id}`)).toBe(true);
+    }
+    expect(page.attr('#newPassword', 'aria-describedby')).toBe('newPassword-error newPassword-hint');
+    expect(page.attr('#lastName', 'aria-invalid')).toBeUndefined();
+  });
 
   it('F-21, ADR 0003: the 422 page carries a fresh token that is accepted on resubmit', async () => {
     const { agent, user } = await signedInAgent();

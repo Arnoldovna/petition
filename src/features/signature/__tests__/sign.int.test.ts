@@ -101,12 +101,44 @@ describe('GET /signature', () => {
     expect(canvas?.getAttribute('aria-label')).toBe('Signature pad');
     expect(canvas?.getAttribute('data-export-width')).toBe('720');
     expect(canvas?.getAttribute('data-export-height')).toBe('240');
-    const instructions = canvas?.getAttribute('aria-describedby') ?? '';
-    expect(page.text(`#${instructions}`)).toMatch(/mouse, a finger or a pen/);
     expect(page.has(`${DRAWN_FORM} [role="alert"]`)).toBe(true);
     expect(page.texts(`${DRAWN_FORM} button`)).toEqual(['clear', 'sign the petition']);
     expect(page.attr(`${DRAWN_FORM} button.button--text`, 'type')).toBe('button');
     expect(page.has('script[src="/assets/signature-pad.js"]')).toBe(true);
+  });
+
+  it('F-45, F-41, B-70: the canvas is described by the instructions and the alert the blank check focuses', async () => {
+    const { agent } = await signedInAgent();
+
+    const page = parse((await agent.get('/signature').expect(200)).text);
+
+    const canvas = page.root.querySelector(`${DRAWN_FORM} canvas`);
+    const [instructions, message, ...rest] = (canvas?.getAttribute('aria-describedby') ?? '').split(' ');
+    expect(rest).toEqual([]);
+    expect(page.text(`#${instructions ?? ''}`)).toMatch(/mouse, a finger or a pen.*typing your full name/s);
+    // The client writes "Please sign before submitting" here and focuses it (tabindex="-1"); empty until then.
+    const alert = page.root.querySelector(`${DRAWN_FORM} #${message ?? ''}`);
+    expect(alert?.getAttribute('role')).toBe('alert');
+    expect(alert?.getAttribute('tabindex')).toBe('-1');
+    expect(alert?.text.trim()).toBe('');
+    // The form is named by its heading; the clear button is the form's only type="button" (signature-pad.ts).
+    const title = page.attr(DRAWN_FORM, 'aria-labelledby');
+    expect(page.text(`#${title ?? ''}`)).toBe('Draw your signature');
+    expect(page.root.querySelectorAll(`${DRAWN_FORM} button[type="button"]`).map((button) => button.text)).toEqual([
+      'clear',
+    ]);
+    expect(page.attr(`${DRAWN_FORM} input[name="signature"]`, 'value')).toBe('');
+  });
+
+  it('B-38, F-83: the canvas has integer width and height attributes at the export size, never CSS lengths', async () => {
+    const { agent } = await signedInAgent();
+
+    const page = parse((await agent.get('/signature').expect(200)).text);
+
+    const canvas = page.root.querySelector(`${DRAWN_FORM} canvas`);
+    expect([canvas?.getAttribute('width'), canvas?.getAttribute('height')]).toEqual(['720', '240']);
+    expect(canvas?.hasAttribute('style')).toBe(false);
+    expect(canvas?.getAttribute('class')).toBe('signature-pad__canvas');
   });
 
   it('F-45: without JavaScript the page explains the pad and the typed form is always visible', async () => {
@@ -181,7 +213,11 @@ describe('POST /signature: drawn', () => {
     const response = await postDrawn(signer, '');
 
     await expectSignRejected(signer, response, { message: BLANK, href: '#signature' });
-    expect(parse(response.text).text('.signature-pad__message')).toBe(`Error: ${BLANK}`);
+    const page = parse(response.text);
+    expect(page.text('.signature-pad__message')).toBe(`Error: ${BLANK}`);
+    // The message is the alert the canvas description points at (F-45).
+    expect(page.attr(`${DRAWN_FORM} canvas`, 'aria-describedby')).toContain('signature-pad-message');
+    expect(page.text('#signature-pad-message')).toBe(`Error: ${BLANK}`);
   });
 
   it('F-41, B-19: a transparent 720 x 240 PNG is blank too', async () => {

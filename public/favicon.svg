@@ -1,4 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Placeholder (phase 1b): the flat accent field (vermilion, tokens.css). Phase 3 adds the wordmark "p". -->
+  <!--
+    The petition mark (ADR 0010): the "p" of "petition" from the wordmark "nonsense petition", black on a flat vermilion
+    field (the vermilion and on-accent tokens of tokens.css; an icon file cannot read CSS custom properties, and an
+    XML comment may not contain a double hyphen, so the token names are not spelled out here). The letter hangs
+    from the top-left inset like the header wordmark, so it is not centred (maw-design-system section 1).
+
+    The path is the outline of "p" in Schibsted Grotesk Medium (SIL OFL 1.1, LICENSES/OFL-SchibstedGrotesk.txt) in
+    font units (2048 per em), read with fontkit from @fontsource/schibsted-grotesk 5.3.0. The transform scales its
+    bounding box (157 -390 1150 1105) to 22 units high with a 5-unit inset at the top and the left. A path instead of
+    <text>, so the mark never depends on a font installed on the device.
+
+    This file is the source of public/apple-touch-icon.png and public/icon-512.png: after a change, run
+    `node scripts/generate-icons.mjs` and commit all three files.
+  -->
   <rect width="32" height="32" fill="#f85d33"/>
+  <path
+    transform="translate(2.6896 21.2609) scale(0.0147157 -0.0147157)"
+    fill="#000"
+    d="M157 -390L157 1080L349 1080L349 857L344 873Q391 991 491 1048Q591 1105 706 1105Q839 1105 939 1036Q1039 967 1094.5 840Q1150 713 1150 539Q1150 364 1094 237.5Q1038 111 938 43Q838 -25 705 -25Q595 -25 494 29Q393 83 338 208L357 215L357 -390ZM642 139Q770 139 850 244Q930 349 930 543Q930 732 852.5 837Q775 942 644 942Q565 942 498.5 899.5Q432 857 392.5 769Q353 681 353 543Q353 338 437.5 238.5Q522 139 642 139Z"
+  />
 </svg>

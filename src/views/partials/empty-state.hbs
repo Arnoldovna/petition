@@ -1,10 +1,12 @@
 {{!--
   empty-state (OVERVIEW.md section 15.2; parameters frozen): title, text, href, linkLabel.
-  maw empty state: one large sentence, one line of text, one link to the next step (F-55, F-58). No illustration.
-  Usage: {{> empty-state title="No supporters yet. Be the first!" href="/signature" linkLabel="sign the petition"}}
+  maw empty state (components section 12): one large sentence that says what happened, one line that says what to do
+  next, one link to that next step (F-55, F-58). No illustration. The title is an h2 below the page's h1 (F-79), so
+  heading navigation reaches it. Every value is printed escaped; the city page passes the requested city (F-53, B-33).
+  Usage: {{> empty-state title="No supporters yet. Be the first!" text="..." href="/signature" linkLabel="sign the petition"}}
 --}}
-<div class="empty-state">
-  <p class="empty-state__title">{{title}}</p>
+<section class="empty-state">
+  <h2 class="empty-state__title">{{title}}</h2>
   {{#if text}}
     <p class="empty-state__text">{{text}}</p>
   {{/if}}
@@ -13,4 +15,4 @@
       <a class="empty-state__link" href="{{href}}">{{linkLabel}}</a>
     </p>
   {{/if}}
-</div>
+</section>

@@ -1,26 +1,44 @@
 /*
- * list-row: partial list-row.hbs (maw list row: title left, meta right).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * list-row: partial list-row.hbs (maw "list row": title left, meta right; stacked on narrow containers).
+ * Structure only (phase 3): the container query, the two columns and wrapping. Title and meta type, the row rule that
+ * turns ink on hover and focus, and the shake come in phase 4a. Part of main.css: no @reference.
  */
 @layer components {
+  /* The row measures its own width, so it stacks in a narrow column on any screen (modular-css section 1.8). */
   .list-row {
-    display: block;
+    container-type: inline-size;
   }
 
-  .list-row__link {
-    display: block;
-  }
-
+  /*
+   * The link (or plain body) of a row. Narrow: title, then meta below. From the `row` container width (36rem): title
+   * left, meta in a fixed column on the right, sharing one baseline.
+   */
+  .list-row__link,
   .list-row__body {
-    display: block;
+    @apply flex flex-col gap-3 pbs-5 pbe-3;
+
+    @variant @row {
+      @apply flex-row items-baseline justify-between gap-6 pbs-6;
+    }
   }
 
+  /* The title takes the free width and wraps; a long word breaks instead of overflowing the row (F-83). */
   .list-row__title {
-    display: block;
+    @apply block;
+
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
   }
 
+  /* The meta column starts at the same position in every row of a list (maw list row). */
   .list-row__meta {
-    display: block;
+    @apply block;
+
+    @variant @row {
+      @apply shrink-0;
+
+      inline-size: var(--container-row);
+      max-inline-size: 45%;
+    }
   }
 }

@@ -4,13 +4,24 @@
   src/client/signature-pad.ts finds [data-signature-pad] and enhances it, so without JavaScript the page shows only
   the note below and the typed-name form. The canvas has an accessible name and instructions (B-70); the client
   exports exactly exportWidth x exportHeight into the hidden `signature` input. `error` is the server's message for a
-  rejected drawing (422) and fills the alert region, which the client also uses for "Please sign before submitting".
+  rejected drawing (422) and fills the alert region, which the client also uses for "Please sign before submitting"
+  (F-41) and focuses (tabindex="-1"); the canvas description names the instructions and that message. The client
+  finds the clear button as the form's only type="button".
   The wrapper id is the error summary's target for the `signature` field (#signature, src/shared/http/form.ts).
   "sign the petition" is the page's one primary button (ADR 0014).
   Usage: {{> signature-pad csrfToken=csrfToken exportWidth=exportWidth exportHeight=exportHeight error=padError}}
 --}}
 <div class="signature-pad" id="signature">
-  <form class="signature-pad__form" method="post" action="/signature" novalidate data-guard data-signature-pad hidden>
+  <form
+    class="signature-pad__form"
+    method="post"
+    action="/signature"
+    aria-labelledby="signature-pad-title"
+    novalidate
+    data-guard
+    data-signature-pad
+    hidden
+  >
     {{> csrf-field}}
     <input type="hidden" name="method" value="drawn">
     <input type="hidden" name="signature" value="">
@@ -23,13 +34,13 @@
       class="signature-pad__canvas"
       role="img"
       aria-label="Signature pad"
-      aria-describedby="signature-pad-instructions"
+      aria-describedby="signature-pad-instructions signature-pad-message"
       width="{{exportWidth}}"
       height="{{exportHeight}}"
       data-export-width="{{exportWidth}}"
       data-export-height="{{exportHeight}}"
     ></canvas>
-    <p class="signature-pad__message" role="alert">
+    <p class="signature-pad__message" id="signature-pad-message" role="alert" tabindex="-1">
       {{#if error}}<span class="visually-hidden">Error: </span>{{error}}{{/if}}
     </p>
     <div class="signature-pad__actions">

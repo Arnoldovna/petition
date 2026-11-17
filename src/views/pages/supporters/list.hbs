@@ -3,6 +3,9 @@
   oldest first, 50 per page (F-54, B-31).
   Model (supporters.controller.ts): title, lead ("64 supporters", absent when empty), total, firstNumber (<ol start>),
   supporters (SupporterView[]), pagination (PaginationView or undefined).
+  Structure (B-67): the h1 with the total of every page as its lead, a numbered <ol> whose start continues across
+  pages (row 51 is item 51 on page 2), then the pagination landmark. With nobody signed, the empty state replaces
+  list and pagination (F-55); its fixed title is the FEATURES copy, the one exclamation mark of the site.
 --}}
 {{> page-heading title="Supporters" lead=lead}}
 {{#if supporters.length}}
@@ -13,5 +16,5 @@
   </ol>
   {{> pagination pagination=pagination}}
 {{else}}
-  {{> empty-state title="No supporters yet. Be the first!" href="/signature" linkLabel="sign the petition"}}
+  {{> empty-state title="No supporters yet. Be the first!" text="Your name appears here as soon as you sign." href="/signature" linkLabel="sign the petition"}}
 {{/if}}

@@ -95,6 +95,29 @@ describe('GET /register', () => {
     expect(page.texts('main a[href="/login"]')).toContain('log in');
   });
 
+  it('F-80, B-65, F-75, F-76: each label sits above its input, no placeholder stands in, the submit is guarded', async () => {
+    const page = parse((await request(testApp.app).get('/register').expect(200)).text);
+
+    const fields = page.root.querySelectorAll(`${FORM} .form-field`);
+    expect(fields.map((field) => field.querySelector('.form-field__input')?.getAttribute('name'))).toEqual([
+      'firstName',
+      'lastName',
+      'email',
+      'password',
+    ]);
+    for (const field of fields) {
+      // The label comes first, so it is read and seen before the control (B-65: legacy put labels below).
+      expect(field.firstElementChild?.tagName).toBe('LABEL');
+    }
+    expect(page.has(`${FORM} [placeholder]`)).toBe(false);
+    expect(page.has('.error-summary')).toBe(false);
+    // F-76: a plain POST form with the token, so it works without JavaScript; form-guard.ts only adds the lock.
+    expect(page.attr(FORM, 'action')).toBe('/register');
+    expect(page.has(`${FORM} input[type="hidden"][name="_csrf"]`)).toBe(true);
+    expect(page.has(`${FORM} .form__actions button[type="submit"].button--primary`)).toBe(true);
+    expect(page.texts('main .button--primary')).toEqual(['register']);
+  });
+
   it('ADR 0003: binds the anonymous session and renders a CSRF token for it', async () => {
     const response = await request(testApp.app).get('/register').expect(200);
 
@@ -183,6 +206,34 @@ describe('POST /register', () => {
     expect(page.has(`${FORM} a[href="/login"]`)).toBe(false);
   });
 
+  it('F-21, B-68: the error summary comes first, takes focus without JavaScript and every reference resolves', async () => {
+    const { agent, csrf } = await guest();
+
+    const response = await postForm(agent, '/register', {
+      _csrf: csrf,
+      ...validFields({ firstName: '', password: 'short' }),
+    }).expect(422);
+    const page = parse(response.text);
+
+    const summary = page.root.querySelector('main .error-summary');
+    expect(summary?.getAttribute('tabindex')).toBe('-1');
+    expect(summary?.hasAttribute('autofocus')).toBe(true);
+    expect(page.root.querySelectorAll('[autofocus]')).toHaveLength(1);
+    const titleId = summary?.getAttribute('aria-labelledby') ?? '';
+    expect(page.text(`#${titleId}.error-summary__title`)).toBe('There is a problem');
+    // Right below the h1 and before the form, so it is the first thing after the heading.
+    expect(summary?.previousElementSibling?.classList.contains('page-heading')).toBe(true);
+    expect(summary?.nextElementSibling?.getAttribute('action')).toBe('/register');
+
+    const hrefs = page.root.querySelectorAll('.error-summary__link').map((link) => link.getAttribute('href') ?? '');
+    expect(hrefs).toEqual(['#firstName', '#password']);
+    for (const href of hrefs) expect(page.has(`${FORM} input${href}`)).toBe(true);
+    // The message is read first, then the hint; both ids exist.
+    expect(page.attr('#password', 'aria-describedby')).toBe('password-error password-hint');
+    expect(page.text('#password-error.form-field__error')).toBe('Error: Password must be at least 12 characters');
+    expect(page.text('#password-hint')).toBe('At least 12 characters');
+  });
+
   it('F-19: a missing field and an over-long name get their messages', async () => {
     const { agent, csrf } = await guest();
 
@@ -230,6 +281,9 @@ describe('POST /register', () => {
     expect(page.texts('.error-summary__link')).toEqual(['An account with this email already exists.']);
     expect(page.attr('#email', 'aria-invalid')).toBe('true');
     expect(page.text(`${FORM} a[href="/login"]`)).toBe('log in instead');
+    // The link follows the email field directly, where the message is (F-20), not somewhere else in the form.
+    const emailField = page.root.querySelector('#email')?.parentNode;
+    expect(emailField?.nextElementSibling?.querySelector('a.form__link')?.getAttribute('href')).toBe('/login');
     expect(page.attr('#firstName', 'value')).toBe('Ada');
     expect(page.attr('#lastName', 'value')).toBe('Byron');
     expect(page.attr('#email', 'value')).toBe(shouted);

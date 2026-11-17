@@ -1,19 +1,19 @@
 /*
- * confirm-panel: partial confirm-panel.hbs (signature delete, account delete).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * confirm-panel: partial confirm-panel.hbs (signature delete, account delete; F-50, F-67, ADR 0013).
+ * Structure (phase 3): what will happen, the optional fields (current password) and the actions, one column at the
+ * prose width. Phase 4b adds the maw design. Part of main.css: no @reference.
  */
 @layer components {
   .confirm-panel {
-    display: block;
+    @apply flex flex-col gap-6 max-inline-prose;
   }
 
   .confirm-panel__title {
-    display: block;
+    @apply m-0;
   }
 
   .confirm-panel__list {
-    display: block;
+    @apply m-0 flex flex-col gap-2;
   }
 
   .confirm-panel__item {
@@ -21,11 +21,16 @@
   }
 
   .confirm-panel__form {
-    display: block;
+    @apply flex flex-col gap-8;
   }
 
+  .confirm-panel__fields {
+    @apply flex flex-col gap-6;
+  }
+
+  /* The destructive button and the "keep" link; they wrap on narrow screens. */
   .confirm-panel__actions {
-    display: block;
+    @apply flex flex-wrap items-center gap-x-6 gap-y-4;
   }
 
   /* Neighbouring targets: at least 24px tall (WCAG 2.5.8 target size, axe target-size). Keep this in later phases. */

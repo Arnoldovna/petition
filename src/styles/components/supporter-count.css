@@ -1,17 +1,21 @@
 /*
  * supporter-count: the supporter count on the thank-you page (F-46), the page's one display-size number.
- * Structure only (phase 2a); phase 4 sets the type. Part of main.css: no @reference.
+ * Structure (phase 3): number and word on one baseline, wrapping below each other on narrow screens; phase 4c sets
+ * the display type (OVERVIEW.md section 15.4). Part of main.css: no @reference.
  */
 @layer components {
   .supporter-count {
-    display: block;
+    @apply flex flex-wrap items-baseline gap-x-3 gap-y-1 m-0 mbs-10 mbe-8;
   }
 
+  /* Digits of equal width, so the number does not change width as it grows. */
   .supporter-count__number {
-    display: block;
+    @apply leading-none;
+
+    font-variant-numeric: tabular-nums;
   }
 
   .supporter-count__label {
-    display: block;
+    @apply leading-none;
   }
 }

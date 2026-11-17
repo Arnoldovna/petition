@@ -1,10 +1,12 @@
 /*
- * row-list: partial row-list.hbs (the list around list-row).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * row-list: partial row-list.hbs, the list around list-row (maw "list rows"; B-67). Structure only (phase 3).
+ * Part of main.css: no @reference.
  */
 @layer components {
+  /* The rows carry their own spacing and rules; the list adds no markers and no indent. */
   .row-list {
-    display: block;
+    @apply flex flex-col m-0 p-0;
+
+    list-style: none;
   }
 }

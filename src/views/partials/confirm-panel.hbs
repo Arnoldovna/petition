@@ -4,7 +4,8 @@
   The confirmation step before a deletion (ADR 0013, F-50, F-67): what will happen (items, plain strings), a POST
   form whose primary button is the destructive action, and a text link that keeps everything. The page's h1 comes
   from page-heading, so the panel title is an h2. Fields the action needs (the current password on account delete)
-  go into the form through the partial block; without a block the form holds only the CSRF token.
+  go into the form through the partial block, wrapped in confirm-panel__fields; without a block the form holds only the
+  CSRF token. The form is guarded against double submits like every form (data-guard, F-75).
   Usage:
     {{#> confirm-panel title="Delete your signature?" items=consequences action="/signature/delete"
          buttonLabel="delete my signature" cancelHref="/thank-you" cancelLabel="keep my signature"}}
@@ -23,7 +24,9 @@
   <form class="confirm-panel__form" method="post" action="{{action}}" novalidate data-guard>
     {{> csrf-field}}
     {{#if @partial-block}}
-      {{> @partial-block}}
+      <div class="confirm-panel__fields">
+        {{> @partial-block}}
+      </div>
     {{/if}}
     <div class="confirm-panel__actions">
       {{> button type="submit" label=buttonLabel modifier="button--primary"}}

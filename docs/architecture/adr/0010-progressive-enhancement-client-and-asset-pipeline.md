@@ -18,7 +18,9 @@ loaded with `<script type="module" src="...">` (deferred by default). CSP `scrip
 
 1. `form-guard.ts` (every page): on `submit` of `form[data-guard]`, sets `aria-busy="true"` and `disabled` on the
    submitter after the event has been dispatched, so the first submission goes through and a double click does not
-   (F-75). Re-enables on `pageshow` with `persisted` (back/forward cache).
+   (F-75). Locks only when no other listener cancelled the submission (the signature pad's blank check, F-41).
+   Re-enables on `pageshow` with `persisted` (back/forward cache), and releases a lock after 15 s, so a stopped or
+   failed navigation never leaves a form unusable; the handlers stay idempotent (B-49).
 2. `signature-pad.ts` (only `/signature`): finds `[data-signature-pad]`, removes `hidden` from the drawing form (the
    typed-name form is always visible; without JS the page shows only it plus the `<noscript>` note, F-45).
    - Pointer Events for mouse, touch and pen; `touch-action: none` on the canvas; `setPointerCapture` on

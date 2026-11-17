@@ -1,12 +1,25 @@
 /*
  * button: partial button.hbs (pattern A text, B outlined, B + accent primary; maw-design-system section 6).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * Structure (phase 3): target size, native font, and the states that src/client/form-guard.ts sets after the first
+ * submit (aria-busy="true" and disabled, F-75). Phase 4b gives the modifiers the maw patterns.
+ * Part of main.css: no @reference.
  */
 @layer components {
   /* Neighbouring targets: at least 24px tall (WCAG 2.5.8 target size, axe target-size). Keep this in later phases. */
   .button {
-    @apply inline-block pbs-1 pbe-1;
+    @apply inline-block m-0 pbs-1 pbe-1;
+
+    font: inherit;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+
+    /* The submit is on its way (form guard); the pointer says "wait" rather than "not allowed". */
+    &[aria-busy='true'] {
+      cursor: progress;
+    }
   }
 
   /* The three modifiers the partial accepts (OVERVIEW.md section 15.2); phase 4b gives them the maw patterns. */

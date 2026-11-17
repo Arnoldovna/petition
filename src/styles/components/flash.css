@@ -1,14 +1,16 @@
 /*
- * flash: partial flash.hbs, the role="status" region of the layout (F-17).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * flash: partial flash.hbs, the role="status" region of the layout (F-17). Structure only (phase 3); the visual
+ * treatment (maw "success": a plain sentence, optionally on the accent field) comes in phase 4a.
+ * Part of main.css: no @reference.
  */
 @layer components {
+  /* Always in the page, so screen readers know the live region before a message arrives; empty, it takes no space. */
   .flash {
-    display: block;
+    @apply block;
   }
 
+  /* One sentence above the page heading, at most one line length wide. */
   .flash__message {
-    display: block;
+    @apply m-0 mbe-8 pbs-3 pbe-3 max-inline-prose;
   }
 }

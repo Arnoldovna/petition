@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { signIn } from '../../../../test/auth.js';
 import { createSignature, createUser } from '../../../../test/factories.js';
@@ -15,10 +15,16 @@ import { drawnSignature } from './fakes.js';
  */
 
 let testApp: TestApp;
+/** What the fake `countSupporters` returns; a test may change it, and every test starts again from 1. */
 let supporters = 1;
 
 beforeAll(async () => {
   testApp = await createTestApp({ countSupporters: () => Promise.resolve(supporters) });
+});
+
+// Reset before each test, not after a change: a failing assertion would otherwise leave its count for the next test.
+beforeEach(() => {
+  supporters = 1;
 });
 
 afterAll(async () => {
@@ -52,6 +58,7 @@ describe('GET /thank-you', () => {
     const page = parse(response.text);
     expect(page.text('title')).toBe('Thank you · Nonsense Petition');
     expect(page.texts('h1')).toEqual(['Thank you for your signature']);
+    expect(page.text('.page-heading__lead')).toBe('Your name is now on the supporters list.');
     const image = page.root.querySelector('.signature-frame img');
     expect(image?.getAttribute('src')).toBe('/signature/image.png');
     expect(image?.getAttribute('alt')).toBe('Your signature');
@@ -67,6 +74,31 @@ describe('GET /thank-you', () => {
     expect(page.has('.row-list .list-row__meta')).toBe(false);
   });
 
+  it('F-46, F-84, B-67: the thanks, the signature, the count and the next steps come in reading order', async () => {
+    const { agent } = await signer();
+    supporters = 64;
+
+    const page = parse((await agent.get('/thank-you').expect(200)).text);
+
+    // querySelectorAll('*') lists the elements of main in document order.
+    const inOrder = page.root.querySelectorAll('main *');
+    const positions = ['h1', '.signature-frame', '.supporter-count', '.row-list'].map((selector) => {
+      const element = page.root.querySelector(`main ${selector}`);
+      return element === null ? -1 : inOrder.indexOf(element);
+    });
+    expect(positions.every((position) => position >= 0)).toBe(true);
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+
+    // The image is content with its own text alternative, never decoration, and the only image on the page (F-84).
+    expect(page.root.querySelectorAll('main img').map((img) => img.getAttribute('alt'))).toEqual(['Your signature']);
+    // Number and word are separate elements, so the number can be the display-size figure (OVERVIEW.md 15.4).
+    expect(page.text('.supporter-count__number')).toBe('64');
+    expect(page.text('.supporter-count__label')).toBe('supporters');
+    // The next steps are text links that name their destination; none is an icon (F-84, B-69).
+    expect(page.texts('main .row-list a')).toEqual(['see all supporters', 'delete signature']);
+    expect(page.has('main .row-list svg, main .row-list img')).toBe(false);
+  });
+
   it('F-46, B-75: shows the supporter count with correct pluralisation and grouping', async () => {
     const { agent } = await signer();
 
@@ -80,7 +112,6 @@ describe('GET /thank-you', () => {
 
       expect(page.text('.supporter-count')).toBe(text);
     }
-    supporters = 1;
   });
 
   it('F-71, ADR 0004 item 7: the page needs no data: URL; the CSP allows images from self only', async () => {

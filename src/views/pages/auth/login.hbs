@@ -2,7 +2,8 @@
   pages/auth/login (ROUTES.md section 3, F-23, F-24, F-30). Model: title, form (FormView), returnTo.
   returnTo is only present when it is a safe same-origin path (the controller drops anything else), and it travels as
   a hidden field, never in the session (OVERVIEW.md section 12). A failed login shows one message in the error
-  summary and keeps the email (F-24). The only accent button of the page.
+  summary and keeps the email (F-24). Labels are visible, the tokens are email and current-password (F-80, B-71). The
+  only accent button of the page. The way to the register page stays outside the form.
 --}}
 {{> page-heading title="Log in"}}
 {{> error-summary errorList=form.errorList}}
@@ -13,6 +14,8 @@
   {{/if}}
   {{> form-field form=form name="email" label="email" type="email" autocomplete="email"}}
   {{> form-field form=form name="password" label="password" type="password" autocomplete="current-password"}}
-  {{> button type="submit" label="log in" modifier="button--primary"}}
+  <div class="form__actions">
+    {{> button type="submit" label="log in" modifier="button--primary"}}
+  </div>
 </form>
 <p>No account yet? <a href="/register">register</a></p>

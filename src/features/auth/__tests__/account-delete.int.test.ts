@@ -71,6 +71,21 @@ describe('GET /account/delete', () => {
     expect(page.text(`${FORM} a[href="/profile/edit"]`)).toBe('keep my account');
   });
 
+  it('F-67, F-75, F-80: the password sits in the guarded form between the list and the actions, labelled above', async () => {
+    const { page: response } = await signedIn();
+    const page = parse(response.text);
+
+    expect(page.has(`.confirm-panel ${FORM}.confirm-panel__form`)).toBe(true);
+    const field = page.root.querySelector(`${FORM} .confirm-panel__fields .form-field`);
+    expect(field?.firstElementChild?.tagName).toBe('LABEL');
+    expect(field?.querySelector('input')?.getAttribute('id')).toBe('currentPassword');
+    expect(page.has(`${FORM} [placeholder]`)).toBe(false);
+    expect(page.texts(`${FORM} .confirm-panel__actions .button--primary`)).toEqual(['delete my account']);
+    expect(page.attr(`${FORM} .confirm-panel__actions .confirm-panel__cancel`, 'href')).toBe('/profile/edit');
+    expect(page.texts('main .button--primary')).toHaveLength(1);
+    expect(page.has('.error-summary')).toBe(false);
+  });
+
   it('F-07, F-30: a guest is sent to the login page with returnTo', async () => {
     await request(testApp.app).get(PATH).expect(302).expect('location', '/login?returnTo=%2Faccount%2Fdelete');
   });
@@ -85,6 +100,13 @@ describe('POST /account/delete', () => {
     expect(page.texts('.error-summary__link')).toEqual(['Enter your current password']);
     expect(page.attr('.error-summary__link', 'href')).toBe('#currentPassword');
     expect(page.attr('#currentPassword', 'aria-invalid')).toBe('true');
+    // F-21: the summary is focused on load and comes before the panel; the message is tied to the field.
+    expect(page.has('main .error-summary[role="alert"][tabindex="-1"][autofocus]')).toBe(true);
+    expect(
+      page.root.querySelector('main .error-summary')?.nextElementSibling?.classList.contains('confirm-panel'),
+    ).toBe(true);
+    expect(page.attr('#currentPassword', 'aria-describedby')).toBe('currentPassword-error');
+    expect(page.text('#currentPassword-error')).toBe('Error: Enter your current password');
     expect(await userExists(user.id)).toBe(true);
   });
 
