@@ -1,0 +1,40 @@
+/*
+ * site-header: partial site-header.hbs (wordmark and at most three nav links; F-14).
+ * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
+ * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ */
+@layer components {
+  .site-header {
+    display: block;
+  }
+
+  /* Wordmark and links are neighbouring targets: at least 24px tall (WCAG 2.5.8). Keep this in later phases. */
+  .site-header__brand {
+    @apply inline-block pbs-1 pbe-1;
+  }
+
+  .site-header__nav {
+    display: block;
+  }
+
+  .site-header__list {
+    display: block;
+  }
+
+  .site-header__item {
+    display: inline-block;
+  }
+
+  .site-header__link {
+    @apply inline-block pbs-1 pbe-1;
+  }
+
+  .site-header__logout {
+    display: inline;
+  }
+
+  /* The log-out button sits among the nav links and uses the page font, not the browser's button font. */
+  .site-header__link--button {
+    font: inherit;
+  }
+}

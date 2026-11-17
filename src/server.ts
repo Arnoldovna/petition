@@ -21,7 +21,8 @@ const container = await createContainer(env, logger).catch((error: unknown) => {
 });
 
 let shuttingDown = false;
-const app = createApp({ env, logger, ...container, isShuttingDown: () => shuttingDown });
+// No test routes and no count override: only the test harness passes those (ADR 0017).
+const app = createApp({ ...container.deps, isShuttingDown: () => shuttingDown });
 
 /**
  * Slow-client limits, passed to the constructor because it validates them (`headersTimeout` must not exceed

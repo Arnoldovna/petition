@@ -1,0 +1,11 @@
+{{!--
+  row-list (OVERVIEW.md section 15.2; no parameters of its own): the list that holds list-row partials, used as a
+  partial block (B-67: a real list instead of one paragraph per entry).
+  Usage:
+    {{#> row-list}}
+      {{#each rows}}{{> list-row href=href title=title meta=meta}}{{/each}}
+    {{/row-list}}
+--}}
+<ul class="row-list">
+  {{> @partial-block}}
+</ul>

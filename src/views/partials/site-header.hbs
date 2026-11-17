@@ -1,0 +1,38 @@
+{{!--
+  site-header (OVERVIEW.md section 15.2; parameters frozen): viewer, currentPath, csrfToken.
+  One navigation for every page, driven by the viewer (F-14, B-46): at most three links (maw header pattern, no
+  hamburger). Guests: about, log in, register. Signed in: supporters, profile, log out; "about" is in the footer.
+  Log out is a POST form with the CSRF token (B-08). `currentAttr` (src/shared/view/helpers.ts) compares a path with
+  currentPath and returns "page" or "", so aria-current is printed only on the current page's link.
+--}}
+<header class="site-header">
+  <a class="site-header__brand" href="/"{{#with (currentAttr "/")}} aria-current="{{this}}"{{/with}}>nonsense petition</a>
+  <nav class="site-header__nav" aria-label="Main">
+    <ul class="site-header__list">
+      {{#if viewer}}
+        <li class="site-header__item">
+          <a class="site-header__link" href="/supporters"{{#with (currentAttr "/supporters")}} aria-current="{{this}}"{{/with}}>supporters</a>
+        </li>
+        <li class="site-header__item">
+          <a class="site-header__link" href="/profile/edit"{{#with (currentAttr "/profile/edit")}} aria-current="{{this}}"{{/with}}>profile</a>
+        </li>
+        <li class="site-header__item">
+          <form class="site-header__logout" method="post" action="/logout" novalidate data-guard>
+            {{> csrf-field}}
+            <button class="site-header__link site-header__link--button" type="submit">log out</button>
+          </form>
+        </li>
+      {{else}}
+        <li class="site-header__item">
+          <a class="site-header__link" href="/about"{{#with (currentAttr "/about")}} aria-current="{{this}}"{{/with}}>about</a>
+        </li>
+        <li class="site-header__item">
+          <a class="site-header__link" href="/login"{{#with (currentAttr "/login")}} aria-current="{{this}}"{{/with}}>log in</a>
+        </li>
+        <li class="site-header__item">
+          <a class="site-header__link" href="/register"{{#with (currentAttr "/register")}} aria-current="{{this}}"{{/with}}>register</a>
+        </li>
+      {{/if}}
+    </ul>
+  </nav>
+</header>

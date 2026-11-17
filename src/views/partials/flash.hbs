@@ -1,0 +1,10 @@
+{{!--
+  flash (OVERVIEW.md section 15.2; parameter frozen): flash = { message } or nothing.
+  The role="status" region is always present, so assistive technology knows it before a message appears (F-17).
+  renderPage takes the flash out of the session, so a message is shown once. Messages are fixed strings from code.
+--}}
+<div class="flash" role="status">
+  {{#if flash}}
+    <p class="flash__message">{{flash.message}}</p>
+  {{/if}}
+</div>

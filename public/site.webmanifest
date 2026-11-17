@@ -1,0 +1,12 @@
+{
+  "name": "Nonsense Petition",
+  "short_name": "petition",
+  "description": "A nonsense petition for absolutely nothing.",
+  "lang": "en",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#ffffff",
+  "theme_color": "#f85d33",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

@@ -3,7 +3,9 @@
   // Entries per OVERVIEW.md section 6. Test files, the Vitest setup files and the tool configs are added by knip's
   // plugins (vitest, eslint, stylelint, drizzle, lefthook, commitlint, lint-staged).
   // `ignoreDependencies` only for a dependency knip reports although it is used, each with a comment naming the user
-  // (ADR 0019 section 3). Every other finding is fixed, never ignored.
+  // (ADR 0019 section 3). Every other finding is fixed, never ignored. The one exception is the `@public` JSDoc tag on
+  // the frozen e2e harness API in e2e/fixtures.ts (registerUser, signDrawn, signTyped, uniqueCity, E2eUser): it is
+  // built in phase 1b, while its importers are the spec files of phases 2b and 5 (ADR 0019 section 3).
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   // src/server.ts and src/db/migrate.ts are entries through the package.json scripts that run them.
   "entry": ["src/tools/*.ts", "src/client/*.ts", "scripts/*.mjs"],

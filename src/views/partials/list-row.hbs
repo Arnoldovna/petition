@@ -1,0 +1,24 @@
+{{!--
+  list-row (OVERVIEW.md section 15.2; parameters frozen): href, title, meta.
+  One <li> inside row-list (maw list row: title left, meta right). With href the whole row is one link (internal,
+  same tab); without href it is a plain row (the about page's stack list). meta is optional.
+  Pass all three explicitly ({{> list-row href=href title=title meta=meta}}), so a value of the surrounding page
+  (its title, for example) never leaks into a row.
+--}}
+<li class="list-row">
+  {{#if href}}
+    <a class="list-row__link" href="{{href}}">
+      <span class="list-row__title">{{title}}</span>
+      {{#if meta}}
+        <span class="list-row__meta">{{meta}}</span>
+      {{/if}}
+    </a>
+  {{else}}
+    <div class="list-row__body">
+      <span class="list-row__title">{{title}}</span>
+      {{#if meta}}
+        <span class="list-row__meta">{{meta}}</span>
+      {{/if}}
+    </div>
+  {{/if}}
+</li>

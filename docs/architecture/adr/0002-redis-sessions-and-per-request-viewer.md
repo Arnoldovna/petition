@@ -33,7 +33,10 @@ showed the guest navigation to signed-in users.
    - Absolute lifetime: `session.issuedAt` (epoch ms from `policy.now()`, set by `establishSession`) and the middleware
      `enforceAbsoluteLifetime(policy)`. An expired session is **regenerated**, not destroyed:
      `await regenerateSession(req)` (promisified `req.session.regenerate`) deletes the old store entry and leaves a
-     fresh, empty, unsaved session object on `req.session`, so the rest of the request runs as a guest (F-29).
+     fresh, empty session object on `req.session`, so the rest of the request runs as a guest (F-29). Because its id
+     differs from the cookie's, express-session stores that anonymous session at the end of the request (a new cookie
+     and an empty entry with the idle TTL); it holds no user data. `viewer.ts` uses the same `regenerateSession`
+     from `shared/security/session.ts`.
 5. **Session content.** `SessionData = { userId?: number; sessionVersion?: number; issuedAt?: number;
 csrfBound?: true; flash?: Flash }`. No names, emails or signature ids (F-28). `flash` is a fixed, server-written
    message and is deleted when a page renders it (ADR 0008). FEATURES F-28 is amended accordingly (OVERVIEW.md

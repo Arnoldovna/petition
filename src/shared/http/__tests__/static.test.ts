@@ -1,11 +1,13 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import express, { type ErrorRequestHandler } from 'express';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
+import { resolvePaths } from '../../../config/paths.js';
 import { createStaticRouter } from '../static.js';
 
 /** Well above compression's 1 kB threshold, so size never decides whether a response is compressed. */
@@ -64,5 +66,37 @@ describe('createStaticRouter compression', () => {
 
     expect(response.status).toBe(404);
     expect(response.headers['content-encoding']).toBeUndefined();
+  });
+});
+
+describe('root icons and manifest', () => {
+  const { viewsDir, publicDir } = resolvePaths('development');
+  const WebManifest = z.object({ icons: z.array(z.object({ src: z.string() })) });
+
+  /** The root files (`/<name>`) that the layout links as icon or manifest. */
+  function linkedRootFiles(): string[] {
+    const layout = readFileSync(join(viewsDir, 'layouts', 'main.hbs'), 'utf8');
+    return [...layout.matchAll(/<link rel="(?:icon|apple-touch-icon|manifest)" href="\/([^"/]+)"/g)].map(
+      ([, file]) => file ?? '',
+    );
+  }
+
+  it('B-43: every icon and the manifest the layout links exist in public/, so browsers get no 404 for them', () => {
+    const manifest = WebManifest.parse(JSON.parse(readFileSync(join(publicDir, 'site.webmanifest'), 'utf8')));
+    const files = [...linkedRootFiles(), ...manifest.icons.map(({ src }) => src.replace(/^\//, ''))];
+
+    expect(files).toContain('apple-touch-icon.png');
+    for (const file of files) expect(existsSync(join(publicDir, file)), file).toBe(true);
+  });
+
+  it('B-43, ROUTES section 7: the root files are served with a one-day cache', async () => {
+    const app = express().use(createStaticRouter({ mode: 'production', builtPublicDir: publicDir, publicDir }));
+
+    for (const file of linkedRootFiles()) {
+      const response = await request(app).get(`/${file}`);
+
+      expect(response.status, file).toBe(200);
+      expect(response.headers['cache-control'], file).toBe('public, max-age=86400');
+    }
   });
 });

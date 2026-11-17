@@ -1,0 +1,26 @@
+{{!--
+  site-footer (OVERVIEW.md section 15.2; parameters frozen): year, contactUrl, imprintUrl.
+  Links: about (always here, F-14 amended), privacy (F-88), contact from configuration (F-15) and imprint only when
+  IMPRINT_URL is set (F-89). The year is computed by viewLocals, never hard-coded. No phone number or private email.
+--}}
+<footer class="site-footer">
+  <nav class="site-footer__nav" aria-label="Footer">
+    <ul class="site-footer__list">
+      <li class="site-footer__item">
+        <a class="site-footer__link" href="/about"{{#with (currentAttr "/about")}} aria-current="{{this}}"{{/with}}>about</a>
+      </li>
+      <li class="site-footer__item">
+        <a class="site-footer__link" href="/privacy"{{#with (currentAttr "/privacy")}} aria-current="{{this}}"{{/with}}>privacy</a>
+      </li>
+      <li class="site-footer__item">
+        <a class="site-footer__link" href="{{contactUrl}}">contact</a>
+      </li>
+      {{#if imprintUrl}}
+        <li class="site-footer__item">
+          <a class="site-footer__link" href="{{imprintUrl}}">imprint</a>
+        </li>
+      {{/if}}
+    </ul>
+  </nav>
+  <p class="site-footer__credit">© {{year}} Arnoldovna. Nonsense Petition is a portfolio project.</p>
+</footer>

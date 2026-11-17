@@ -1,0 +1,32 @@
+{{!--
+  form-field (OVERVIEW.md section 15.2; parameters frozen): form, name, label, type, autocomplete, inputmode, hint.
+  form is the FormView of src/shared/http/form.ts ({ values, errors, errorList }). The input id is the field name,
+  so the error summary links to #<name> (F-21). A visible label above the input, never a placeholder (F-80, B-65);
+  the hint and the error message are tied to the input with aria-describedby, the error also with aria-invalid
+  (B-68). type defaults to "text". Values are escaped; form.ts never echoes passwords back.
+  Usage: {{> form-field form=form name="email" label="email" type="email" autocomplete="email"}}
+--}}
+<div class="form-field">
+  <label class="form-field__label" for="{{name}}">{{label}}</label>
+  <input
+    class="form-field__input"
+    id="{{name}}"
+    name="{{name}}"
+    type="{{#if type}}{{type}}{{else}}text{{/if}}"
+    value="{{lookup form.values name}}"
+    {{#if autocomplete}}autocomplete="{{autocomplete}}"{{/if}}
+    {{#if inputmode}}inputmode="{{inputmode}}"{{/if}}
+    {{#if (lookup form.errors name)}}
+      aria-invalid="true"
+      aria-describedby="{{name}}-error{{#if hint}} {{name}}-hint{{/if}}"
+    {{else if hint}}
+      aria-describedby="{{name}}-hint"
+    {{/if}}
+  >
+  {{#if hint}}
+    <p class="form-field__hint" id="{{name}}-hint">{{hint}}</p>
+  {{/if}}
+  {{#with (lookup form.errors name)}}
+    <p class="form-field__error" id="{{../name}}-error"><span class="visually-hidden">Error: </span>{{this}}</p>
+  {{/with}}
+</div>

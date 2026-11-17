@@ -29,7 +29,7 @@ while adding a second password-checking endpoint.
 - **Bounded hashing.** `createHasher({ maxConcurrent: 2, maxQueue: 64 })` in `src/shared/auth/password.ts` wraps
   `hash` and `verify` (including the dummy-hash verify for unknown emails) in a small semaphore. At most two hashes
   run at once, so peak hashing memory is 128 MiB. A request that finds 64 others already waiting gets
-  `TooManyRequestsError` (the 429 page). The runtime container needs at least **384 MiB** of memory; this is noted in
+  `TooManyRequestsError` with `Retry-After: 5` (the 429 page). The runtime container needs at least **384 MiB** of memory; this is noted in
   the compose file and in the deploy job. Unit test: with a fake slow hash, a third concurrent call waits, the 65th
   queued call is rejected.
 - **Login uses one code path:** `findForLogin(email)` returns `{ id, passwordHash, hasSigned } | undefined` in one
@@ -43,8 +43,11 @@ while adding a second password-checking endpoint.
   afterwards) exports:
   - `verifyCurrentPassword(userId, password): Promise<boolean>` (uses the bounded hasher; `needsRehash` handled),
   - `hashNewPassword(password): Promise<string>` (call **before** opening a transaction),
-  - `apply(tx, userId, { email?, passwordHash? })`: one `UPDATE users` inside the caller's transaction; a new hash
-    increments `session_version`; 23505 on the email index returns `{ ok: false, reason: 'email-taken' }`.
+  - `apply(tx: DatabaseTransaction, userId, { email?, passwordHash? })`: one `UPDATE users` inside a savepoint of the
+    caller's transaction; a new hash increments `session_version`. Result
+    `{ ok: true, sessionVersion } | { ok: false, reason: 'email-taken' | 'not-found' }`: 23505 on
+    `users_email_lower_idx` gives `email-taken` and rolls back only the savepoint, so the caller's transaction stays
+    usable; `sessionVersion` is the value to re-establish the current session with after a password change.
     Account deletion (auth) and profile edit (profile, injected through `app.ts`) both use it, so the
     current-password rule and the session-version bump exist once.
 - **Re-authentication** with the current password for: changing email, changing password (F-63) and deleting the

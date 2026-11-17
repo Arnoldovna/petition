@@ -1,11 +1,10 @@
+import { sql } from 'drizzle-orm';
 import express from 'express';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createTestApp } from '../../../../test/test-app.js';
+import { createTestApp, type TestApp } from '../../../../test/test-app.js';
 import { createHealthRouter } from '../health.js';
-
-type TestApp = Awaited<ReturnType<typeof createTestApp>>;
 
 describe('health endpoints on the real app', () => {
   let testApp: TestApp;
@@ -51,13 +50,24 @@ describe('health endpoints on the real app', () => {
     expect(response.body).toMatchObject({ status: 404, title: 'Not found' });
   });
 
+  it("ADR 0017: the test app runs on the file's own empty, migrated database, cloned from the template", async () => {
+    const result = await testApp.db.execute<{ name: string }>(sql`select current_database() as name`);
+    // `shared` may not import `db`, so the table is named in SQL here.
+    const users = await testApp.db.execute<{ count: number }>(sql`select count(*)::int as count from users`);
+
+    expect(result.rows[0]?.name).toMatch(/^t_[0-9a-f]{32}$/);
+    expect(users.rows[0]?.count).toBe(0);
+  });
+
   it('F-74, B-10: health responses skip the page middleware but carry the request id', async () => {
     const response = await request(testApp.app).get('/health/ready').set('x-request-id', 'probe-12345678');
 
     expect(response.headers['x-request-id']).toBe('probe-12345678');
     expect(response.headers['x-powered-by']).toBeUndefined();
-    // Mounted before helmet (OVERVIEW.md section 5.1): probes never pay for the CSP.
+    // Mounted before helmet, sessions and limits (OVERVIEW.md section 5.1): probes never get a CSP or a cookie.
     expect(response.headers['content-security-policy']).toBeUndefined();
+    expect(response.headers['set-cookie']).toBeUndefined();
+    expect(response.headers['ratelimit-policy']).toBeUndefined();
   });
 });
 

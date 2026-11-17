@@ -1,4 +1,9 @@
-{{!-- Temporary error page (phase 1a); phase 1b gives it its final markup. Copy per status: ROUTES.md section 8. --}}
-<h1>{{heading}}</h1>
-<p>{{text}}</p>
-<p><a href="{{nextHref}}">{{nextLabel}}</a></p>
+{{!--
+  pages/error (ROUTES.md section 8, ADR 0008): rendered by errorHandler through renderPage for every HTML error
+  response (every row of that table), so it has the full layout with the viewer's navigation.
+  Model: heading (the h1), text (one sentence), nextHref and nextLabel (the next step). No stack, no internals (F-09).
+--}}
+{{> page-heading title=heading lead=text}}
+<p class="page__next">
+  <a class="page__next-link" href="{{nextHref}}">{{nextLabel}}</a>
+</p>

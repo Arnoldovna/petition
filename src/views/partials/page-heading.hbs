@@ -1,0 +1,11 @@
+{{!--
+  page-heading (OVERVIEW.md section 15.2; parameters frozen): title, lead.
+  The one h1 of every page (F-79, B-67) and an optional lead sentence.
+  Usage: {{> page-heading title="Supporters" lead="64 supporters"}}
+--}}
+<div class="page-heading">
+  <h1 class="page-heading__title">{{title}}</h1>
+  {{#if lead}}
+    <p class="page-heading__lead">{{lead}}</p>
+  {{/if}}
+</div>

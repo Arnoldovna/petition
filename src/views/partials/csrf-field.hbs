@@ -1,0 +1,6 @@
+{{!--
+  csrf-field (OVERVIEW.md section 15.2; parameter frozen): csrfToken.
+  Inside every form (ADR 0003). The token comes from renderPage; pass csrfToken=@root.csrfToken explicitly when the
+  partial is used inside an {{#each}} or {{#with}} block, whose context does not carry it.
+--}}
+<input type="hidden" name="_csrf" value="{{csrfToken}}">

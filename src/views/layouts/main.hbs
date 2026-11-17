@@ -1,39 +1,37 @@
 {{!--
-  Temporary phase-1a layout. Phase 1b replaces it with the final, frozen layout of OVERVIEW.md section 15.1
-  (site-header and site-footer partials, flash region, icons and manifest). Only classes that already exist in
-  src/styles are used here (check:utilities).
+  The one layout (OVERVIEW.md section 15.1, ADR 0014). Frozen from phase 1b on: a change is a shared-file request.
+
+  Model, added by renderPage and viewLocals: title (F-16), scripts (extra module entries), viewer, currentPath,
+  csrfToken, flash, year, contactUrl, imprintUrl. The partials read them from this context.
+  {{{body}}} is the only triple-stash in src/views: the express-handlebars slot for the already rendered page
+  (allow-listed for layouts in scripts/check-views.mjs).
 --~}}
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{title}} · Nonsense Petition</title>
-    <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#f85d33" />
-    <link
-      rel="preload"
-      href="/fonts/schibsted-grotesk-latin-400-normal.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link rel="stylesheet" href="{{asset 'app.css'}}" />
+    <meta name="color-scheme" content="light dark">
+    {{!-- The accent (#f85d33, tokens.css --color-vermilion) for browser chrome; markup meta cannot read a token. --}}
+    <meta name="theme-color" content="#f85d33">
+    <link rel="preload" href="/fonts/schibsted-grotesk-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{{asset 'app.css'}}">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
     <script type="module" src="{{asset 'form-guard.js'}}"></script>
     {{#each scripts}}
       <script type="module" src="{{asset this}}"></script>
     {{/each}}
   </head>
-  <body>
+  <body class="page">
     <a class="skip-link" href="#main">Skip to content</a>
-    <header>
-      <a href="/">nonsense petition</a>
-    </header>
-    <main id="main" tabindex="-1">
+    {{> site-header}}
+    <main class="page__main" id="main" tabindex="-1">
+      {{> flash}}
       {{{body}}}
     </main>
-    <footer>
-      <p>a nonsense petition by Arnoldovna</p>
-    </footer>
+    {{> site-footer}}
   </body>
 </html>

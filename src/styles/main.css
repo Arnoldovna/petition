@@ -12,6 +12,27 @@
 @import './utilities.css';
 
 /*
- * Component files (OVERVIEW.md section 15.3) arrive in phase 1b: one @import per file in src/styles/components/,
- * alphabetical, without @reference (they are part of this compilation).
+ * One file per block (OVERVIEW.md section 15.3), alphabetical by block name. They are part of this compilation, so
+ * they have no @reference (it would recurse). Every file wraps its rules in @layer components.
  */
+@import './components/button.css';
+@import './components/confirm-panel.css';
+@import './components/empty-state.css';
+@import './components/error-summary.css';
+@import './components/flash.css';
+@import './components/form.css';
+@import './components/form-field.css';
+@import './components/list-row.css';
+@import './components/page.css';
+@import './components/page-heading.css';
+@import './components/pagination.css';
+@import './components/prose.css';
+@import './components/row-list.css';
+@import './components/signature-frame.css';
+@import './components/signature-pad.css';
+@import './components/site-footer.css';
+@import './components/site-header.css';
+@import './components/supporter-count.css';
+@import './components/supporter-list.css';
+@import './components/supporter-row.css';
+@import './components/typed-signature.css';

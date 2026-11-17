@@ -52,4 +52,21 @@ describe('createRedisClient', () => {
     expect(client.isOpen).toBe(false);
     expect(logger.error).toHaveBeenCalled();
   }, 15_000);
+
+  it('F-74: a command sent while the client is not ready fails at once instead of waiting in an offline queue', async () => {
+    const client = createRedisClient({
+      url: `redis://127.0.0.1:${String(await closedPort())}`,
+      logger: { error: vi.fn() },
+    });
+    // connect() keeps the client open but not ready while it retries; it rejects once the retries are used up.
+    const connecting = client.connect().then(
+      () => 'connected',
+      () => 'gave up',
+    );
+
+    const started = Date.now();
+    await expect(client.ping()).rejects.toThrow('The client is offline');
+    expect(Date.now() - started).toBeLessThan(1_000);
+    expect(await connecting).toBe('gave up');
+  }, 15_000);
 });

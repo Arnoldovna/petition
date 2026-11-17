@@ -133,18 +133,24 @@ flowchart TB
   container --> db & shared & signature
 ```
 
-| Module                               | Owns routes                                                             | Owns writes to                                                                               | Exports (index.ts)                                    | Depends on (injected)                                                             |
-| ------------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `pages`                              | `/`, `/home`, `/about`, `/privacy`                                      | nothing                                                                                      | router                                                | none                                                                              |
-| `auth`                               | `/register`, `/login`, `/logout`, `/account/delete`                     | `users` (insert, rehash, email, password hash, `session_version`, delete)                    | router, `createViewerRepository`, `createCredentials` | `db`, `hasher`, `timingDummyHash`, `rateLimits`, session helpers, `sessionPolicy` |
-| `profile`                            | `/profile`, `/profile/edit`                                             | `profiles`; `users` first and last name; email and password only through `credentials.apply` | router                                                | `db`, `credentials`, `rateLimits`                                                 |
-| `signature`                          | `/signature`, `/signature/image.png`, `/signature/delete`, `/thank-you` | `signatures`                                                                                 | router, `createSignatureImages`                       | `db`, `signatureImages`, `countSupporters`, `rateLimits`                          |
-| `supporters`                         | `/supporters`, `/supporters/city/:city`                                 | nothing (read only)                                                                          | router, `countSupporters`                             | `db`, `pageSize`                                                                  |
-| `tools` (not a module, entry points) | none                                                                    | `seed.ts` inserts demo data; `erase-user.ts` deletes one user                                | nothing                                               | env, `db`, features' `index.ts`                                                   |
+| Module                               | Owns routes                                                             | Owns writes to                                                                               | Exports (index.ts)                                    | Depends on (injected)                                            |
+| ------------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------- |
+| `pages`                              | `/`, `/home`, `/about`, `/privacy`                                      | nothing                                                                                      | router                                                | none                                                             |
+| `auth`                               | `/register`, `/login`, `/logout`, `/account/delete`                     | `users` (insert, rehash, email, password hash, `session_version`, delete)                    | router, `createViewerRepository`, `createCredentials` | `db`, `hasher`, `timingDummyHash`, `rateLimits`, `sessionPolicy` |
+| `profile`                            | `/profile`, `/profile/edit`                                             | `profiles`; `users` first and last name; email and password only through `credentials.apply` | router                                                | `db`, `credentials`, `rateLimits`, `sessionPolicy`               |
+| `signature`                          | `/signature`, `/signature/image.png`, `/signature/delete`, `/thank-you` | `signatures`                                                                                 | router, `createSignatureImages`                       | `db`, `signatureImages`, `countSupporters`, `rateLimits`         |
+| `supporters`                         | `/supporters`, `/supporters/city/:city`                                 | nothing (read only)                                                                          | router, `countSupporters`                             | `db`, `pageSize`                                                 |
+| `tools` (not a module, entry points) | none                                                                    | `seed.ts` inserts demo data; `erase-user.ts` deletes one user                                | nothing                                               | env, `db`, features' `index.ts`                                  |
 
 Each module's `index.ts` exports `create<Name>Module(deps): { router: Router; ... }`. The deps interfaces, the auth
 kernel (`viewer.repository.ts`, `credentials.ts`) and the signature-image contract are fixed in the scaffold
 (BUILD-ORDER.md phase 1), so modules can be built in parallel.
+
+`rateLimits` in every deps interface is the set of built limiters (`RateLimiters` from `shared/security/security.ts`,
+created once by `createRateLimiters` in `container.ts` or `test/test-app.ts`), not the numeric `RateLimitConfig`: the
+Redis stores and the email-key secret stay in the composition root, and the test probe routes share the app's limiter
+instances. The session helpers (`establishSession`, `endSession`, `bindAnonymousSession`) are imported directly from
+`shared/security`, not injected.
 
 ## 5. Request flow
 
@@ -161,7 +167,7 @@ kernel (`viewer.repository.ts`, `credentials.ts`) and the signature-image contra
 | 7   | `session` (express-session + RedisStore, cookie `petition.sid` / `__Host-petition.sid`)                                                               | ADR 0002                                         |
 | 8   | `enforceAbsoluteLifetime(sessionPolicy)`: regenerates an expired session                                                                              | F-29                                             |
 | 9   | `loadViewer(findViewer)` -> `res.locals.viewer` or guest; regenerates ghost or outdated sessions                                                      | F-31, F-32                                       |
-| 10  | `rateLimiter('global', rateLimits.globalPerMinute, keyByIp)`                                                                                          | ADR 0012                                         |
+| 10  | `rateLimits.global` (built by `createRateLimiters`: `globalPerMinute`, `keyByIp`)                                                                     | ADR 0012                                         |
 | 11  | `app.use('/signature', urlencoded({ limit: '128kb' }))` then global `urlencoded({ extended: false, limit: '16kb' })`                                  | ADR 0004                                         |
 | 12  | `deps.testRoutes` (only in `createTestApp`: `POST /__test/sign-in`, with its own `express.json({ limit: '1kb' })`; the app itself has no JSON parser) | ADR 0017, ADR 0019                               |
 | 13  | `cookieParser()`                                                                                                                                      | csrf-csrf requirement                            |
@@ -324,7 +330,7 @@ petition/
     ├── container.ts                             (tpl) pg, redis, session, bounded hasher, dummy hash, rate limits + stores, sessionPolicy, signatureImages, assets
     ├── app.ts                                   middleware order (5.1), module wiring
     ├── config/
-    │   ├── app.ts                               APP_SLUG = 'petition', APP_NAME = 'Nonsense Petition'
+    │   ├── app.ts                               APP_SLUG = 'petition' (APP_NAME is added with its first user)
     │   ├── env.ts                               Zod env (section 16)
     │   ├── paths.ts                             viewsDir, publicDir, builtPublicDir and signatureFontsDir per mode
     │   └── __tests__/env.test.ts
@@ -416,7 +422,8 @@ There is no API client, so the contract is between HTML forms and the server. Al
 
 - `src/shared/validation/fields.ts`: one schema per field concept (`firstName`, `lastName`, `email`, `newPassword`,
   `currentPassword`, `optionalAge`, `optionalCity`, `optionalHomepage`, `typedName`, `safeReturnTo`, `pageQuery`,
-  `cityParam`) with the messages from ROUTES.md section 1. Pure, unit-tested.
+  `cityParam`, plus the variants `loginPassword`, `optionalNewPassword` and `optionalCurrentPassword`) with the
+  messages from ROUTES.md section 1 (including its notes on control characters and lengths). Pure, unit-tested.
 - `features/<x>/<x>.schema.ts` composes them into form schemas (`RegisterForm`, `LoginForm`, `OnboardingForm`,
   `EditProfileForm`, `SignForm` as a discriminated union on `method`, `DeleteAccountForm`) and defines view-model
   types (`SupporterView`, `PaginationView`, `ThankYouView`). Repositories return rows; services map rows to view types.

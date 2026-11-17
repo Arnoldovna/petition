@@ -1,0 +1,32 @@
+{{!--
+  pagination (OVERVIEW.md section 15.2; parameter frozen): pagination = PaginationView from
+  src/shared/http/pagination.ts ({ current, last, previous, next, items }), or undefined when everything fits on one
+  page (then nothing is rendered). Numbered links with aria-current="page" on the current page, an ellipsis for gaps,
+  previous and next links (F-54, ADR 0006). Every link has a text name ("page 3", "previous page").
+  Usage: {{> pagination pagination=pagination}}
+--}}
+{{#if pagination}}
+  <nav class="pagination" aria-label="Pagination">
+    <ul class="pagination__list">
+      {{#with pagination.previous}}
+        <li class="pagination__item">
+          <a class="pagination__link" href="{{href}}" rel="prev"><span aria-hidden="true">←</span> previous<span class="visually-hidden"> page</span></a>
+        </li>
+      {{/with}}
+      {{#each pagination.items}}
+        {{#if gap}}
+          <li class="pagination__item pagination__item--gap">…</li>
+        {{else}}
+          <li class="pagination__item">
+            <a class="pagination__link" href="{{href}}"{{#if current}} aria-current="page"{{/if}}><span class="visually-hidden">page </span>{{page}}</a>
+          </li>
+        {{/if}}
+      {{/each}}
+      {{#with pagination.next}}
+        <li class="pagination__item">
+          <a class="pagination__link" href="{{href}}" rel="next">next<span class="visually-hidden"> page</span> <span aria-hidden="true">→</span></a>
+        </li>
+      {{/with}}
+    </ul>
+  </nav>
+{{/if}}

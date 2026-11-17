@@ -39,9 +39,12 @@ no keyboard or no-JS way to sign.
   `scripts/font-glyphs.mjs` (devDependency `fontkit` 2.0.4; 3.0.0 is a four-day-old major) reads the `cmap` of every
   shipped woff2 and writes `src/features/signature/image/glyphs.generated.ts` (committed): two sorted code-point range
   lists, `PRIMARY` (Schibsted) and `FALLBACK` (Noto Sans). The unit test `glyphs.test.ts` re-derives both lists from
-  the installed font packages and fails on drift (for example after a fontsource update through Dependabot).
-- **Typed-name rule (Zod, `typedName` in `fields.ts`)**: NFC; replace `’` (U+2019) and `ʼ` (U+02BC) with `'`; trim;
-  collapse inner whitespace; 2 to 60 characters; first character a letter; every character is a space, `.`, `'`, `-`
+  the installed font packages and fails on drift (for example after a fontsource update through Dependabot). Control
+  characters (`\p{Cc}`) are left out: the Schibsted and Noto subsets map U+0000 and U+000D, which never draw, and
+  `typedName` never accepts them.
+- **Typed-name rule (Zod, `typedName` in `fields.ts`)**: NFC; replace `’` (U+2019) and `ʼ` (U+02BC) with `'`; remove
+  control characters; trim; collapse inner whitespace; 2 to 60 characters (more than 60 also gets "Type your full
+  name"); first character a letter; every character is a space, `.`, `'`, `-`
   or a letter (`\p{L}`) or combining mark (`\p{M}`) contained in `PRIMARY ∪ FALLBACK`. Messages: "Type your full
   name"; "Use letters, spaces, hyphens, apostrophes and full stops only"; for letters outside the glyph set "We cannot
   draw some letters of this name yet. Type it in Latin, Greek or Cyrillic letters, or draw your signature."

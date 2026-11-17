@@ -8,6 +8,15 @@
 
     -webkit-font-smoothing: antialiased;
     text-size-adjust: 100%;
+
+    /*
+     * From 640px the site header is sticky (maw header pattern, ADR 0014). In-page targets (the error summary's
+     * #<field> links, the skip link's #main) must not land underneath it: 32 spacing steps = 128px, the header's
+     * height with the display-size wordmark.
+     */
+    @variant sm {
+      scroll-padding-block-start: --spacing(32);
+    }
   }
 
   body {

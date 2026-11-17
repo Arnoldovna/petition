@@ -1,0 +1,18 @@
+/*
+ * page-heading: partial page-heading.hbs (the one h1 per page).
+ * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
+ * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ */
+@layer components {
+  .page-heading {
+    display: block;
+  }
+
+  .page-heading__title {
+    display: block;
+  }
+
+  .page-heading__lead {
+    display: block;
+  }
+}

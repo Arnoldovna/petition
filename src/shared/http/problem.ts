@@ -32,6 +32,10 @@ interface HttpErrorLike {
   status: number;
   expose: boolean;
   message: string;
+  /** body-parser's machine-readable reason, e.g. `entity.too.large`. */
+  type?: unknown;
+  /** csrf-csrf's `EBADCSRFTOKEN`. */
+  code?: unknown;
 }
 
 function isHttpErrorLike(error: unknown): error is HttpErrorLike {
@@ -45,10 +49,69 @@ function isHttpErrorLike(error: unknown): error is HttpErrorLike {
   );
 }
 
+interface KnownProblem {
+  status: number;
+  code: string;
+  detail: string;
+}
+
+const CSRF_INVALID: KnownProblem = {
+  status: 403,
+  code: 'csrf-invalid',
+  detail: 'The form has expired. Reload the page and send it again.',
+};
+const PAYLOAD_TOO_LARGE: KnownProblem = {
+  status: 413,
+  code: 'payload-too-large',
+  detail: 'The request body is too large.',
+};
+const MALFORMED_BODY: KnownProblem = {
+  status: 400,
+  code: 'malformed-body',
+  detail: 'The request body could not be read.',
+};
+const UNSUPPORTED_ENCODING: KnownProblem = {
+  status: 415,
+  code: 'unsupported-media-type',
+  detail: 'The request body uses an unsupported encoding or charset.',
+};
+
+/**
+ * body-parser rejections with a stable problem type and a fixed detail (ADR 0008), so neither the library's wording
+ * nor anything it echoes from the request reaches the client.
+ */
+const BODY_PARSER_PROBLEMS: Readonly<Record<string, KnownProblem>> = {
+  'entity.too.large': PAYLOAD_TOO_LARGE,
+  'parameters.too.many': PAYLOAD_TOO_LARGE,
+  'entity.parse.failed': MALFORMED_BODY,
+  'entity.verify.failed': MALFORMED_BODY,
+  'request.aborted': { status: 400, code: 'request-aborted', detail: 'The request was aborted.' },
+  'request.size.invalid': MALFORMED_BODY,
+  'encoding.unsupported': UNSUPPORTED_ENCODING,
+  'charset.unsupported': UNSUPPORTED_ENCODING,
+};
+
+/**
+ * True for the CSRF rejection (ADR 0003). The error page needs to know, because only this 403 is "This form has
+ * expired"; any other 403 (a static folder refusing a path that leaves it, `ForbiddenError`) is not about a form.
+ */
+export function isCsrfProblem(problem: Pick<ProblemDetails, 'type'>): boolean {
+  return problem.type === `${PROBLEM_TYPE_PREFIX}${CSRF_INVALID.code}`;
+}
+
+function knownProblem(error: HttpErrorLike): KnownProblem | undefined {
+  if (error.code === 'EBADCSRFTOKEN') return CSRF_INVALID;
+  return typeof error.type === 'string' ? BODY_PARSER_PROBLEMS[error.type] : undefined;
+}
+
+function titleFor(status: number): string {
+  return STATUS_TITLES[status] ?? (status >= 500 ? 'Internal server error' : 'Bad request');
+}
+
 function generic(status: number, req: Request, detail?: string): ProblemDetails {
   return {
     type: 'about:blank',
-    title: STATUS_TITLES[status] ?? 'Error',
+    title: titleFor(status),
     status,
     ...(detail === undefined ? {} : { detail }),
     instance: req.originalUrl,
@@ -56,9 +119,10 @@ function generic(status: number, req: Request, detail?: string): ProblemDetails 
 }
 
 /**
- * Maps any thrown value to a client-safe problem (ADR 0008): AppErrors keep their code and detail, http-errors 4xx
- * keep their status (and their message only when marked `expose`), everything else is a generic 500. Internal
- * messages, SQL and stacks never leave the server (F-09, B-13).
+ * Maps any thrown value to a client-safe problem (ADR 0008): AppErrors keep their code and detail; CSRF and
+ * body-parser rejections get stable types and fixed details; other http-errors 4xx keep their status (and their
+ * message only when marked `expose`); everything else is a generic 500. Internal messages, SQL and stacks never leave
+ * the server (F-09, B-13).
  */
 export function toProblem(error: unknown, req: Request): ProblemDetails {
   if (error instanceof AppError) {
@@ -72,6 +136,16 @@ export function toProblem(error: unknown, req: Request): ProblemDetails {
     };
   }
   if (isHttpErrorLike(error) && error.status >= 400 && error.status < 500) {
+    const known = knownProblem(error);
+    if (known !== undefined) {
+      return {
+        type: `${PROBLEM_TYPE_PREFIX}${known.code}`,
+        title: titleFor(known.status),
+        status: known.status,
+        detail: known.detail,
+        instance: req.originalUrl,
+      };
+    }
     return generic(error.status, req, error.expose ? error.message : undefined);
   }
   return generic(500, req, 'An unexpected error occurred.');

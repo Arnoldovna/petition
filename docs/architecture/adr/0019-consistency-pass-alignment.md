@@ -65,7 +65,11 @@ scoped tests red. Rules:
   packages that `copy-fonts.mjs` and `test/fonts.ts` use by file path, the `pino-pretty` transport string and the CSS
   `@import "tailwindcss"`. Phase 1a runs knip; only a dependency knip actually reports and that is provably used gets an
   `ignoreDependencies` entry, each with a comment naming the user. Every other finding is fixed (remove the dependency
-  or the dead export), never ignored.
+  or the dead export), never ignored. One exception, decided at the 1b gate: the helpers of the frozen e2e harness
+  (`e2e/fixtures.ts`: `registerUser`, `signDrawn`, `signTyped`, `uniqueCity`, `E2eUser`) carry a `@public` JSDoc tag,
+  because units may not edit that file later and their only importers are the spec files of step 2b and phase 5.
+  Application code never uses the tag; a stub that nothing can import yet is created in the phase that uses it
+  instead (for example `png.ts` in 2a).
 - `@vitest/coverage-v8` is used by a `test:coverage` script (`vitest run --project unit --coverage`, not part of
   `verify`); services should be near full branch coverage (`express-feature-module` testing reference).
 

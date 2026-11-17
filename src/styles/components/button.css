@@ -1,0 +1,24 @@
+/*
+ * button: partial button.hbs (pattern A text, B outlined, B + accent primary; maw-design-system section 6).
+ * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
+ * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ */
+@layer components {
+  /* Neighbouring targets: at least 24px tall (WCAG 2.5.8 target size, axe target-size). Keep this in later phases. */
+  .button {
+    @apply inline-block pbs-1 pbe-1;
+  }
+
+  /* The three modifiers the partial accepts (OVERVIEW.md section 15.2); phase 4b gives them the maw patterns. */
+  .button--primary {
+    display: inline-block;
+  }
+
+  .button--outlined {
+    display: inline-block;
+  }
+
+  .button--text {
+    display: inline-block;
+  }
+}

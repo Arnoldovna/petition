@@ -31,8 +31,9 @@ current-password checks on their own.
   `users.session_version`, and every password check. Its `index.ts` exports, besides the router:
   - `createViewerRepository(db)` with `findViewer(userId)`, injected into `loadViewer` (ADR 0002);
   - `createCredentials({ db, hasher })` with `verifyCurrentPassword(userId, password)`,
-    `hashNewPassword(password)` and `apply(tx, userId, { email?, passwordHash? })` (one `UPDATE users`, bumps
-    `session_version` when the hash changes, returns `{ ok: false, reason: 'email-taken' }` on 23505). `app.ts` injects
+    `hashNewPassword(password)` and `apply(tx, userId, { email?, passwordHash? })` (one `UPDATE users` in a savepoint
+    of the caller's transaction, bumps `session_version` when the hash changes; result
+    `{ ok: true, sessionVersion } | { ok: false, reason: 'email-taken' | 'not-found' }`, ADR 0009). `app.ts` injects
     it into the profile module, which runs it inside its own edit transaction (ADR 0009).
 - **The signature image code belongs to the signature feature** (`src/features/signature/image/`). Its `index.ts`
   exports `createSignatureImages(...)`; `container.ts` creates it, and `src/tools/seed.ts` uses the same export.

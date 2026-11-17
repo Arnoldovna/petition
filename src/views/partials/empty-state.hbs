@@ -1,0 +1,16 @@
+{{!--
+  empty-state (OVERVIEW.md section 15.2; parameters frozen): title, text, href, linkLabel.
+  maw empty state: one large sentence, one line of text, one link to the next step (F-55, F-58). No illustration.
+  Usage: {{> empty-state title="No supporters yet. Be the first!" href="/signature" linkLabel="sign the petition"}}
+--}}
+<div class="empty-state">
+  <p class="empty-state__title">{{title}}</p>
+  {{#if text}}
+    <p class="empty-state__text">{{text}}</p>
+  {{/if}}
+  {{#if href}}
+    <p class="empty-state__action">
+      <a class="empty-state__link" href="{{href}}">{{linkLabel}}</a>
+    </p>
+  {{/if}}
+</div>

@@ -1,0 +1,18 @@
+{{!--
+  error-summary (OVERVIEW.md section 15.2; parameter frozen): errorList = [{ field, message, href }]
+  (src/shared/http/form.ts). Rendered only when there is an error. role="alert" announces it and autofocus moves
+  focus to it without JavaScript (F-21, ADR 0008); each link jumps to its field (#<name>, or #main for a form-level
+  error). Usage: {{> error-summary errorList=form.errorList}}
+--}}
+{{#if errorList.length}}
+  <div class="error-summary" role="alert" tabindex="-1" autofocus aria-labelledby="error-summary-title">
+    <h2 class="error-summary__title" id="error-summary-title">There is a problem</h2>
+    <ul class="error-summary__list">
+      {{#each errorList}}
+        <li class="error-summary__item">
+          <a class="error-summary__link" href="{{href}}">{{message}}</a>
+        </li>
+      {{/each}}
+    </ul>
+  </div>
+{{/if}}

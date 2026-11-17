@@ -56,6 +56,10 @@ interface TestAppOverrides {
   sessionPolicy?: Partial<SessionPolicy>; // idleMs, absoluteMs, now (ADR 0002)
   countSupporters?: () => Promise<number>; // fake for phase 2a signature tests (ADR 0006)
   trustProxy?: number; // only the two limiter test files set 1
+  hasher?: PasswordHasher; // default: createFakeHasher() (test/fakes.ts)
+  signatureImages?: SignatureImages; // default: createFakeSignatureImages() (test/fakes.ts)
+  env?: Readonly<Record<string, string>>; // extra env keys, validated by loadEnv (COOKIE_SECURE, IMPRINT_URL, ...)
+  logger?: Logger; // default: silent
 }
 
 interface TestApp {
@@ -72,7 +76,9 @@ interface TestApp {
 - `test/test-routes.ts` builds a router with `POST /__test/sign-in` (JSON body `{ userId }`, parsed by an
   `express.json({ limit: '1kb' })` on this router, because the app itself only parses urlencoded forms): it loads the
   user through the injected viewer repository and calls `establishSession(req, user, policy)`; 204 on success, 404 for
-  an unknown id. `test/auth.ts` exports `signIn(agent, userId)`.
+  an unknown id. `test/auth.ts` exports `signIn(agent, userId)`. The same router also has
+  `POST /__test/rate-limit/<limiter>` (a probe behind the app's real limiter instances, for `rate-limit.int.test.ts`)
+  and `POST /__test/form` (a CSRF-protected form for the resubmit round trip in `csrf.int.test.ts`).
 - `AppDeps.testRoutes?: Router` is mounted by `app.ts` after the body parsers and before CSRF. Only `createTestApp`
   passes it; `container.ts` never does. ESLint `no-restricted-imports` bans `test/**` from every non-test file in
   `src/**` (test files under `__tests__/` import the harness by design), and `route-matrix.int.test.ts` asserts that an

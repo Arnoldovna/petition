@@ -25,7 +25,9 @@ generators. The critique showed three problems:
 
 ### Configuration
 
-`RateLimitConfig` is part of `AppDeps` (built in `container.ts` from env, built in `test/test-app.ts` from overrides):
+`RateLimitConfig` holds the maxima (built in `container.ts` from env, built in `test/test-app.ts` from overrides).
+`createRateLimiters({ config, stores, emailKeySecret, logger })` reads it once at startup and builds all seven limiters;
+`AppDeps.rateLimits` and the module deps hold those built limiters (`RateLimiters`):
 
 ```ts
 interface RateLimitConfig {
@@ -118,8 +120,9 @@ try again.") with `Retry-After` (windows differ per limiter, so the text names n
 
 ## Consequences
 
-- `AppDeps` gains `rateLimits: RateLimitConfig`; every limiter in `app.ts` and in the feature routers reads its
-  maximum from there.
+- `AppDeps` gains `rateLimits: RateLimiters`, built once by `createRateLimiters` from the `RateLimitConfig` (the
+  maxima are read there, once); `app.ts` mounts `global` and the feature routers mount their named limiters from the
+  same object, so the test probe routes share the app's limiter instances.
 - `.env.example` documents the two keys with their production defaults; `scripts/setup-env.mjs` does not change them.
 - **Skill follow-up: resolved in the consistency pass (2026-11-15).** `project-scaffold/references/conventions.md` §8
   now makes the rule binding for all three projects: a limiter with a custom `keyGenerator` builds its IP part with
