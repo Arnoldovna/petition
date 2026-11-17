@@ -43,7 +43,7 @@
     "stack:down": "docker compose --profile app --profile demo down",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=.env src/db/migrate.ts",
-    "db:seed": "SEED_ALLOW=true tsx --env-file-if-exists=.env src/tools/seed.ts",
+    "db:seed": "pnpm assets:fonts .dev && SEED_ALLOW=true tsx --env-file-if-exists=.env src/tools/seed.ts",
     "admin:erase": "tsx --env-file-if-exists=.env src/tools/erase-user.ts",
     "prepare": "lefthook install"
   },

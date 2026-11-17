@@ -1,7 +1,7 @@
 import { DrizzleQueryError } from 'drizzle-orm/errors';
 import { describe, expect, it } from 'vitest';
 
-import { isUniqueViolation } from '../db-errors.js';
+import { isForeignKeyViolation, isUniqueViolation } from '../db-errors.js';
 
 /** A node-postgres DatabaseError as far as the services care: SQLSTATE and constraint name. */
 const pgError = (code: string, constraint?: string) =>
@@ -38,5 +38,21 @@ describe('isUniqueViolation', () => {
     loop.cause = loop;
 
     expect(isUniqueViolation(loop)).toBe(false);
+  });
+});
+
+describe('isForeignKeyViolation', () => {
+  it('F-31: finds 23503 behind the Drizzle wrapper, for the named constraint only when one is given', () => {
+    const accountGone = wrapped(pgError('23503', 'signatures_user_id_users_id_fk'));
+
+    expect(isForeignKeyViolation(accountGone)).toBe(true);
+    expect(isForeignKeyViolation(accountGone, 'signatures_user_id_users_id_fk')).toBe(true);
+    expect(isForeignKeyViolation(accountGone, 'profiles_user_id_users_id_fk')).toBe(false);
+  });
+
+  it('F-31: a unique violation, other errors and non-errors are not foreign-key violations', () => {
+    expect(isForeignKeyViolation(wrapped(pgError('23505', 'signatures_user_id_key')))).toBe(false);
+    expect(isForeignKeyViolation(new Error('plain'))).toBe(false);
+    for (const value of [undefined, null, '23503', { code: 23503 }]) expect(isForeignKeyViolation(value)).toBe(false);
   });
 });

@@ -139,7 +139,8 @@ scripts/check-views.mjs`), `lint:css`, `check:utilities`, `format`, `format:chec
 `test:integration`, `test:e2e` (`node scripts/run-e2e.mjs`), `e2e:up`, `e2e:down`, `secrets:scan`, `verify`,
 `infra:up`, `infra:down`, `stack:up`, `stack:demo` (`docker compose --profile demo up -d --build --wait`), `stack:down`
 (`docker compose --profile app --profile demo down`, no `-v`), `db:generate`, `db:migrate`, `db:seed`
-(`SEED_ALLOW=true tsx --env-file-if-exists=.env src/tools/seed.ts`), `admin:erase` (added in 1b with
+(`pnpm assets:fonts .dev && SEED_ALLOW=true tsx --env-file-if-exists=.env src/tools/seed.ts`; the first seed renders
+signatures, so the fonts must exist on a clean clone before any `pnpm dev`), `admin:erase` (added in 1b with
 `src/tools/erase-user.ts`), `prepare`.
 
 **Gate 1a** (branch `feat/scaffold-tooling`):
@@ -210,7 +211,7 @@ from the shared partials. CSS: structural rules only, in the files listed.
 | `src/features/pages/{pages.controller.ts, pages.routes.ts, index.ts}`         |     |
 | `src/features/pages/__tests__/pages.int.test.ts`                              |     |
 | `src/views/pages/{home.hbs, about.hbs, privacy.hbs}` (home replaces the stub) |     |
-| `src/styles/components/prose.css`                                             |     |
+| `src/styles/components/long-text.css` (planned as `prose.css`, renamed in 2b) |     |
 
 Covers F-12, F-13, F-14 (nav per state through the shared header), F-16, F-88, F-89; B-42, B-44, B-62 (about lists the
 rebuild stack).
@@ -239,15 +240,15 @@ B-28, B-29, B-47 (edit page link only when signed), B-55, B-72.
 
 #### Module `signature`
 
-| Files                                                                                                                                                                                                                                                                                   |     |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
-| `src/features/signature/{signature.schema.ts, signature.repository.ts, signature.service.ts, signature.controller.ts, signature.routes.ts, index.ts}` (`index.ts` also exports `createSignatureImages`)                                                                                 |     |
-| `src/features/signature/__tests__/{fakes.ts, signature.service.test.ts, sign.int.test.ts, thank-you.int.test.ts, delete.int.test.ts}` (thank-you and delete use a fake `countSupporters` from `createTestApp`; F-47 itself is asserted in 2b)                                           |     |
-| `src/features/signature/image/{png.ts (new: `inspectPngHeader(bytes): { width, height } \| null`, ADR 0004 item 3.3), signature-image.ts, fonts.ts}` (implements the phase-1 contract) + `image/__tests__/{png.test.ts, signature-image.test.ts}` (the glyph files are frozen since 1b) |     |
-| `src/tools/smoke-canvas.ts` (switch to `renderTypedSignature` + validator)                                                                                                                                                                                                              |     |
-| `src/views/pages/signature/{sign.hbs, thank-you.hbs, delete.hbs}`                                                                                                                                                                                                                       |     |
-| `src/views/partials/{signature-pad.hbs, typed-signature.hbs, signature-frame.hbs}` (pad markup hidden until phase 3 enhances it)                                                                                                                                                        |     |
-| `src/styles/components/{signature-pad.css, typed-signature.css, signature-frame.css, supporter-count.css}`                                                                                                                                                                              |     |
+| Files                                                                                                                                                                                                                                                                                                                              |     |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| `src/features/signature/{signature.schema.ts, signature.repository.ts, signature.service.ts, signature.controller.ts, signature.routes.ts, index.ts}` (`index.ts` also exports `createSignatureImages`)                                                                                                                            |     |
+| `src/features/signature/__tests__/{fakes.ts, signature.service.test.ts, sign.int.test.ts, thank-you.int.test.ts, delete.int.test.ts}` (thank-you and delete use a fake `countSupporters` from `createTestApp`; F-47 itself is asserted in 2b)                                                                                      |     |
+| `src/features/signature/image/{png.ts (new: `inspectPngHeader(bytes): { width, height } \| null`and`isCompletePng(bytes): boolean`, ADR 0004 items 3.3 and 3.4), signature-image.ts, fonts.ts}` (implements the phase-1 contract) + `image/__tests__/{png.test.ts, signature-image.test.ts}` (the glyph files are frozen since 1b) |     |
+| `src/tools/smoke-canvas.ts` (switch to `renderTypedSignature` + validator)                                                                                                                                                                                                                                                         |     |
+| `src/views/pages/signature/{sign.hbs, thank-you.hbs, delete.hbs}`                                                                                                                                                                                                                                                                  |     |
+| `src/views/partials/{signature-pad.hbs, typed-signature.hbs, signature-frame.hbs}` (pad markup hidden until phase 3 enhances it)                                                                                                                                                                                                   |     |
+| `src/styles/components/{signature-pad.css, typed-signature.css, signature-frame.css, supporter-count.css}`                                                                                                                                                                                                                         |     |
 
 Covers F-37, F-41 (server), F-42, F-43, F-44, F-45 (typed path and noscript), F-46, F-48, F-49, F-50, F-71 (image
 route); B-07, B-19, B-47, B-49, B-54, B-70 (server side).
@@ -317,13 +318,13 @@ Covers F-20 (link to log in), F-21, F-60, F-75, F-76, F-80; B-49 (client), B-65,
 
 #### Module `shell`
 
-| Files                                                                                                                                                |                        |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `src/views/partials/{site-header.hbs, site-footer.hbs, flash.hbs, page-heading.hbs, row-list.hbs, list-row.hbs}`                                     |                        |
-| `src/views/pages/{home.hbs, about.hbs, privacy.hbs, error.hbs}`                                                                                      |                        |
-| `public/{favicon.svg, apple-touch-icon.png, icon-512.png, site.webmanifest, robots.txt}`, `scripts/generate-icons.mjs`                               |                        |
-| `src/styles/components/{page.css, site-header.css, site-footer.css, flash.css, page-heading.css, row-list.css, list-row.css, prose.css}` (structure) |                        |
-| `src/features/pages/__tests__/pages.int.test.ts`, `src/__tests__/error-pages.int.test.ts`                                                            | markup assertions only |
+| Files                                                                                                                                                    |                        |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `src/views/partials/{site-header.hbs, site-footer.hbs, flash.hbs, page-heading.hbs, row-list.hbs, list-row.hbs}`                                         |                        |
+| `src/views/pages/{home.hbs, about.hbs, privacy.hbs, error.hbs}`                                                                                          |                        |
+| `public/{favicon.svg, apple-touch-icon.png, icon-512.png, site.webmanifest, robots.txt}`, `scripts/generate-icons.mjs`                                   |                        |
+| `src/styles/components/{page.css, site-header.css, site-footer.css, flash.css, page-heading.css, row-list.css, list-row.css, long-text.css}` (structure) |                        |
+| `src/features/pages/__tests__/pages.int.test.ts`, `src/__tests__/error-pages.int.test.ts`                                                                | markup assertions only |
 
 Covers F-12, F-14 (at most three nav links, about in the footer for signed-in users), F-15, F-16, F-17, F-79, F-84,
 F-86 (no third parties; the font preload is in the frozen layout), F-88, F-89 (footer links); B-15, B-42, B-43, B-45,
@@ -353,12 +354,12 @@ Tokens are frozen (`tokens.css` only changes in 4e). Each group owns its files; 
 `@layer components`, logical properties, container queries, `motion-safe`. Reference: `maw-design-system`
 components and `references/screenshots/maw-target-*.png`.
 
-| Group         | Files                                                                                                                                                | Covers                                                                 |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 4a shell      | `src/styles/{base.css, utilities.css, fonts.css}`, `components/{page, site-header, site-footer, flash, page-heading, prose, row-list, list-row}.css` | F-79, F-81, F-82, F-83, F-85, F-86; B-63, B-66, B-74, B-78, B-81, B-83 |
-| 4b forms      | `components/{form, form-field, error-summary, button, confirm-panel}.css`                                                                            | F-80, F-81, F-82; B-65, B-66, B-68, B-77                               |
-| 4c signature  | `components/{signature-pad, typed-signature, signature-frame, supporter-count}.css`                                                                  | F-38 (`touch-action`), F-83; B-38, B-63                                |
-| 4d supporters | `components/{supporter-list, supporter-row, pagination, empty-state}.css`                                                                            | F-52 (no stray separators), F-54; B-73, B-74, B-77, B-79, B-80         |
+| Group         | Files                                                                                                                                                    | Covers                                                                 |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 4a shell      | `src/styles/{base.css, utilities.css, fonts.css}`, `components/{page, site-header, site-footer, flash, page-heading, long-text, row-list, list-row}.css` | F-79, F-81, F-82, F-83, F-85, F-86; B-63, B-66, B-74, B-78, B-81, B-83 |
+| 4b forms      | `components/{form, form-field, error-summary, button, confirm-panel}.css`                                                                                | F-80, F-81, F-82; B-65, B-66, B-68, B-77                               |
+| 4c signature  | `components/{signature-pad, typed-signature, signature-frame, supporter-count}.css`                                                                      | F-38 (`touch-action`), F-83; B-38, B-63                                |
+| 4d supporters | `components/{supporter-list, supporter-row, pagination, empty-state}.css`                                                                                | F-52 (no stray separators), F-54; B-73, B-74, B-77, B-79, B-80         |
 
 **4e. Design review (sequential, orchestrator):** apply queued token requests; start the seeded demo stack with
 `pnpm demo` (http://127.0.0.1:3000; never the e2e stack) and take screenshots at 390 x 844, 768 x 1024, 1440 x 900,

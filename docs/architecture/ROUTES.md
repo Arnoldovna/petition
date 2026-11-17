@@ -37,13 +37,13 @@ headers (ADR 0011), `x-request-id`.
 | `password` (new)        | string, not trimmed, 12..128 (ADR 0009)                                                                                                                                                                                    | "Enter a password"; "Password must be at least 12 characters"; "Password must be 128 characters or fewer"                                                                                                    |
 | `currentPassword`       | string, at least 1                                                                                                                                                                                                         | "Enter your current password"                                                                                                                                                                                |
 | `age`                   | trim; `''` -> `null`; else `^\d{1,3}$` -> integer 1..120                                                                                                                                                                   | "Age must be a whole number between 1 and 120"                                                                                                                                                               |
-| `city`                  | `''` -> `null`; NFC, remove control and format characters, collapse whitespace, trim, 1..100                                                                                                                               | "City must be 100 characters or fewer"                                                                                                                                                                       |
+| `city`                  | `''` -> `null`; NFC, remove control and format characters, collapse whitespace, trim, 1..100, at least one letter (`\p{L}`; rules out the dot segments `.` and `..` in its link)                                           | "City must be 100 characters or fewer"; "City must contain at least one letter"                                                                                                                              |
 | `homepage`              | `''` -> `null`; trim; prepend `https://` only when no `scheme:` prefix is present; `new URL()`; protocol `http:` or `https:`; host contains a dot; no username or password; `href` at most 300                             | "Enter a web address like https://example.com"                                                                                                                                                               |
 | `returnTo`              | optional; starts with `/`, not `//` or `/\`; resolves to the same origin; at most 512                                                                                                                                      | invalid values are silently dropped (no open redirect)                                                                                                                                                       |
 | `typedName`             | NFC; `’` and `ʼ` become `'`; trim; collapse whitespace; 2..60; starts with a letter; only spaces, `.`, `'`, `-` and letters or marks contained in the shipped signature fonts' glyph set (`glyphs.generated.ts`, ADR 0005) | "Type your full name"; "Use letters, spaces, hyphens, apostrophes and full stops only"; "We cannot draw some letters of this name yet. Type it in Latin, Greek or Cyrillic letters, or draw your signature." |
 | `signature`             | see ADR 0004 pipeline                                                                                                                                                                                                      | "Please sign before submitting"; "The signature could not be read. Clear the pad and sign again."                                                                                                            |
 | `page` (query)          | absent -> 1; `^\d{1,5}$` -> integer 1..10000                                                                                                                                                                               | invalid -> 404 page                                                                                                                                                                                          |
-| `city` (param)          | decoded by Express, normalised like `city`                                                                                                                                                                                 | empty or longer than 100 -> 404 page                                                                                                                                                                         |
+| `city` (param)          | decoded by Express, normalised like `city`                                                                                                                                                                                 | empty, longer than 100 or without a letter -> 404 page                                                                                                                                                       |
 
 Notes on the field rules (recorded in phase 1b, `fields.ts`):
 
@@ -179,7 +179,8 @@ Notes on the field rules (recorded in phase 1b, `fields.ts`):
 - Guards: `requireAuth`, CSRF. Body `{ _csrf, age, city, homepage }`.
 - Success: upsert (`ON CONFLICT (user_id) DO UPDATE`), empty fields stored as `NULL` (F-34), 303 `/signature`.
   Repeated submits never fail (F-36, B-28, B-49).
-- Errors: 422 with field messages and kept values (F-35, B-26, B-27, B-18). 403 CSRF.
+- Errors: 422 with field messages and kept values (F-35, B-26, B-27, B-18). 403 CSRF. An account deleted while the
+  request ran (the profile's foreign key): nothing is stored, 303 `/login` (F-31).
 
 ### GET `/profile/edit`
 
@@ -192,7 +193,9 @@ Notes on the field rules (recorded in phase 1b, `fields.ts`):
 
 ### POST `/profile/edit`
 
-- Guards and middleware: `requireAuth`, limiter `reauth` (skipped when `currentPassword` is empty), CSRF.
+- Guards and middleware: `requireAuth`, CSRF, limiter `reauth`. The limiter counts only an edit that checks the current
+  password (an email or password change with a `currentPassword`): the controller applies it through the service right
+  before that check, so a name or profile edit never counts, even when a password manager filled in the field.
 - Body: `{ _csrf, firstName, lastName, email, age, city, homepage, newPassword, currentPassword }`.
 - Rules: empty `newPassword` keeps the password; email change or new password requires a correct `currentPassword`,
   checked with auth's injected `credentials.verifyCurrentPassword` (F-63, ADR 0009); the new hash is computed before
@@ -202,7 +205,7 @@ Notes on the field rules (recorded in phase 1b, `fields.ts`):
 - Success: 303 `/profile/edit`, flash "Profile updated" (F-62).
 - Errors: 422 validation (F-61); 422 email taken "An account with this email already exists." and nothing is saved
   (F-64); 422 "Enter your current password to change your email or password"; 422 "The password is incorrect"; 429;
-  403 CSRF.
+  403 CSRF. An account deleted while the request ran: nothing is saved, 303 `/login` (F-31).
 
 ## 5. Signature (`features/signature`)
 
@@ -232,7 +235,10 @@ Notes on the field rules (recorded in phase 1b, `fields.ts`):
 - Success: `insertIfAbsent` (`ON CONFLICT (user_id) DO NOTHING`), flash "Thank you, your signature was saved", 303
   `/thank-you`. A concurrent duplicate also gets 303 `/thank-you` (F-43, B-49).
 - Errors: 422 on the sign view with the message in the error summary (blank, wrong format, wrong size, too large,
-  corrupt; typed name rules) (F-41, F-42, B-19). 413 page when the body exceeds 128 kb. 429. 403 CSRF.
+  corrupt; typed name rules) (F-41, F-42, B-19). A body whose `method` is neither `drawn` nor `typed` (neither form
+  sends one) is the 400 page "That request could not be read" (`ValidationError`), not a 422. 413 page when the body
+  exceeds 128 kb. 429. 403 CSRF. An account deleted while the image rendered (the signature's foreign key): nothing
+  is stored, 303 `/login` (F-31).
 
 ### GET `/signature/image.png`
 
@@ -276,7 +282,8 @@ Notes on the field rules (recorded in phase 1b, `fields.ts`):
 ### GET `/supporters/city/:city`
 
 - Guards: `requireAuth`. Params `city` (decoded, normalised). Query `page`.
-- View `pages/supporters/city`, title "Supporters from {{city}}". Heading "Supporters from {{city}}" (escaped, never
+- View `pages/supporters/city`, title "Supporters from {{city}}" (page 1) or "Supporters from {{city}}, page 2", so
+  every title stays unique (F-16). Heading "Supporters from {{city}}" (escaped, never
   blank, B-33), count, list of rows without the city link (F-56), link "all supporters" to `/supporters`, pagination
   like the list (F-59). Empty state "No supporters from {{city}} yet" with the link back (F-58).
 - 200; 404 for invalid `city` or out-of-range `page`.
@@ -295,8 +302,13 @@ Static files are served before sessions, CSRF and rate limits (B-59) and never c
 routes are compressed; dynamic HTML is not (BREACH, ADR 0010).
 
 Test-only: `POST /__test/sign-in` (JSON `{ userId }`, parsed by the test router's own `express.json({ limit: '1kb' })`;
-no CSRF, mounted before it) exists only in apps built by `test/test-app.ts` (ADR 0017, ADR 0019 §5); in every other
-build it is the 404 page.
+no CSRF, mounted before it) exists only in apps built by `test/test-app.ts` (ADR 0017, ADR 0019 §5). In every other
+build (and in a harness app with `testRoutes: false`) a POST that carries a valid `_csrf` passes the app-wide CSRF check
+and is the 404 page; one without a token (such as the harness's JSON body) is rejected by that check first with the 403
+page. Nobody is signed in either way (`route-matrix.int.test.ts`).
+
+`/icon-512.png` arrives with the phase-3 icons (`scripts/generate-icons.mjs`, ADR 0010); until then it is the 404 page,
+and nothing links it.
 
 ## 8. Error responses
 

@@ -1,12 +1,15 @@
-import { Router } from 'express';
+import type { Router } from 'express';
 
 import type { Database } from '../../db/client.js';
+import { createSupportersController } from './supporters.controller.js';
+import { createSupportersRepository } from './supporters.repository.js';
+import { createSupportersRouter } from './supporters.routes.js';
+import { createSupportersService } from './supporters.service.js';
 
 /**
  * Public API of the supporters module (ADR 0001, ADR 0006): the read-only list and city pages, and the supporters
- * total that `app.ts` injects into the signature module's thank-you page (F-47). Frozen since phase 1b: the supporters
- * module replaces this file last in phase 2a (BUILD-ORDER.md rule 6) and keeps `SupportersModuleDeps` and the shape
- * `{ router, countSupporters }` unchanged.
+ * total that `app.ts` injects into the signature module's thank-you page (F-47). `SupportersModuleDeps` and the shape
+ * `{ router, countSupporters }` are frozen since phase 1b.
  */
 export interface SupportersModuleDeps {
   db: Database;
@@ -20,10 +23,11 @@ export interface SupportersModule {
   countSupporters: () => Promise<number>;
 }
 
-/**
- * Phase-1b stub: an empty router until phase 2a adds `/supporters` and `/supporters/city/:city`; the count is 0 until
- * the module queries it.
- */
-export function createSupportersModule(_deps: SupportersModuleDeps): SupportersModule {
-  return { router: Router(), countSupporters: () => Promise.resolve(0) };
+/** Wires repository -> service -> controller -> router. Opens no connection and never throws (BUILD-ORDER rule 6). */
+export function createSupportersModule({ db, pageSize }: SupportersModuleDeps): SupportersModule {
+  const service = createSupportersService({ repository: createSupportersRepository(db), pageSize });
+  return {
+    router: createSupportersRouter(createSupportersController(service)),
+    countSupporters: service.countSupporters,
+  };
 }

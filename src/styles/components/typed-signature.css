@@ -1,10 +1,25 @@
 /*
- * typed-signature: partial typed-signature.hbs (sign page).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * typed-signature: partial typed-signature.hbs, the typed-name form of the sign page (F-45, ADR 0005).
+ * Structure only (phase 2a); phase 3 and phase 4 add the rest. Part of main.css: no @reference.
  */
 @layer components {
   .typed-signature {
+    @apply grid gap-4;
+  }
+
+  .typed-signature__title {
     display: block;
+  }
+
+  .typed-signature__text {
+    display: block;
+  }
+
+  .typed-signature__form {
+    @apply grid gap-4;
+  }
+
+  .typed-signature__actions {
+    @apply flex flex-wrap items-center gap-4;
   }
 }

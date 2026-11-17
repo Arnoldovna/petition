@@ -105,6 +105,17 @@ describe('toProblem', () => {
     });
   });
 
+  it("F-09: the router's URIError for a malformed percent-encoding keeps its 400 without the message", () => {
+    const error = Object.assign(new URIError("Failed to decode param '%E0%A4%A'"), { status: 400, statusCode: 400 });
+
+    expect(toProblem(error, req)).toEqual({
+      type: 'about:blank',
+      title: 'Bad request',
+      status: 400,
+      instance: '/signature?page=2',
+    });
+  });
+
   it.each([
     ['a plain error with SQL', new Error('Failed query: select * from users\nparams: ada@example.com')],
     ['an http-errors 5xx', httpError(503, 'upstream db-1.internal unavailable')],

@@ -27,26 +27,23 @@ const STATUS_TITLES: Readonly<Record<number, string>> = {
   500: 'Internal server error',
 };
 
-/** Errors created by `http-errors` (body-parser, serve-static, csrf-csrf) carry `status` and `expose`. */
-interface HttpErrorLike {
+/**
+ * Errors created by `http-errors` (body-parser, serve-static, csrf-csrf) carry `status` and `expose`. Express 5's
+ * router throws a plain `URIError` with `status = 400` and no `expose` for a malformed percent-encoding in a route
+ * parameter, so `expose` is optional and a message is shown only when it is explicitly `true`.
+ */
+interface HttpErrorLike extends Error {
   status: number;
-  expose: boolean;
-  message: string;
+  expose?: unknown;
   /** body-parser's machine-readable reason, e.g. `entity.too.large`. */
   type?: unknown;
   /** csrf-csrf's `EBADCSRFTOKEN`. */
   code?: unknown;
 }
 
+/** Only real `Error` instances count: a plain object with a `status` field is not trusted (generic 500). */
 function isHttpErrorLike(error: unknown): error is HttpErrorLike {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'status' in error &&
-    typeof error.status === 'number' &&
-    'expose' in error &&
-    typeof error.expose === 'boolean'
-  );
+  return error instanceof Error && 'status' in error && typeof error.status === 'number';
 }
 
 interface KnownProblem {
@@ -120,9 +117,9 @@ function generic(status: number, req: Request, detail?: string): ProblemDetails 
 
 /**
  * Maps any thrown value to a client-safe problem (ADR 0008): AppErrors keep their code and detail; CSRF and
- * body-parser rejections get stable types and fixed details; other http-errors 4xx keep their status (and their
- * message only when marked `expose`); everything else is a generic 500. Internal messages, SQL and stacks never leave
- * the server (F-09, B-13).
+ * body-parser rejections get stable types and fixed details; other 4xx errors with a numeric `status` (http-errors,
+ * the router's `URIError`) keep their status (and their message only when marked `expose: true`); everything else is
+ * a generic 500. Internal messages, SQL and stacks never leave the server (F-09, B-13).
  */
 export function toProblem(error: unknown, req: Request): ProblemDetails {
   if (error instanceof AppError) {
@@ -146,7 +143,7 @@ export function toProblem(error: unknown, req: Request): ProblemDetails {
         instance: req.originalUrl,
       };
     }
-    return generic(error.status, req, error.expose ? error.message : undefined);
+    return generic(error.status, req, error.expose === true ? error.message : undefined);
   }
   return generic(500, req, 'An unexpected error occurred.');
 }

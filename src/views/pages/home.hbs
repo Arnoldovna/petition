@@ -1,5 +1,14 @@
 {{!--
-  Temporary home page (phase 1b stub). The pages module replaces it in phase 2 with the intro and the list rows of
-  ROUTES.md section 2.
+  pages/home (ROUTES.md section 2, F-12): the petition intro and one list row per step of the petition.
+  Model (pages.controller.ts): title, rows [{ href, title, meta }]. Every href is a route of ROUTES.md (B-42);
+  guests and signed-in viewers see the same rows, and the target routes' guards redirect where needed.
 --}}
 {{> page-heading title="Nonsense Petition" lead="A nonsense petition for absolutely nothing."}}
+<section aria-labelledby="home-steps">
+  <h2 class="visually-hidden" id="home-steps">Take part</h2>
+  {{#> row-list}}
+    {{#each rows}}
+      {{> list-row href=href title=title meta=meta}}
+    {{/each}}
+  {{/row-list}}
+</section>

@@ -1,12 +1,10 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 import type { Database, DatabaseTransaction } from '../../db/client.js';
-import { users } from '../../db/schema/index.js';
+import { users, USERS_EMAIL_UNIQUE_INDEX } from '../../db/schema/index.js';
 import type { PasswordHasher } from '../../shared/auth/password.js';
 import { isUniqueViolation } from '../../shared/errors/db-errors.js';
-
-/** The unique index that makes emails case-insensitively unique (DATA-MODEL.md section 2.2, ADR 0007). */
-const EMAIL_INDEX = 'users_email_lower_idx';
+import { createAuthRepository } from './auth.repository.js';
 
 /** What `apply` may change. `email` is already normalised by the `email` field schema (trimmed, lower-cased). */
 interface CredentialChanges {
@@ -59,6 +57,8 @@ export interface CredentialsDeps {
 }
 
 export function createCredentials({ db, hasher }: CredentialsDeps): Credentials {
+  // The rehash write of login, so the "only while the verified hash is still stored" rule exists once (ADR 0009).
+  const authRepository = createAuthRepository(db);
   return {
     verifyCurrentPassword: async (userId, password) => {
       const [row] = await db.select({ passwordHash: users.passwordHash }).from(users).where(eq(users.id, userId));
@@ -66,12 +66,8 @@ export function createCredentials({ db, hasher }: CredentialsDeps): Credentials 
 
       const valid = await hasher.verify(row.passwordHash, password);
       if (valid && hasher.needsRehash(row.passwordHash)) {
-        const fresh = await hasher.hash(password);
         // Only replaces the hash that was verified: a password change that committed meanwhile wins.
-        await db
-          .update(users)
-          .set({ passwordHash: fresh })
-          .where(and(eq(users.id, userId), eq(users.passwordHash, row.passwordHash)));
+        await authRepository.updatePasswordHash(userId, row.passwordHash, await hasher.hash(password));
       }
       return valid;
     },
@@ -97,7 +93,7 @@ export function createCredentials({ db, hasher }: CredentialsDeps): Credentials 
         );
         return toApplyResult(row);
       } catch (error) {
-        if (isUniqueViolation(error, EMAIL_INDEX)) return { ok: false, reason: 'email-taken' };
+        if (isUniqueViolation(error, USERS_EMAIL_UNIQUE_INDEX)) return { ok: false, reason: 'email-taken' };
         throw error;
       }
     },

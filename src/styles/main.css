@@ -23,10 +23,10 @@
 @import './components/form.css';
 @import './components/form-field.css';
 @import './components/list-row.css';
+@import './components/long-text.css';
 @import './components/page.css';
 @import './components/page-heading.css';
 @import './components/pagination.css';
-@import './components/prose.css';
 @import './components/row-list.css';
 @import './components/signature-frame.css';
 @import './components/signature-pad.css';

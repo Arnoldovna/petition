@@ -1,0 +1,18 @@
+{{!--
+  pages/auth/login (ROUTES.md section 3, F-23, F-24, F-30). Model: title, form (FormView), returnTo.
+  returnTo is only present when it is a safe same-origin path (the controller drops anything else), and it travels as
+  a hidden field, never in the session (OVERVIEW.md section 12). A failed login shows one message in the error
+  summary and keeps the email (F-24). The only accent button of the page.
+--}}
+{{> page-heading title="Log in"}}
+{{> error-summary errorList=form.errorList}}
+<form class="form" method="post" action="/login" novalidate data-guard>
+  {{> csrf-field}}
+  {{#if returnTo}}
+    <input type="hidden" name="returnTo" value="{{returnTo}}">
+  {{/if}}
+  {{> form-field form=form name="email" label="email" type="email" autocomplete="email"}}
+  {{> form-field form=form name="password" label="password" type="password" autocomplete="current-password"}}
+  {{> button type="submit" label="log in" modifier="button--primary"}}
+</form>
+<p>No account yet? <a href="/register">register</a></p>

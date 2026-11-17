@@ -114,7 +114,8 @@ function tearDown(env) {
 async function startStack(env) {
   await tearDown(env);
   await mustCompose(env, 'up', '-d', '--build', '--wait');
-  // Phase-1 smoke check: @napi-rs/canvas, the shipped fonts and PNG round trip inside the distroless image.
+  // Canvas smoke check inside the distroless image (ADR 0005): the real signature-image service renders a typed name in
+  // both shipped fonts and passes it through the drawn-signature validator.
   await mustRun(
     `canvas smoke check in ${APP_IMAGE}`,
     'docker',

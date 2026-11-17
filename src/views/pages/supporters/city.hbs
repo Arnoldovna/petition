@@ -1,0 +1,22 @@
+{{!--
+  pages/supporters/city (ROUTES.md section 6, GET /supporters/city/:city): signers whose city matches the requested
+  one case-insensitively (F-56, ADR 0007), paginated like the list (F-59).
+  Model (supporters.controller.ts): title, heading ("Supporters from <requested city>", never taken from a row, B-33),
+  emptyTitle ("No supporters from <city> yet", F-58), lead, total, firstNumber, supporters, pagination.
+  Rows show the city as plain text, not as a link to this same page (F-56). Exactly one link back to all supporters:
+  inside the empty state, or after the list.
+--}}
+{{> page-heading title=heading lead=lead}}
+{{#if supporters.length}}
+  <ol class="supporter-list" start="{{firstNumber}}">
+    {{#each supporters}}
+      {{> supporter-row supporter=this showCity=false}}
+    {{/each}}
+  </ol>
+  {{> pagination pagination=pagination}}
+  <p class="page__next">
+    <a class="page__next-link" href="/supporters">all supporters</a>
+  </p>
+{{else}}
+  {{> empty-state title=emptyTitle href="/supporters" linkLabel="all supporters"}}
+{{/if}}

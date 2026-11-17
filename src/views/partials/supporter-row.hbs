@@ -1,0 +1,29 @@
+{{!--
+  supporter-row (OVERVIEW.md section 15.2; parameters frozen): supporter, showCity.
+  One <li> of the supporters list (F-52): the full name left, age, city and signing date as meta right. supporter is
+  a SupporterView (src/features/supporters/supporters.schema.ts); every value is user input and printed escaped
+  (F-53, B-01). The homepage link opens in the same tab with rel="noopener noreferrer nofollow ugc" (B-17). Optional
+  values that are absent render nothing, so there are no stray separators (F-52). showCity=true links the city to its
+  page (same tab, encoded with cityPath, F-57); showCity=false (the city page) shows it as plain text (F-56).
+  Usage: {{#each supporters}}{{> supporter-row supporter=this showCity=true}}{{/each}}
+--}}
+<li class="supporter-row">
+  {{#if supporter.homepageUrl}}
+    <a class="supporter-row__name supporter-row__name--link" href="{{supporter.homepageUrl}}" rel="noopener noreferrer nofollow ugc">{{supporter.fullName}}</a>
+  {{else}}
+    <span class="supporter-row__name">{{supporter.fullName}}</span>
+  {{/if}}
+  <span class="supporter-row__meta">
+    {{#if supporter.age}}
+      <span class="supporter-row__age">age {{supporter.age}}</span>
+    {{/if}}
+    {{#if supporter.city}}
+      {{#if showCity}}
+        <a class="supporter-row__city supporter-row__city--link" href="{{cityPath supporter.city}}">{{supporter.city}}</a>
+      {{else}}
+        <span class="supporter-row__city">{{supporter.city}}</span>
+      {{/if}}
+    {{/if}}
+    <span class="supporter-row__date">signed <time datetime="{{supporter.signedAt}}">{{formatDate supporter.signedAt}}</time></span>
+  </span>
+</li>

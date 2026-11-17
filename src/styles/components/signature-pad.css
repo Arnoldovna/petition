@@ -1,10 +1,48 @@
 /*
- * signature-pad: partial signature-pad.hbs (sign page).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * signature-pad: partial signature-pad.hbs, the drawing form of the sign page (F-38 to F-41, F-83, ADR 0010).
+ * Structure only (phase 2a); phase 3 refines the pad states and phase 4 adds the maw design (the accent pad surface).
+ * Part of main.css: no @reference.
  */
 @layer components {
   .signature-pad {
+    @apply grid gap-4;
+  }
+
+  .signature-pad__form {
+    @apply grid gap-4;
+  }
+
+  /* The form stays hidden until signature-pad.js enhances it; the grid rule above must not undo the attribute. */
+  .signature-pad__form[hidden] {
+    display: none;
+  }
+
+  .signature-pad__title {
+    display: block;
+  }
+
+  .signature-pad__instructions {
+    display: block;
+  }
+
+  /* Scales with its container at the export ratio 720 x 240; touch-action keeps touch strokes off the page scroll. */
+  .signature-pad__canvas {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 3 / 1;
+    touch-action: none;
+  }
+
+  .signature-pad__message {
+    display: block;
+  }
+
+  .signature-pad__actions {
+    @apply flex flex-wrap items-center gap-4;
+  }
+
+  .signature-pad__noscript {
     display: block;
   }
 }

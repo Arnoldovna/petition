@@ -1,9 +1,9 @@
 import { expectNoA11yViolations } from './a11y.ts';
 import { expect, test } from './fixtures.ts';
 
-// Phase-1 smoke spec: the production image renders a page with its hashed assets and fonts, headers and the 404
-// page. `test` from fixtures.ts fails every test on a Content-Security-Policy violation (F-71), so each page below is
-// also proven to render under the strict CSP.
+// Smoke spec: the production image renders a page with its hashed assets and fonts, headers, the 404 page and
+// (since phase 2) a signed-in page. `test` from fixtures.ts fails every test on a Content-Security-Policy violation
+// (F-71), so each page below is also proven to render under the strict CSP.
 
 test('F-16, F-78: the home page renders with its title, landmarks and assets and has no axe violations', async ({
   page,
@@ -76,4 +76,28 @@ test('F-71: the browser enforces the CSP: an injected inline script does not run
   const [violation, ...others] = cspViolations.splice(0);
   expect(others).toEqual([]);
   expect(violation).toMatchObject({ blockedURI: 'inline', directive: expect.stringMatching(/^script-src/) });
+});
+
+test.describe('signed in', () => {
+  test.use({ signedIn: true });
+
+  test('F-14, F-78: a signed-in visitor gets the signed-in navigation and pages without axe violations', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const nav = page.getByRole('navigation', { name: 'Main' });
+
+    await expect(nav.getByRole('link', { name: 'supporters' })).toHaveAttribute('href', '/supporters');
+    await expect(nav.getByRole('link', { name: 'profile' })).toHaveAttribute('href', '/profile/edit');
+    await expect(nav.getByRole('button', { name: 'log out' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'log in' })).toHaveCount(0);
+    await expect(page.getByRole('contentinfo').getByRole('link', { name: 'about' })).toHaveAttribute('href', '/about');
+    await expectNoA11yViolations(page);
+
+    const response = await page.goto('/profile/edit');
+    expect(response?.status()).toBe(200);
+    await expect(page).toHaveTitle('Edit profile · Nonsense Petition');
+    await expect(nav.getByRole('link', { name: 'profile' })).toHaveAttribute('aria-current', 'page');
+    await expectNoA11yViolations(page);
+  });
 });

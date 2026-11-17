@@ -1,0 +1,48 @@
+/*
+ * long-text: running text of the about and privacy pages (pages/about.hbs, pages/privacy.hbs).
+ * Phase 2a: structure only (sections, line length, list markers). The maw design (section label type and rule,
+ * link underline) is added in phase 4a (OVERVIEW.md section 15). Part of main.css: no @reference.
+ *
+ * Not called `prose`: that is a Tailwind Typography utility name, which scripts/check-no-utilities.mjs rejects in
+ * markup (OVERVIEW.md section 15.3, ADR 0016).
+ */
+@layer components {
+  /* The topics of one page, one after the other. */
+  .long-text {
+    @apply flex flex-col gap-10;
+  }
+
+  /* One topic: its label, then text, lists or a row-list, which may use the full column width. */
+  .long-text__section {
+    @apply flex flex-col gap-4;
+  }
+
+  .long-text__heading {
+    @apply m-0;
+  }
+
+  /* Running text keeps a readable line length (--container-prose, about 70 characters). */
+  .long-text__text {
+    @apply m-0 max-inline-prose;
+  }
+
+  /* A block, not a flex column: list items keep their markers in every engine. */
+  .long-text__list {
+    @apply m-0 ps-6 max-inline-prose;
+
+    list-style-type: disc;
+  }
+
+  .long-text__item {
+    display: list-item;
+  }
+
+  .long-text__item + .long-text__item {
+    @apply mbs-2;
+  }
+
+  /* A long link text (a contact address) wraps instead of widening the page at 320px (F-83). */
+  .long-text__link {
+    overflow-wrap: anywhere;
+  }
+}

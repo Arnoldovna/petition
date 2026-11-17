@@ -1,0 +1,10 @@
+{{!--
+  pages/signature/sign (ROUTES.md section 5, GET and the 422 re-render of POST /signature).
+  Model (SignPageView): heading ("Hey <first name>", F-37), form (typed-name values and errors, and the error summary
+  of both forms, F-21), padError (the drawn form's message), exportWidth and exportHeight (720 x 240, ADR 0004).
+  The drawing form stays hidden until signature-pad.js enhances it; the typed-name form is always visible (F-45).
+--}}
+{{> page-heading title=heading lead="Sign the nonsense petition for absolutely nothing: draw your signature, or type your full name."}}
+{{> error-summary errorList=form.errorList}}
+{{> signature-pad csrfToken=csrfToken exportWidth=exportWidth exportHeight=exportHeight error=padError}}
+{{> typed-signature csrfToken=csrfToken form=form}}

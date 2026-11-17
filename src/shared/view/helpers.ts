@@ -48,6 +48,28 @@ function currentPathOf(options: unknown): string | undefined {
   return typeof root.currentPath === 'string' ? root.currentPath : undefined;
 }
 
+const countFormat = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 });
+const pluralRules = new Intl.PluralRules('en-GB');
+
+/** A count in the en-GB format of OVERVIEW.md section 15.4: `1284` -> `1,284`. The `formatCount` helper uses it. */
+export function formatCount(count: number): string {
+  return countFormat.format(count);
+}
+
+/** `singular` for a count of one, else `pluralForm` (en-GB plural rules, B-75). The `plural` helper uses it. */
+export function pluralWord(count: number, singular: string, pluralForm: string): string {
+  return pluralRules.select(count) === 'one' ? singular : pluralForm;
+}
+
+/**
+ * The supporters-by-city page of `city` (ADR 0007): `Frankfurt/Main` -> `/supporters/city/Frankfurt%2FMain`, which
+ * Express matches as one segment and decodes back. The city is user input; encoding keeps it inside the path segment.
+ * The one place that builds this path: the `cityPath` helper (row links) and the city page's pagination both use it.
+ */
+export function cityPath(city: string): string {
+  return `/supporters/city/${encodeURIComponent(city)}`;
+}
+
 /**
  * Handlebars helpers (ADR 0014), registered once in `engine.ts`. Every helper returns a plain value that Handlebars
  * escapes; none returns HTML (`{{{ }}}` is banned in every view, B-01). A helper called with the wrong kind of value
@@ -56,9 +78,7 @@ function currentPathOf(options: unknown): string | undefined {
  * Formats are en-GB (OVERVIEW.md section 15.4): counts `1,284`, dates `15 Nov 2026` in `APP_TIME_ZONE`.
  */
 export function createHelpers({ assets, timeZone }: HelperDeps) {
-  const countFormat = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 });
   const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone });
-  const pluralRules = new Intl.PluralRules('en-GB');
 
   return {
     /** `{{asset "app.css"}}` -> `/assets/app-<hash>.css` (production) or `/assets/app.css` (development). */
@@ -72,21 +92,16 @@ export function createHelpers({ assets, timeZone }: HelperDeps) {
      * "1,284 supporters" (B-75: the legacy copy had no singular). Returns the word only.
      */
     plural: (count: unknown, singular: unknown, pluralForm: unknown): string =>
-      pluralRules.select(requireCount('plural', count)) === 'one'
-        ? requireText('plural', singular)
-        : requireText('plural', pluralForm),
+      pluralWord(requireCount('plural', count), requireText('plural', singular), requireText('plural', pluralForm)),
 
     /** `1284` -> `1,284`. */
-    formatCount: (count: unknown): string => countFormat.format(requireCount('formatCount', count)),
+    formatCount: (count: unknown): string => formatCount(requireCount('formatCount', count)),
 
     /** A signing date as `15 Nov 2026` in `APP_TIME_ZONE`, so a signature at 23:30 UTC shows the local day. */
     formatDate: (value: unknown): string => dateFormat.format(toDate(value)),
 
-    /**
-     * The supporters-by-city link (ADR 0007): `Frankfurt/Main` -> `/supporters/city/Frankfurt%2FMain`, which Express
-     * matches as one segment and decodes back. The city is user input; encoding keeps it inside the path segment.
-     */
-    cityPath: (city: unknown): string => `/supporters/city/${encodeURIComponent(requireText('cityPath', city))}`,
+    /** The supporters-by-city link of a row (`cityPath` above). */
+    cityPath: (city: unknown): string => cityPath(requireText('cityPath', city)),
 
     /**
      * The canonical URL of a list page (ADR 0006), built by `pageHref` like the pagination links: page 1 is the bare

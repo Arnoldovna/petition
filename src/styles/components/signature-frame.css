@@ -1,10 +1,17 @@
 /*
- * signature-frame: partial signature-frame.hbs (thank-you page).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * signature-frame: partial signature-frame.hbs, the viewer's own signature on the thank-you page (F-46).
+ * Structure only (phase 2a); phase 4 makes it the accent field. Part of main.css: no @reference.
  */
 @layer components {
   .signature-frame {
     display: block;
+  }
+
+  /* The 720 x 240 image scales down with its container and keeps its 3:1 ratio. */
+  .signature-frame__image {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 3 / 1;
   }
 }

@@ -1,10 +1,45 @@
 /*
- * supporter-row: partial supporter-row.hbs.
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * supporter-row: partial supporter-row.hbs (one supporter: name left; age, city and date as meta right; F-52).
+ * Structure only (phase 2a); the maw design follows in phase 4 (OVERVIEW.md section 15). Rows stack on narrow
+ * containers and become one line from the `row` container width of supporter-list. Absent values render no element,
+ * and the meta items are separated by gaps, never by separator characters (F-52, B-17).
+ * Part of main.css: no @reference.
  */
 @layer components {
   .supporter-row {
-    display: block;
+    @apply flex flex-col gap-1 pbs-3 pbe-3;
+
+    @variant @row {
+      @apply flex-row flex-wrap items-baseline justify-between gap-4;
+    }
+  }
+
+  .supporter-row__name {
+    @apply inline-block;
+  }
+
+  /* Name and city links are neighbouring targets: at least 24px tall (WCAG 2.5.8 target size). */
+  .supporter-row__name--link {
+    @apply pbs-1 pbe-1;
+  }
+
+  .supporter-row__meta {
+    @apply flex flex-wrap gap-x-3 gap-y-1;
+  }
+
+  .supporter-row__age {
+    @apply inline-block;
+  }
+
+  .supporter-row__city {
+    @apply inline-block;
+  }
+
+  .supporter-row__city--link {
+    @apply pbs-1 pbe-1;
+  }
+
+  .supporter-row__date {
+    @apply inline-block;
   }
 }

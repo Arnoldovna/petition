@@ -1,0 +1,43 @@
+{{!--
+  signature-pad (OVERVIEW.md section 15.2; parameters frozen): csrfToken, exportWidth, exportHeight, error.
+  The drawing form of the sign page (F-37 to F-41, F-45, ADR 0004, ADR 0010). It is `hidden` until
+  src/client/signature-pad.ts finds [data-signature-pad] and enhances it, so without JavaScript the page shows only
+  the note below and the typed-name form. The canvas has an accessible name and instructions (B-70); the client
+  exports exactly exportWidth x exportHeight into the hidden `signature` input. `error` is the server's message for a
+  rejected drawing (422) and fills the alert region, which the client also uses for "Please sign before submitting".
+  The wrapper id is the error summary's target for the `signature` field (#signature, src/shared/http/form.ts).
+  "sign the petition" is the page's one primary button (ADR 0014).
+  Usage: {{> signature-pad csrfToken=csrfToken exportWidth=exportWidth exportHeight=exportHeight error=padError}}
+--}}
+<div class="signature-pad" id="signature">
+  <form class="signature-pad__form" method="post" action="/signature" novalidate data-guard data-signature-pad hidden>
+    {{> csrf-field}}
+    <input type="hidden" name="method" value="drawn">
+    <input type="hidden" name="signature" value="">
+    <h2 class="signature-pad__title" id="signature-pad-title">Draw your signature</h2>
+    <p class="signature-pad__instructions" id="signature-pad-instructions">
+      Sign in the field below with a mouse, a finger or a pen. Use clear to start again. If drawing does not work for
+      you, sign by typing your full name instead.
+    </p>
+    <canvas
+      class="signature-pad__canvas"
+      role="img"
+      aria-label="Signature pad"
+      aria-describedby="signature-pad-instructions"
+      width="{{exportWidth}}"
+      height="{{exportHeight}}"
+      data-export-width="{{exportWidth}}"
+      data-export-height="{{exportHeight}}"
+    ></canvas>
+    <p class="signature-pad__message" role="alert">
+      {{#if error}}<span class="visually-hidden">Error: </span>{{error}}{{/if}}
+    </p>
+    <div class="signature-pad__actions">
+      {{> button type="button" label="clear" modifier="button--text"}}
+      {{> button type="submit" label="sign the petition" modifier="button--primary"}}
+    </div>
+  </form>
+  <noscript>
+    <p class="signature-pad__noscript">Drawing a signature needs JavaScript. You can sign by typing your full name below.</p>
+  </noscript>
+</div>

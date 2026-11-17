@@ -87,15 +87,15 @@ export const keyByEmailAndSubnet = (secret: Buffer) => (req: Request) =>
 `next(new TooManyRequestsError())`, which renders the 429 page ("Too many attempts. Please wait a few minutes, then
 try again.") with `Retry-After` (windows differ per limiter, so the text names no fixed duration).
 
-| Limiter              | Applies to                                                           | Key                   | Counts                                       | Limit (production)                  |
-| -------------------- | -------------------------------------------------------------------- | --------------------- | -------------------------------------------- | ----------------------------------- |
-| `global`             | every non-static request                                             | `keyByIp`             | all                                          | `globalPerMinute` (300) per minute  |
-| `auth-ip`            | `POST /login`, `POST /register`                                      | `keyByIp`             | all                                          | `authPer15Min` (10) per 15 minutes  |
-| `register-email`     | `POST /register`                                                     | `keyByEmail`          | all                                          | `authPer15Min` (10) per 15 minutes  |
-| `login-email-subnet` | `POST /login`                                                        | `keyByEmailAndSubnet` | failed only (`skipSuccessfulRequests: true`) | `authPer15Min` (10) per 15 minutes  |
-| `login-email`        | `POST /login`                                                        | `keyByEmail`          | failed only                                  | `loginEmailPerHour` (100) per hour  |
-| `reauth`             | `POST /profile/edit` with a current password, `POST /account/delete` | `keyByUser`           | all                                          | `reauthPer15Min` (5) per 15 minutes |
-| `sign`               | `POST /signature`                                                    | `keyByUser`           | all                                          | `signPerHour` (20) per hour         |
+| Limiter              | Applies to                                                                    | Key                   | Counts                                       | Limit (production)                  |
+| -------------------- | ----------------------------------------------------------------------------- | --------------------- | -------------------------------------------- | ----------------------------------- |
+| `global`             | every non-static request                                                      | `keyByIp`             | all                                          | `globalPerMinute` (300) per minute  |
+| `auth-ip`            | `POST /login`, `POST /register`                                               | `keyByIp`             | all                                          | `authPer15Min` (10) per 15 minutes  |
+| `register-email`     | `POST /register`                                                              | `keyByEmail`          | all                                          | `authPer15Min` (10) per 15 minutes  |
+| `login-email-subnet` | `POST /login`                                                                 | `keyByEmailAndSubnet` | failed only (`skipSuccessfulRequests: true`) | `authPer15Min` (10) per 15 minutes  |
+| `login-email`        | `POST /login`                                                                 | `keyByEmail`          | failed only                                  | `loginEmailPerHour` (100) per hour  |
+| `reauth`             | `POST /profile/edit` that checks the current password, `POST /account/delete` | `keyByUser`           | all                                          | `reauthPer15Min` (5) per 15 minutes |
+| `sign`               | `POST /signature`                                                             | `keyByUser`           | all                                          | `signPerHour` (20) per hour         |
 
 - "Failed" for the login limiters means a response status of 400 or above (401 wrong credentials, 422 validation).
   A successful login (303) does not count, so the owner of an account never consumes their own budget.
@@ -105,6 +105,12 @@ try again.") with `Retry-After` (windows differ per limiter, so the text names n
   guessing against one account stays capped at 100 attempts per hour. Accepted for this app.
 - `register-email` counts every attempt: repeatedly registering a victim's address only blocks registering that
   address, which already exists.
+- `reauth` on `POST /profile/edit` is not a route middleware: only the service knows, after reading the stored email,
+  whether an edit checks the current password, so the controller passes the limiter to it (`applyLimiter`,
+  `shared/security/security.ts`) and the service runs it right before `verifyCurrentPassword`. A name or profile edit
+  with an autofilled current password therefore never uses up the budget that account deletion shares, and a guess
+  is still counted before any argon2 work (recorded in the phase-2 review; the first version counted every edit with
+  a non-empty `currentPassword`).
 - `trust proxy` must be configured correctly (`TRUST_PROXY`); otherwise every user shares the proxy's IP. The E2E stack
   runs with `TRUST_PROXY=0`, which is why it raises the limits instead.
 

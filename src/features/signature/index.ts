@@ -1,16 +1,26 @@
-import { Router } from 'express';
+import type { Router } from 'express';
 
 import type { Database } from '../../db/client.js';
 import type { RateLimiters } from '../../shared/security/security.js';
 import type { SignatureImages } from './image/index.js';
+import { createSignatureController } from './signature.controller.js';
+import { createSignatureRepository } from './signature.repository.js';
+import { createSignatureRouter } from './signature.routes.js';
+import { createSignatureService } from './signature.service.js';
 
 /**
  * Public API of the signature module (ADR 0001, ADR 0004, ADR 0005). The image service is created once by the
  * composition root (`createSignatureImages`, fonts registered at startup) and injected here; the seed uses the same
- * export. Frozen since phase 1b: the signature module replaces this file last in phase 2a (BUILD-ORDER.md rule 6) and
- * keeps these exports and `SignatureModuleDeps` unchanged.
+ * export. These exports and `SignatureModuleDeps` are the phase-1b contract and stay unchanged; the export size is
+ * re-exported for the seed's generated signatures (phase 2b).
  */
-export { createSignatureImages, signatureFontPaths, type SignatureImages } from './image/index.js';
+export {
+  createSignatureImages,
+  SIGNATURE_HEIGHT,
+  SIGNATURE_WIDTH,
+  signatureFontPaths,
+  type SignatureImages,
+} from './image/index.js';
 
 export interface SignatureModuleDeps {
   db: Database;
@@ -26,9 +36,19 @@ export interface SignatureModuleDeps {
 }
 
 /**
- * Phase-1b stub: an empty router until phase 2a adds `/signature`, `/signature/image.png`, `/signature/delete` and
- * `/thank-you`.
+ * `/signature`, `/signature/image.png`, `/signature/delete` and `/thank-you` (ROUTES.md section 5). Builds the
+ * repository, service, controller and router; opens no connection and does nothing that can throw, so creating the
+ * app never fails here (BUILD-ORDER.md rule 6).
  */
-export function createSignatureModule(_deps: SignatureModuleDeps): { router: Router } {
-  return { router: Router() };
+export function createSignatureModule(deps: SignatureModuleDeps): { router: Router } {
+  const service = createSignatureService({
+    repository: createSignatureRepository(deps.db),
+    signatureImages: deps.signatureImages,
+    countSupporters: deps.countSupporters,
+  });
+  const router = createSignatureRouter({
+    controller: createSignatureController(service),
+    signLimiter: deps.rateLimits.sign,
+  });
+  return { router };
 }

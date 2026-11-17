@@ -1,0 +1,17 @@
+{{!--
+  pages/supporters/list (ROUTES.md section 6, GET /supporters): every signer, with or without a profile (F-51, B-30),
+  oldest first, 50 per page (F-54, B-31).
+  Model (supporters.controller.ts): title, lead ("64 supporters", absent when empty), total, firstNumber (<ol start>),
+  supporters (SupporterView[]), pagination (PaginationView or undefined).
+--}}
+{{> page-heading title="Supporters" lead=lead}}
+{{#if supporters.length}}
+  <ol class="supporter-list" start="{{firstNumber}}">
+    {{#each supporters}}
+      {{> supporter-row supporter=this showCity=true}}
+    {{/each}}
+  </ol>
+  {{> pagination pagination=pagination}}
+{{else}}
+  {{> empty-state title="No supporters yet. Be the first!" href="/signature" linkLabel="sign the petition"}}
+{{/if}}

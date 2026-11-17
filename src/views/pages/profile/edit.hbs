@@ -1,0 +1,47 @@
+{{!--
+  pages/profile/edit (ROUTES.md section 4, GET and POST /profile/edit): F-60 to F-66.
+  Model: title, form (FormView: the stored values on GET, the submitted values and errors after a 422; password
+  fields are never echoed, form.ts drops them), showDeleteSignature (viewer.hasSigned: the "delete signature" link
+  only for signers, F-66, B-47).
+  Both password fields are type="password" (B-11, B-72); the new one is always empty with autocomplete
+  "new-password" (F-60), the current one is needed only for an email or password change (F-63, ADR 0009).
+  Classes: only the defined blocks (form, row-list, list-row) until the forms unit (phase 3) adds element classes.
+--}}
+{{> page-heading title=title}}
+{{> error-summary errorList=form.errorList}}
+<form class="form" method="post" action="/profile/edit" novalidate data-guard>
+  {{> csrf-field}}
+  <fieldset>
+    <legend>name and email</legend>
+    {{> form-field form=form name="firstName" label="first name" autocomplete="given-name"}}
+    {{> form-field form=form name="lastName" label="last name" autocomplete="family-name"}}
+    {{> form-field form=form name="email" label="email" type="email" autocomplete="email"}}
+  </fieldset>
+  <fieldset>
+    <legend>about you</legend>
+    <p>
+      Age, city and homepage are optional. If you add them, they appear next to your name on the supporters list.
+      Details: <a href="/privacy">privacy</a>.
+    </p>
+    {{> form-field form=form name="age" label="age" inputmode="numeric" autocomplete="off"}}
+    {{> form-field form=form name="city" label="city" autocomplete="address-level2"}}
+    {{> form-field form=form name="homepage" label="homepage" type="url" autocomplete="url"}}
+  </fieldset>
+  <fieldset>
+    <legend>password</legend>
+    {{> form-field form=form name="newPassword" label="new password" type="password" autocomplete="new-password"
+        hint="Leave empty to keep your password"}}
+    {{> form-field form=form name="currentPassword" label="current password" type="password"
+        autocomplete="current-password" hint="Needed only when you change your email or password"}}
+  </fieldset>
+  {{> button type="submit" label="save changes" modifier="button--primary"}}
+</form>
+<section aria-labelledby="profile-delete-title">
+  <h2 id="profile-delete-title">Delete your data</h2>
+  {{#> row-list}}
+    {{#if showDeleteSignature}}
+      {{> list-row href="/signature/delete" title="delete signature" meta="removes you from the supporters list"}}
+    {{/if}}
+    {{> list-row href="/account/delete" title="delete account" meta="removes your account, profile and signature"}}
+  {{/row-list}}
+</section>

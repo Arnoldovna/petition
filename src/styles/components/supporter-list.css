@@ -1,10 +1,13 @@
 /*
- * supporter-list: the ordered supporters list (F-54).
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * supporter-list: the ordered list of supporter-row partials on pages/supporters/{list,city}.hbs (F-54).
+ * Structure only (phase 2a); the maw design follows in phase 4 (OVERVIEW.md section 15). The list is the container
+ * its rows query, so a row switches to "name left, meta right" by the list's width, not the viewport's.
+ * Part of main.css: no @reference.
  */
 @layer components {
   .supporter-list {
-    display: block;
+    @apply m-0 p-0;
+
+    container-type: inline-size;
   }
 }

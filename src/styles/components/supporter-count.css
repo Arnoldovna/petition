@@ -1,10 +1,17 @@
 /*
- * supporter-count: the supporter count on the thank-you page.
- * Phase-1b stub (BUILD-ORDER.md 1b): the block and the element classes its markup uses, so check:utilities passes.
- * Later phases add the structure and the maw design (OVERVIEW.md section 15). Part of main.css: no @reference.
+ * supporter-count: the supporter count on the thank-you page (F-46), the page's one display-size number.
+ * Structure only (phase 2a); phase 4 sets the type. Part of main.css: no @reference.
  */
 @layer components {
   .supporter-count {
+    display: block;
+  }
+
+  .supporter-count__number {
+    display: block;
+  }
+
+  .supporter-count__label {
     display: block;
   }
 }

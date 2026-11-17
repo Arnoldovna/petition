@@ -161,6 +161,20 @@ export const optionalCurrentPassword = optionalField(CURRENT_PASSWORD_MISSING, (
 );
 
 // ---------------------------------------------------------------------------------------------------------------
+// Account refusals shared by two forms (ROUTES.md sections 3 and 4)
+// ---------------------------------------------------------------------------------------------------------------
+
+/**
+ * Refusals that only the database can decide, so no field rule produces them: registration and the profile edit both
+ * answer "email taken" (F-20, F-64), account deletion and the profile edit both answer "wrong password" (F-63, F-67).
+ * One string each, so the two modules can never drift apart; each controller attaches it to its own field.
+ */
+export const ACCOUNT_MESSAGES = {
+  emailTaken: 'An account with this email already exists.',
+  wrongPassword: 'The password is incorrect',
+} as const;
+
+// ---------------------------------------------------------------------------------------------------------------
 // Optional profile fields (F-34, F-35, B-18, B-26, B-27): empty -> null
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -181,12 +195,22 @@ export const optionalAge = optionalField(AGE_INVALID, (raw) => {
 
 const CITY_MAX = 100;
 const CITY_TOO_LONG = 'City must be 100 characters or fewer';
+const CITY_NO_LETTER = 'City must contain at least one letter';
+/**
+ * Every real city name has a letter. Requiring one also rules out `.` and `..`: a browser resolves those as dot
+ * segments in `/supporters/city/<encoded>`, even percent-encoded, so their city page could never be reached.
+ */
+const HAS_LETTER = /\p{L}/u;
 
-/** `''` (also whitespace only) -> `null`; otherwise normalised text of at most 100 characters (ADR 0007). */
+/**
+ * `''` (also whitespace only) -> `null`; otherwise normalised text of at most 100 characters with at least one letter
+ * (ADR 0007).
+ */
 export const optionalCity = optionalField(CITY_TOO_LONG, (raw) => {
   const value = normaliseShownText(raw);
   if (value.length === 0) return ok(null);
-  return codePointLength(value) <= CITY_MAX ? ok(value) : fail(CITY_TOO_LONG);
+  if (codePointLength(value) > CITY_MAX) return fail(CITY_TOO_LONG);
+  return HAS_LETTER.test(value) ? ok(value) : fail(CITY_NO_LETTER);
 });
 
 const HOMEPAGE_INVALID = 'Enter a web address like https://example.com';
@@ -299,11 +323,15 @@ export function typedName(glyphs: GlyphSet) {
 // ---------------------------------------------------------------------------------------------------------------
 
 /**
- * `returnTo` (query on `GET /login`, hidden field on `POST /login`): never fails. A safe same-origin path is kept, any
+ * `returnTo` (query on `GET /login`, hidden field on `POST /login`): never fails, also as an absent object key (hence
+ * `.optional()` before the transform; a bare transform is a required key in Zod 4). A safe same-origin path is kept, any
  * other value becomes `undefined`, so it can never become an open redirect (F-30, `safeReturnTo` in
  * `shared/http/redirect.ts`).
  */
-export const safeReturnTo = z.unknown().transform((value) => toSafeReturnTo(value));
+export const safeReturnTo = z
+  .unknown()
+  .optional()
+  .transform((value) => toSafeReturnTo(value));
 
 const PAGE_PATTERN = /^\d{1,5}$/;
 const PAGE_MAX = 10_000;
@@ -323,10 +351,12 @@ export const pageQuery = z
   });
 
 /**
- * `/supporters/city/:city` (decoded by Express): normalised like `optionalCity`; empty or longer than 100 characters
- * fails, which the controller turns into the 404 page (ADR 0007, B-33).
+ * `/supporters/city/:city` (decoded by Express): normalised like `optionalCity`; empty, longer than 100 characters or
+ * without a letter fails, which the controller turns into the 404 page (ADR 0007, B-33).
  */
 export const cityParam = field(PAGE_INVALID, (raw) => {
   const value = normaliseShownText(raw);
-  return value.length > 0 && codePointLength(value) <= CITY_MAX ? ok(value) : fail(PAGE_INVALID);
+  return value.length > 0 && codePointLength(value) <= CITY_MAX && HAS_LETTER.test(value)
+    ? ok(value)
+    : fail(PAGE_INVALID);
 });

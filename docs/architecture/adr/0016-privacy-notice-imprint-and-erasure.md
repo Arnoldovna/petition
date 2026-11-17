@@ -20,7 +20,8 @@ password.
 ## Decision
 
 **Privacy notice (F-88).** `GET /privacy` in the `pages` module, no guard, no session for guests, title "Privacy".
-Content (plain prose, maw `prose` block):
+Content (plain running text in the `long-text` block, OVERVIEW.md section 15.3; planned as `prose`, renamed in
+phase 2b because `prose` is a Tailwind utility name that the utility-class check rejects in markup):
 
 - who runs the site and how to reach them: the operator named "Arnoldovna" and the `CONTACT_URL` link;
 - what is stored: first and last name, email, password hash, optional age, city and homepage, the signature image,

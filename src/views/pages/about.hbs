@@ -1,0 +1,27 @@
+{{!--
+  pages/about (ROUTES.md section 2, F-13, B-62): what the project is and the rebuild stack as plain list rows.
+  Model (pages.controller.ts): title, stack [{ title, meta }] (no href: the rows are text, not links).
+--}}
+{{> page-heading title="About" lead="A petition for absolutely nothing, rebuilt from scratch."}}
+<div class="long-text">
+  <section class="long-text__section" aria-labelledby="about-project">
+    <h2 class="long-text__heading" id="about-project">the project</h2>
+    <p class="long-text__text">
+      You can register, add a few details about yourself, sign with a drawn or a typed signature and see who else
+      signed. Nothing happens afterwards. That is the whole idea.
+    </p>
+    <p class="long-text__text">
+      The first version was a learning project from 2018. This rebuild keeps the idea and replaces everything else:
+      server-rendered pages that work without JavaScript, validated input, sessions that end on time, accessible
+      markup and tests at every level.
+    </p>
+  </section>
+  <section class="long-text__section" aria-labelledby="about-stack">
+    <h2 class="long-text__heading" id="about-stack">the stack</h2>
+    {{#> row-list}}
+      {{#each stack}}
+        {{> list-row href=href title=title meta=meta}}
+      {{/each}}
+    {{/row-list}}
+  </section>
+</div>

@@ -7,6 +7,12 @@ import { users } from './users.js';
 export const signatureMethod = pgEnum('signature_method', ['drawn', 'typed']);
 
 /**
+ * Drizzle's name for the `user_id` reference below (drizzle/0000_init.sql). Inserting a signature for an account that
+ * was deleted meanwhile fails on it; the signature repository reports that race by this name.
+ */
+export const SIGNATURES_USER_FK = 'signatures_user_id_users_id_fk';
+
+/**
  * One validated, re-encoded PNG per user (DATA-MODEL.md section 2.4, ADR 0004). The unique `user_id` makes signing
  * idempotent (`ON CONFLICT (user_id) DO NOTHING`, F-43, B-49) and doubles as the foreign-key index.
  */

@@ -4,6 +4,12 @@ import { check, index, integer, pgTable, smallint, text, timestamp } from 'drizz
 import { users } from './users.js';
 
 /**
+ * Drizzle's name for the `user_id` reference below (drizzle/0000_init.sql). Saving a profile for an account that was
+ * deleted meanwhile fails on it; the profile repository reports that race by this name.
+ */
+export const PROFILES_USER_FK = 'profiles_user_id_users_id_fk';
+
+/**
  * Optional profile details, at most one row per user (DATA-MODEL.md section 2.3). CHECK constraints pass for NULL,
  * so every field stays optional (F-34). Regular expressions inside `sql` need doubled backslashes: the template
  * literal consumes one level.

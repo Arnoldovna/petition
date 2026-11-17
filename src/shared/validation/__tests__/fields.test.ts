@@ -203,6 +203,14 @@ describe('optionalCity', () => {
     expect(valueOf(optionalCity, 'c'.repeat(100))).toHaveLength(100);
     expect(messagesOf(optionalCity, 'c'.repeat(101))).toEqual(['City must be 100 characters or fewer']);
   });
+
+  it('F-35, F-56: a city needs at least one letter, so "." and ".." (dot segments in its link) are rejected', () => {
+    for (const input of ['.', '..', ' . . ', '123', '?!']) {
+      expect(messagesOf(optionalCity, input), input).toEqual(['City must contain at least one letter']);
+    }
+    expect(valueOf(optionalCity, 'Ōsaka 2')).toBe('Ōsaka 2');
+    expect(valueOf(optionalCity, 'Αθήνα')).toBe('Αθήνα');
+  });
 });
 
 describe('optionalHomepage', () => {
@@ -351,6 +359,13 @@ describe('safeReturnTo', () => {
     }
     expect(valueOf(safeReturnTo, `/${'a'.repeat(512)}`)).toBeUndefined();
   });
+
+  it('F-30: never fails as an absent object key (a form or query without returnTo)', () => {
+    const LoginLike = z.object({ returnTo: safeReturnTo });
+
+    expect(valueOf(LoginLike, {})).toEqual({ returnTo: undefined });
+    expect(valueOf(LoginLike, { returnTo: '/profile' })).toEqual({ returnTo: '/profile' });
+  });
 });
 
 describe('pageQuery', () => {
@@ -374,8 +389,8 @@ describe('cityParam', () => {
     expect(valueOf(cityParam, 'München')).toBe('München');
   });
 
-  it('B-33: empty or longer than 100 characters fails (404 in the controller)', () => {
-    for (const input of ['', '   ', 'c'.repeat(101), undefined]) {
+  it('B-33: empty, longer than 100 characters or without a letter fails (404 in the controller)', () => {
+    for (const input of ['', '   ', 'c'.repeat(101), undefined, '.', '..', '42']) {
       expect(cityParam.safeParse(input).success, JSON.stringify(input)).toBe(false);
     }
   });

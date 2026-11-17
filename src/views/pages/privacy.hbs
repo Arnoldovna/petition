@@ -1,0 +1,92 @@
+{{!--
+  pages/privacy (ROUTES.md section 2, F-88, ADR 0016): the privacy notice. No guard and no session for guests.
+  Model (pages.controller.ts): title. contactUrl comes from viewLocals (CONTACT_URL), so the contact channel is
+  configuration, never a private address in markup (F-15, B-15). The imprint, when configured, is in the footer (F-89).
+--}}
+{{> page-heading title="Privacy" lead="What this site stores about you, who can see it and how to remove it."}}
+<div class="long-text">
+  <section class="long-text__section" aria-labelledby="privacy-operator">
+    <h2 class="long-text__heading" id="privacy-operator">who runs this site</h2>
+    <p class="long-text__text">
+      Nonsense Petition is a portfolio project run by Arnoldovna. For every question about your data, including
+      requests to see or erase it, use the
+      <a class="long-text__link" href="{{contactUrl}}">contact page of Arnoldovna</a>.
+    </p>
+  </section>
+
+  <section class="long-text__section" aria-labelledby="privacy-stored">
+    <h2 class="long-text__heading" id="privacy-stored">what is stored</h2>
+    <ul class="long-text__list">
+      <li class="long-text__item">your first and last name and your email address</li>
+      <li class="long-text__item">a hash of your password, never the password itself</li>
+      <li class="long-text__item">your age, city and homepage, only if you add them</li>
+      <li class="long-text__item">your signature image and the time you signed</li>
+    </ul>
+    <p class="long-text__text">No IP addresses are stored in the database.</p>
+  </section>
+
+  <section class="long-text__section" aria-labelledby="privacy-visibility">
+    <h2 class="long-text__heading" id="privacy-visibility">who sees what</h2>
+    <ul class="long-text__list">
+      <li class="long-text__item">
+        The supporters list shows your name, the date you signed and, if you added them, your age, city and homepage.
+        Only registered users who are logged in can see it.
+      </li>
+      <li class="long-text__item">Your signature image is shown only to you.</li>
+      <li class="long-text__item">Your email address is never shown to anyone else.</li>
+    </ul>
+  </section>
+
+  <section class="long-text__section" aria-labelledby="privacy-purpose">
+    <h2 class="long-text__heading" id="privacy-purpose">why</h2>
+    <p class="long-text__text">
+      Your data is used to run this petition and for nothing else. There is no tracking, no analytics and no request
+      to any third party. The site sets only the cookies it needs to work: one for your session and one that protects
+      its forms against forgery. That is why there is no cookie banner.
+    </p>
+  </section>
+
+  <section class="long-text__section" aria-labelledby="privacy-retention">
+    <h2 class="long-text__heading" id="privacy-retention">how long it is kept</h2>
+    <ul class="long-text__list">
+      <li class="long-text__item">Your account, profile and signature: until you delete them.</li>
+      <li class="long-text__item">
+        Your session: until you log out, after a period without activity, or at the latest after a fixed maximum
+        lifetime, whichever comes first.
+      </li>
+      <li class="long-text__item">
+        Counters that slow down repeated attempts, kept per network address range and per keyed hash of an email
+        address: at most one hour.
+      </li>
+      <li class="long-text__item">Server logs: they name user ids only, never names or email addresses.</li>
+    </ul>
+  </section>
+
+  <section class="long-text__section" aria-labelledby="privacy-deletion">
+    <h2 class="long-text__heading" id="privacy-deletion">deleting your data</h2>
+    <ul class="long-text__list">
+      <li class="long-text__item">
+        To remove only your signature, <a class="long-text__link" href="/signature/delete">delete your signature</a>.
+      </li>
+      <li class="long-text__item">
+        To remove your account, profile and signature together,
+        <a class="long-text__link" href="/account/delete">delete your account</a>.
+      </li>
+      <li class="long-text__item">
+        If you cannot log in any more, ask for erasure through the
+        <a class="long-text__link" href="{{contactUrl}}">contact page</a>, writing from the email address of your
+        account. Once that is confirmed, your account, profile and signature are erased together. You can ask for a
+        copy of your data the same way.
+      </li>
+    </ul>
+  </section>
+
+  <section class="long-text__section" aria-labelledby="privacy-rights">
+    <h2 class="long-text__heading" id="privacy-rights">your rights</h2>
+    <p class="long-text__text">
+      You have the right to see the data stored about you, to correct it
+      (<a class="long-text__link" href="/profile/edit">edit your profile</a>), to have it erased and to complain to a data
+      protection supervisory authority.
+    </p>
+  </section>
+</div>

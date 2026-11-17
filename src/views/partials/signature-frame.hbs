@@ -1,0 +1,10 @@
+{{!--
+  signature-frame (OVERVIEW.md section 15.2; parameters frozen): src, alt.
+  The viewer's own signature on the thank-you page (F-46, ADR 0004 item 6): src is the private image route, never a
+  data URL (CSP img-src 'self', F-71). Width and height are the fixed export size (720 x 240, ADR 0004 item 1), so the
+  page reserves the space before the image loads. The black-on-transparent PNG sits on an accent field (phase 4).
+  Usage: {{> signature-frame src="/signature/image.png" alt="Your signature"}}
+--}}
+<div class="signature-frame">
+  <img class="signature-frame__image" src="{{src}}" alt="{{alt}}" width="720" height="240">
+</div>

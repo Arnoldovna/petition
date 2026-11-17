@@ -22,8 +22,11 @@ export interface FormView {
 
 export type FormResult<T> = { ok: true; data: T } | { ok: false; errors: FieldErrors; values: FormValues };
 
-/** Errors that belong to no single field (a root-level refinement) are reported under this key. */
-const FORM_ERROR_KEY = '_form';
+/**
+ * Errors that belong to no single field (a root-level refinement, a failed login) are reported under this key; the
+ * error summary links them to `#main`.
+ */
+export const FORM_ERROR_KEY = '_form';
 
 /**
  * Never echoed back into a form: passwords (ROUTES.md section 1, F-20, B-11), the CSRF token (renderPage adds a fresh

@@ -6,7 +6,7 @@ import { inject } from 'vitest';
 
 import { createApp, createAppCsrf } from '../src/app.js';
 import { isHttps, loadEnv } from '../src/config/env.js';
-import { resolvePaths } from '../src/config/paths.js';
+import { resolvePaths, type AppPaths } from '../src/config/paths.js';
 import { createDatabase, type Database } from '../src/db/client.js';
 import { createViewerRepository } from '../src/features/auth/index.js';
 import type { SignatureImages } from '../src/features/signature/index.js';
@@ -46,6 +46,16 @@ export interface TestAppOverrides {
   env?: Readonly<Record<string, string>>;
   /** Default: a silent logger. Pass one with a destination to assert on log lines (B-58, ADR 0012). */
   logger?: Logger;
+  /**
+   * Default `resolvePaths('development')`. A test that serves generated assets of its own passes these paths with
+   * `builtPublicDir` pointing at a temporary folder; `mode` stays `'development'` (plain asset paths, no manifest).
+   */
+  paths?: AppPaths;
+  /**
+   * Default `true`: mount the test-only routes (`test/test-routes.ts`). `false` builds the app like `server.ts`, without
+   * `/__test/*`, to prove they exist only in the harness (F-07, ADR 0017).
+   */
+  testRoutes?: boolean;
 }
 
 export interface TestApp {
@@ -62,8 +72,9 @@ export interface TestApp {
 
 /**
  * The real app (every module, the full middleware order) on the test file's own database and the run's Redis
- * (ADR 0015, 0017, 0019 §5), with test limits, the test-only routes (`test/test-routes.ts`) and fakes for the
- * hasher and the signature images. Each call uses a fresh Redis prefix, so no two apps share sessions or counters.
+ * (ADR 0015, 0017, 0019 §5), with test limits, the test-only routes (`test/test-routes.ts`, unless
+ * `testRoutes: false`) and fakes for the hasher and the signature images. Each call uses a fresh Redis prefix, so no
+ * two apps share sessions or counters.
  *
  * Call it in `beforeAll`/`beforeEach`, never at module top level (`currentDatabaseUrl()` throws there), and `close()`
  * it in the matching `afterAll`/`afterEach`.
@@ -81,7 +92,7 @@ export async function createTestApp(overrides: TestAppOverrides = {}): Promise<T
   });
   const logger = overrides.logger ?? pino({ level: 'silent' });
   // Plain asset paths whatever NODE_ENV says: the views, static folders and resolver all follow this one mode.
-  const paths = resolvePaths('development');
+  const paths = overrides.paths ?? resolvePaths('development');
   const prefix = `test-${randomUUID()}`;
   // The env defaults of OVERVIEW.md section 16 (120 minutes idle, 168 hours absolute) with the real clock.
   const sessionPolicy: SessionPolicy = { ...sessionPolicyFromEnv(env), ...overrides.sessionPolicy };
@@ -133,13 +144,17 @@ export async function createTestApp(overrides: TestAppOverrides = {}): Promise<T
         redis: () => Promise.resolve(redis.isReady),
       },
       isShuttingDown: () => false,
-      testRoutes: createTestRoutes({
-        findViewer: createViewerRepository(database.db).findViewer,
-        sessionPolicy,
-        rateLimits,
-        csrf: createAppCsrf(env),
-      }),
       countSupporters: overrides.countSupporters,
+      ...(overrides.testRoutes === false
+        ? {}
+        : {
+            testRoutes: createTestRoutes({
+              findViewer: createViewerRepository(database.db).findViewer,
+              sessionPolicy,
+              rateLimits,
+              csrf: createAppCsrf(env),
+            }),
+          }),
     });
 
     return { app, db: database.db, redis, prefix, close };

@@ -2,6 +2,12 @@ import { sql } from 'drizzle-orm';
 import { check, integer, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 /**
+ * The unique expression index on `lower(email)` (DATA-MODEL.md section 2.2, ADR 0007). Registration and the email
+ * change of the profile edit recognise "email taken" by this name on the 23505 error, so it is defined once, here.
+ */
+export const USERS_EMAIL_UNIQUE_INDEX = 'users_email_lower_idx';
+
+/**
  * Accounts (DATA-MODEL.md section 2.2). Zod validates every field first (ROUTES.md section 1); the CHECK constraints
  * are the backstop, so no code path can store an untrimmed name, a mixed-case email or a non-argon2id hash (B-61).
  */
@@ -11,7 +17,7 @@ export const users = pgTable(
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     firstName: text().notNull(),
     lastName: text().notNull(),
-    /** Stored lowercased and trimmed; unique case-insensitively through `users_email_lower_idx` (ADR 0007). */
+    /** Stored lowercased and trimmed; unique case-insensitively through `USERS_EMAIL_UNIQUE_INDEX` (ADR 0007). */
     email: text().notNull(),
     /** argon2id PHC string (ADR 0009); never leaves the auth module. */
     passwordHash: text().notNull(),
@@ -25,7 +31,7 @@ export const users = pgTable(
   },
   (t) => [
     // Case-insensitive uniqueness without the citext extension (F-02, F-20, B-25).
-    uniqueIndex('users_email_lower_idx').on(sql`lower(${t.email})`),
+    uniqueIndex(USERS_EMAIL_UNIQUE_INDEX).on(sql`lower(${t.email})`),
     check(
       'users_first_name_chk',
       sql`${t.firstName} = btrim(${t.firstName}) AND char_length(${t.firstName}) BETWEEN 1 AND 100 AND ${t.firstName} !~ '[[:cntrl:]]'`,

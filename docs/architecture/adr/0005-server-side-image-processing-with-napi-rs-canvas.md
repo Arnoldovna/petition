@@ -51,8 +51,10 @@ no keyboard or no-JS way to sign.
 - `renderTypedSignature(name)`: chooses **one** font for the whole name: `SignatureFont` when every character is in
   `PRIMARY`, otherwise `SignatureFallback`. No per-glyph mixing, so the result never depends on Skia's font fallback
   (the distroless image has no system fonts). 720 x 240 transparent canvas, ink `#000`, font size starts at 96 px and
-  shrinks in 4 px steps until the text fits 656 px (32 px side padding), minimum 32 px, vertically centred. Encoded as
-  PNG and passed through the same `inspectPngHeader` and size checks as drawn signatures.
+  shrinks in 4 px steps until the text fits 656 px (32 px side padding), minimum 32 px; a name still wider than 656 px
+  at 32 px is squeezed to fit by `fillText`'s `maxWidth`. The ink is centred horizontally and vertically (on its
+  measured ink box, not the font's line box). Encoded as PNG and passed through the same `inspectPngHeader` and size
+  checks as drawn signatures.
 - The signature-image service lives in `src/features/signature/image/` (ADR 0001), is created once in `container.ts`
   (`createSignatureImages({ fontPaths })`, exported from the signature module's `index.ts`) and injected.
 

@@ -1,0 +1,20 @@
+{{!--
+  typed-signature (OVERVIEW.md section 15.2; parameters frozen): csrfToken, form.
+  The keyboard, screen-reader and no-JavaScript way to sign (F-45, B-70, ADR 0005): always visible; the server draws
+  the typed name into a PNG that is stored like a drawn one. form is the sign page's FormView, so a rejected name
+  comes back with its message and value (F-21). The submit is always button--outlined, with and without JavaScript,
+  because the drawing form holds the page's one primary button (ADR 0014).
+  Usage: {{> typed-signature csrfToken=csrfToken form=form}}
+--}}
+<section class="typed-signature" aria-labelledby="typed-signature-title">
+  <h2 class="typed-signature__title" id="typed-signature-title">Sign by typing your full name</h2>
+  <p class="typed-signature__text">We draw your name as your signature and store it like a drawn one.</p>
+  <form class="typed-signature__form" method="post" action="/signature" novalidate data-guard>
+    {{> csrf-field}}
+    <input type="hidden" name="method" value="typed">
+    {{> form-field form=form name="typedName" label="full name" autocomplete="name" hint="Letters, spaces, hyphens, apostrophes and full stops"}}
+    <div class="typed-signature__actions">
+      {{> button type="submit" label="sign with my typed name" modifier="button--outlined"}}
+    </div>
+  </form>
+</section>

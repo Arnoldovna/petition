@@ -1,0 +1,7 @@
+{{!--
+  pages/signature/delete (ROUTES.md section 5, F-49, F-50, ADR 0013): the confirmation step before the signature is
+  deleted. Works without JavaScript: a POST form (CSRF) with the destructive primary button and a link that keeps the
+  signature. Model (DeleteSignatureView): consequences, the list of what will happen.
+--}}
+{{> page-heading title="Delete signature" lead="Your signature will be removed from the petition."}}
+{{> confirm-panel title="Delete your signature?" items=consequences action="/signature/delete" buttonLabel="delete my signature" cancelHref="/thank-you" cancelLabel="keep my signature"}}

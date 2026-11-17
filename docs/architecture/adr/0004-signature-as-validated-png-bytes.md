@@ -21,10 +21,15 @@ URLs and up to 100 KB of text were accepted. Base64 inflates storage by a third 
    1. Zod: string, prefix `data:image/png;base64,`, base64 alphabet only, at most 87,400 characters after the prefix.
    2. Decode; reject if the decoded length is 0 or greater than 65,536 bytes (64 KiB).
    3. `inspectPngHeader(bytes)`: 8-byte PNG signature, first chunk `IHDR`, width 720, height 240.
-   4. Full decode with `loadImage` (rejects corrupt or truncated files).
-   5. Ink check: at least `MIN_INK_PIXELS` (150) pixels with alpha > 0. Fewer means blank: "Please sign before
+   4. `isCompletePng(bytes)` (`png.ts`, next to `inspectPngHeader`, added in phase 2a): every chunk's CRC is valid,
+      `IHDR` comes first, there is at least one `IDAT`, `IEND` is last and empty with no bytes after it, and the
+      concatenated `IDAT` data inflates to a complete zlib stream under a 2 MiB cap (rejects deflate bombs). Failure is
+      `corrupt`. This step is needed because `loadImage` in @napi-rs/canvas 1.1.1 decodes a truncated PNG, or one
+      without `IEND`, without an error and draws part of it (measured in phase 2a).
+   5. Full decode with `loadImage` (rejects files whose pixel data cannot be decoded).
+   6. Ink check: at least `MIN_INK_PIXELS` (150) pixels with alpha > 0. Fewer means blank: "Please sign before
       submitting" (F-41).
-   6. **Re-encode** the decoded pixels to a new PNG. Only these canonical bytes are stored, which strips text chunks
+   7. **Re-encode** the decoded pixels to a new PNG. Only these canonical bytes are stored, which strips text chunks
       and any polyglot payload. The re-encoded size must also be at most 64 KiB.
       Any failure returns a `SignatureImageError` with a user-facing message; the controller re-renders the page with
       HTTP 422 (F-42).
@@ -33,10 +38,10 @@ URLs and up to 100 KB of text were accepted. Base64 inflates storage by a third 
    with `customType<{ data: Buffer; driverData: Buffer }>`.
 5. **Idempotent insert.** `INSERT ... ON CONFLICT (user_id) DO NOTHING`, then 303 to `/thank-you` whether a row was
    inserted or not (F-43, B-49).
-6. **Delivery.** The image is never inlined. `GET /signature/image.png` (requireAuth, requireSigned) streams the
-   current user's own bytes with `Content-Type: image/png`, `Cache-Control: private, no-store`,
-   `X-Content-Type-Options: nosniff`. The thank-you page references it with `alt="Your signature"`. Only the owner can
-   load it; there is no id in the URL.
+6. **Delivery.** The image is never inlined. `GET /signature/image.png` (requireAuth; a viewer who has not signed
+   gets the 404 page, never an HTML redirect, ROUTES.md section 5) streams the current user's own bytes with
+   `Content-Type: image/png`, `Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`. The thank-you
+   page references it with `alt="Your signature"`. Only the owner can load it; there is no id in the URL.
 7. **CSP.** `img-src 'self'` is enough. This is stricter than the `img-src 'self' data:` allowed by F-71.
 
 ## Alternatives considered
@@ -46,8 +51,9 @@ URLs and up to 100 KB of text were accepted. Base64 inflates storage by a third 
 - **Object storage (S3/MinIO).** Rejected: at most 64 KiB per user, one per user, no public delivery. A bytea column
   keeps deletion atomic with the user row (F-06).
 - **SVG of stroke points.** Rejected: SVG is an XSS surface and F-42 requires PNG.
-- **`file-type` for sniffing** (as in the skill's upload section). Not needed: the PNG check is 15 lines, fully
-  unit-tested, and the full decode plus re-encode is stronger than magic-byte sniffing.
+- **`file-type` for sniffing** (as in the skill's upload section). Not needed: the PNG checks (`inspectPngHeader`,
+  `isCompletePng`) are a small, fully unit-tested file (`png.ts`), and the full decode plus re-encode is stronger
+  than magic-byte sniffing.
 
 ## Consequences
 

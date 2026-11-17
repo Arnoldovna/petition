@@ -132,7 +132,7 @@ This document lists every user-facing feature of the legacy app (`_legacy/src/pe
 - **F-34** Each field is optional on its own. Any combination (for example, only city) saves correctly. Empty fields are stored as `NULL`. [B-26]
 - **F-35** Validation **(new)** [B-27, B-18]:
   - Age: integer 1–120 (`inputmode="numeric"`). Decimals and text are rejected with a message.
-  - City: trimmed, internal whitespace collapsed, 1–100 characters.
+  - City: trimmed, internal whitespace collapsed, 1–100 characters, at least one letter (so `.` and `..`, which a browser treats as path steps in the city link, are rejected).
   - Homepage: valid absolute URL with `http` or `https` scheme, ≤ 300 characters. If no scheme is entered, `https://` is prepended **before** validation. A value that already has a scheme is never prefixed twice.
 - **F-36** Submitting the form again, or revisiting `/profile` when a profile exists, never fails. The form is prefilled and the save is an upsert. [B-28]
 

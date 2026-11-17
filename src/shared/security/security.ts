@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { rateLimit, type Store, type ValueDeterminingMiddleware } from 'express-rate-limit';
 import helmet from 'helmet';
 import type { Logger } from 'pino';
@@ -201,6 +201,23 @@ export function rateLimiter({
       req.log.warn({ limiter: name }, 'rate_limit.hit');
       next(new TooManyRequestsError());
     },
+  });
+}
+
+/**
+ * Applies a limiter from inside a handler, for a limit that covers only part of a route's work: the `reauth` limiter
+ * on `POST /profile/edit` counts only the edits that check the current password (ADR 0012), which only the service
+ * knows after reading the stored email. Resolves when the request may go on; rejects with what the limiter passes to
+ * `next` (`TooManyRequestsError`, the 429 page with `Retry-After`, or a store failure).
+ */
+export function applyLimiter(limiter: RequestHandler, req: Request, res: Response): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const next: NextFunction = (error?: unknown) => {
+      if (error === undefined || error === null) resolve();
+      else reject(error instanceof Error ? error : new Error('rate limiter failed', { cause: error }));
+    };
+    // express-rate-limit reports its own failures through `next`; a rejection would be a bug in it, not lost either.
+    Promise.resolve(limiter(req, res, next)).catch(reject);
   });
 }
 

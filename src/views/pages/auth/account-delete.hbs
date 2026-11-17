@@ -1,0 +1,11 @@
+{{!--
+  pages/auth/account-delete (ROUTES.md section 3, F-67, ADR 0013). Model: title, form (FormView), consequences.
+  The confirm panel lists what is deleted and holds the POST form; the current password goes into that form through
+  the partial block (re-authentication, autocomplete="current-password"). "keep my account" leads back to the edit
+  page. Works without JavaScript.
+--}}
+{{> page-heading title="Delete account" lead="This deletes everything we store about you. It cannot be undone."}}
+{{> error-summary errorList=form.errorList}}
+{{#> confirm-panel title="Delete your account?" items=consequences action="/account/delete" buttonLabel="delete my account" cancelHref="/profile/edit" cancelLabel="keep my account"}}
+  {{> form-field form=form name="currentPassword" label="current password" type="password" autocomplete="current-password"}}
+{{/confirm-panel}}
