@@ -17,14 +17,15 @@ agent or a script.
 Private repositories pay for Actions minutes and package storage, so the two expensive parts of the pipeline only run
 where they add information. Full reasoning: [ADR 0018](architecture/adr/0018-ci-cost-rule.md).
 
-| Workflow / job                                 | Pull request | Push to `main`           | Manual (`workflow_dispatch`) | Condition                                                 |
-| ---------------------------------------------- | ------------ | ------------------------ | ---------------------------- | --------------------------------------------------------- |
-| `ci.yml` lint, typecheck, unit, integration    | runs         | runs                     | runs                         | none                                                      |
-| `ci.yml` build, `dev-setup-smoke`, gitleaks    | runs         | runs                     | runs                         | none                                                      |
-| `ci.yml` e2e                                   | runs         | skipped                  | skipped                      | `github.event_name == 'pull_request'`                     |
-| `release.yml` `build + push image` (`images`)  | never        | after green CI on `main` | `main` only                  | `github.event.repository.private == false`                |
-| `release.yml` `deploy`                         | never        | after `images`           | after `images`               | repository public **and** `vars.DEPLOY_ENABLED == 'true'` |
-| `audit.yml` (`pnpm audit --prod`, high and up) | never        | when the lockfile moves  | runs                         | also weekly, Monday 03:00 UTC; never a pull request check |
+| Workflow / job                                 | Pull request | Push to `main`              | Manual (`workflow_dispatch`) | Condition                                                 |
+| ---------------------------------------------- | ------------ | --------------------------- | ---------------------------- | --------------------------------------------------------- |
+| `ci.yml` lint, typecheck, unit, integration    | runs         | runs                        | runs                         | none                                                      |
+| `ci.yml` build, `dev-setup-smoke`, gitleaks    | runs         | runs                        | runs                         | none                                                      |
+| `ci.yml` e2e                                   | runs         | skipped                     | skipped                      | `github.event_name == 'pull_request'`                     |
+| `release.yml` `build + push image` (`images`)  | never        | after green CI on `main`    | `main` only                  | `github.event.repository.private == false`                |
+| `release.yml` `deploy`                         | never        | after `images`              | after `images`               | repository public **and** `vars.DEPLOY_ENABLED == 'true'` |
+| `audit.yml` (`pnpm audit --prod`, high and up) | never        | when the lockfile moves     | runs                         | also weekly, Monday 03:00 UTC; never a pull request check |
+| `pages.yml` `build page`, `deploy page`        | never        | when the page or media move | runs                         | `github.event.repository.private == false`                |
 
 Why e2e is enough on the pull request: phases are merged one at a time with a squash merge, so `main` does not move
 between the PR's e2e run and the merge (ADR 0017). The PR's e2e job is also the only proof that the production image
@@ -40,7 +41,8 @@ gh run view "$run_id" --json conclusion,headSha,jobs --jq '{conclusion, headSha,
 ```
 
 Expected: run `conclusion` is `skipped`, `headSha` is the merge commit, and both `build + push image` and `deploy` are
-`skipped`.
+`skipped`. The same holds for `pages.yml` after a merge that touched the demo page or `docs/media` (`build page` and
+`deploy page` skipped).
 
 Running the audit by hand (presentation phase, and whenever a security advisory is announced):
 
@@ -255,6 +257,18 @@ made private again, so this is a deliberate, one-way step. The package is linked
 `org.opencontainers.image.source` label that `docker/metadata-action` sets, so it appears on the repository page.
 
 From then on every green CI run on `main` pushes a new `sha-<commit>` tag and moves `latest`.
+
+### Demo page on GitHub Pages (Marina)
+
+petition has no live server (PLAN.md, Etappe 3b). The demo page `site/index.html` shows the recorded demo video and
+the screenshots; `pnpm site:build` builds it into `dist/site`, and `pages.yml` publishes it while the repository is
+public.
+
+- [ ] After the switch: Settings → Pages → Build and deployment → Source "GitHub Actions". Then
+      `gh workflow run pages.yml --ref main` and check https://arnoldovna.github.io/petition/.
+
+The video is re-recorded with `pnpm media:record` against the running `pnpm demo` stack (README, Scripts); the
+screenshots with `pnpm media:readme`. Both write to `docs/media`, and the next push to `main` republishes the page.
 
 ## 4. Deploy checklist
 

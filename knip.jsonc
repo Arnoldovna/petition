@@ -23,6 +23,7 @@
     // (`transport: { target: 'pino-pretty' }`); knip cannot see a module named in a string.
     "pino-pretty",
   ],
-  // System tool from Phase 0 (BUILD-ORDER), called by `secrets:scan` and lefthook, not an npm package.
-  "ignoreBinaries": ["gitleaks"],
+  // System tools, not npm packages: gitleaks from Phase 0 (BUILD-ORDER), called by `secrets:scan` and lefthook;
+  // ffmpeg, optional, called by scripts/record-demo.mjs (`pnpm media:record`, Etappe 3b) to encode the demo video.
+  "ignoreBinaries": ["gitleaks", "ffmpeg"],
 }

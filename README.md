@@ -8,9 +8,14 @@ works without JavaScript, so the interesting parts are the boring ones: forms, s
 [![Release](https://github.com/Arnoldovna/petition/actions/workflows/release.yml/badge.svg)](https://github.com/Arnoldovna/petition/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
 
-![Supporters page in light mode: the wordmark "nonsense petition" top left, the links supporters, profile and log out top right, the heading "Supporters" with "64 supporters", and list rows with a name on the left and age, city link and signing date on the right, separated by thin grey rules](docs/media/desktop-light.png)
+![The whole journey in 25 seconds: Lena Brandt registers, adds her age and city, draws the signature "Mara" on the vermilion pad and signs, finds her row on the last page of the supporters list, changes her city on the profile page and deletes her signature on its confirmation page](docs/media/demo-flow.gif)
 
-![Signing the petition: a signature "Mara" is drawn stroke by stroke on the vermilion pad, "sign the petition" is clicked, and the thank-you page shows the saved signature and "65 supporters"](docs/media/sign-flow.gif)
+**Demo video:** there is no live server, so the [demo page](https://arnoldovna.github.io/petition/) shows the full
+recording on desktop and on a phone (published once the repository is public). The videos are also here:
+[desktop (MP4)](docs/media/demo-desktop.mp4), [phone (MP4)](docs/media/demo-mobile.mp4). `pnpm demo` runs the same app
+locally.
+
+![Supporters page in light mode: the wordmark "nonsense petition" top left, the links supporters, profile and log out top right, the heading "Supporters" with "64 supporters", and list rows with a name on the left and age, city link and signing date on the right, separated by thin grey rules](docs/media/desktop-light.png)
 
 | Mobile: drawing a signature                                                                                                                                                                  | Mobile, dark mode: thank-you page                                                                                                                                                                                               |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -139,7 +144,9 @@ at a time. If you change `POSTGRES_PORT` or `REDIS_PORT` for `pnpm dev`, change 
 | `pnpm db:generate` / `db:migrate` / `db:seed`           | migrations and demo data                                                                                         |
 | `pnpm admin:erase`                                      | deletes one user and everything that belongs to them (erasure on request)                                        |
 | `pnpm stack:down`                                       | stops the demo or local production stack and keeps its data                                                      |
-| `pnpm media:readme`                                     | regenerates the `docs/media/` screenshots, the sign-flow clip and the social preview against the running demo    |
+| `pnpm media:readme`                                     | regenerates the `docs/media/` screenshots and the social preview against the running demo                        |
+| `pnpm media:record`                                     | records the demo video (desktop and phone) against the running demo: WebM, MP4 and the README GIF                |
+| `pnpm site:build`                                       | builds the GitHub Pages demo page into `dist/site`                                                               |
 
 ## Testing
 
@@ -161,7 +168,8 @@ at a time. If you change `POSTGRES_PORT` or `REDIS_PORT` for `pnpm dev`, change 
 `pnpm dev:setup` smoke run and gitleaks on every pull request and push to `main`; the e2e job runs on pull requests only.
 `release.yml` builds the image of a commit that passed CI on `main` and pushes it to
 `ghcr.io/arnoldovna/petition` with provenance and an SBOM, but only once the repository is public. The deploy job is
-prepared and stays off until `DEPLOY_ENABLED` is set. A weekly `audit.yml` runs `pnpm audit`. Operations, the deploy
+prepared and stays off until `DEPLOY_ENABLED` is set. A weekly `audit.yml` runs `pnpm audit`. `pages.yml` publishes
+the demo page (`site/`) to GitHub Pages, also only while the repository is public. Operations, the deploy
 checklist and the erasure procedure are in [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 ## Credits

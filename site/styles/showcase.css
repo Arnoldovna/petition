@@ -1,0 +1,64 @@
+/*
+ * showcase: the media sections of the Pages page. A figure is a browser frame with a caption row below it, built
+ * like a maw list row (label left, meta right, a 1px rule). The grid measures its own width (container query), so
+ * the figures stack on a phone and sit side by side in the 1280px column. Part of site/site.css: no @reference.
+ */
+@layer components {
+  .showcase {
+    container-type: inline-size;
+  }
+
+  /* One column on narrow screens; generous space between figures (maw: tight inside, generous between). */
+  .showcase__grid {
+    @apply grid gap-10;
+  }
+
+  /* Desktop video beside the phone video, in their real width ratio (1440 : 390 is about 3 : 1 at equal height). */
+  .showcase__grid--video {
+    @variant @wide {
+      @apply items-start gap-8;
+
+      grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+    }
+  }
+
+  /* Two screenshots of the same size side by side, from the row width on. */
+  .showcase__grid--pair {
+    @variant @row {
+      @apply items-start gap-6;
+
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Two phone screenshots side by side at every width, never wider than a phone column each. */
+  .showcase__grid--phones {
+    @apply items-start gap-4 max-inline-row;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .showcase__figure {
+    @apply flex flex-col gap-3 m-0;
+  }
+
+  /* A phone screenshot without a browser frame: it keeps its own aspect ratio (width and height in the markup). */
+  .showcase__media {
+    @apply block inline-full;
+
+    block-size: auto;
+  }
+
+  .showcase__caption {
+    @apply flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pbe-3 text-meta border-be border-rule;
+  }
+
+  .showcase__label {
+    @apply font-medium;
+  }
+
+  /* Secondary meta on paper: muted ink (6.29:1 light, 7.46:1 dark). */
+  .showcase__meta {
+    @apply text-ink-muted;
+  }
+}

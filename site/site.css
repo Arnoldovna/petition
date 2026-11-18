@@ -1,0 +1,22 @@
+/*
+ * Entry stylesheet of the GitHub Pages page (site/index.html), built by scripts/build-site.mjs with the Tailwind CLI
+ * into dist/site/assets/site.css. It reuses the app's tokens, base styles and the components the page shares with the
+ * app (header, footer, page shell, heading, rows), so the page looks like the app; only the media blocks are its own.
+ * Same rules as src/styles/main.css: source(none), fonts before tokens, every component in @layer components.
+ * The @font-face URLs of fonts.css point at /fonts; the build script rewrites them to the page's relative fonts/
+ * folder, because the page is served below /<repo>/.
+ */
+@import 'tailwindcss' source(none);
+@import '../src/styles/fonts.css';
+@import '../src/styles/tokens.css';
+@import '../src/styles/base.css';
+@import '../src/styles/utilities.css';
+@import '../src/styles/components/list-row.css';
+@import '../src/styles/components/long-text.css';
+@import '../src/styles/components/page.css';
+@import '../src/styles/components/page-heading.css';
+@import '../src/styles/components/row-list.css';
+@import '../src/styles/components/site-footer.css';
+@import '../src/styles/components/site-header.css';
+@import './styles/browser-frame.css';
+@import './styles/showcase.css';

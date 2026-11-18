@@ -142,7 +142,9 @@ scripts/check-views.mjs`), `lint:css`, `check:utilities`, `format`, `format:chec
 (`pnpm assets:fonts .dev && SEED_ALLOW=true tsx --env-file-if-exists=.env src/tools/seed.ts`; the first seed renders
 signatures, so the fonts must exist on a clean clone before any `pnpm dev`), `admin:erase` (added in 1b with
 `src/tools/erase-user.ts`), `prepare`. Etappe 3 adds `media:readme` (`node --env-file=.env
-node_modules/@playwright/test/cli.js test -c playwright.media.config.ts`, needs `E2E_BASE_URL` set to the demo URL).
+node_modules/@playwright/test/cli.js test -c playwright.media.config.ts --project media`, needs `E2E_BASE_URL` set to
+the demo URL). Etappe 3b adds `media:record` (`node --env-file-if-exists=.env scripts/record-demo.mjs`, the demo
+video) and `site:build` (`node scripts/build-site.mjs`, the GitHub Pages page).
 
 **Gate 1a** (branch `feat/scaffold-tooling`):
 

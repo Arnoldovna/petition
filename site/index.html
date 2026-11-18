@@ -1,0 +1,254 @@
+<!doctype html>
+<!--
+  The GitHub Pages page of the repository (Etappe 3b in PLAN.md): petition has no live server, so this page shows the
+  demo recording and the README screenshots. scripts/build-site.mjs (`pnpm site:build`) copies it to dist/site with
+  the stylesheet, the fonts and the media from docs/media, and fills in the year (the one placeholder in double
+  braces). .github/workflows/pages.yml publishes it, only while the
+  repository is public. Classes are the app's BEM blocks plus site/styles; no utility classes (check:utilities).
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Demo video · Nonsense Petition</title>
+    <meta
+      name="description"
+      content="A screen recording of Nonsense Petition: register, add a profile, sign, find yourself on the supporters list, edit the profile and delete the signature."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f85d33" />
+    <link rel="preload" href="fonts/schibsted-grotesk-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="assets/site.css" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="site-header__brand" href="./" aria-current="page">nonsense petition</a>
+      <nav class="site-header__nav" aria-label="Main">
+        <ul class="site-header__list">
+          <li class="site-header__item"><a class="site-header__link" href="#video">video</a></li>
+          <li class="site-header__item"><a class="site-header__link" href="#screenshots">screenshots</a></li>
+          <li class="site-header__item">
+            <a class="site-header__link" href="https://github.com/Arnoldovna/petition">source</a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+    <main class="page__main" id="main" tabindex="-1">
+      <div class="page-heading">
+        <h1 class="page-heading__title">Nonsense Petition</h1>
+        <p class="page-heading__lead">
+          A petition for absolutely nothing, rebuilt as a server-rendered Express 5 app that works without JavaScript.
+          There is no live server, so here is the whole journey, recorded against the local demo stack.
+        </p>
+      </div>
+
+      <section class="page__section" id="video" aria-labelledby="video-title">
+        <h2 class="page__section-title" id="video-title">demo video</h2>
+        <div class="showcase">
+          <div class="showcase__grid showcase__grid--video">
+            <figure class="showcase__figure">
+              <div class="browser-frame">
+                <div class="browser-frame__bar" aria-hidden="true">
+                  <span class="browser-frame__dot"></span><span class="browser-frame__dot"></span
+                  ><span class="browser-frame__dot"></span>
+                </div>
+                <video
+                  class="browser-frame__media"
+                  controls
+                  muted
+                  playsinline
+                  preload="metadata"
+                  width="1440"
+                  height="900"
+                  poster="media/desktop-light.png"
+                  aria-describedby="video-steps"
+                >
+                  <source src="media/demo-desktop.webm" type="video/webm" />
+                  <source src="media/demo-desktop.mp4" type="video/mp4" />
+                  <a href="media/demo-desktop.mp4">Download the desktop video (MP4)</a>
+                </video>
+              </div>
+              <figcaption class="showcase__caption">
+                <span class="showcase__label">desktop, 1440 px</span>
+                <span class="showcase__meta">no sound</span>
+              </figcaption>
+            </figure>
+            <figure class="showcase__figure">
+              <div class="browser-frame">
+                <div class="browser-frame__bar" aria-hidden="true">
+                  <span class="browser-frame__dot"></span><span class="browser-frame__dot"></span
+                  ><span class="browser-frame__dot"></span>
+                </div>
+                <video
+                  class="browser-frame__media"
+                  controls
+                  muted
+                  playsinline
+                  preload="metadata"
+                  width="390"
+                  height="844"
+                  poster="media/mobile-light.png"
+                  aria-describedby="video-steps"
+                >
+                  <source src="media/demo-mobile.webm" type="video/webm" />
+                  <source src="media/demo-mobile.mp4" type="video/mp4" />
+                  <a href="media/demo-mobile.mp4">Download the phone video (MP4)</a>
+                </video>
+              </div>
+              <figcaption class="showcase__caption">
+                <span class="showcase__label">phone, 390 px</span>
+                <span class="showcase__meta">no sound</span>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="page__section" aria-labelledby="steps-title">
+        <h2 class="page__section-title" id="steps-title">what the video shows</h2>
+        <ol class="row-list" id="video-steps" role="list">
+          <li class="list-row">
+            <div class="list-row__body">
+              <span class="list-row__title">register</span>
+              <span class="list-row__meta">step 1 · name, email and a password</span>
+            </div>
+          </li>
+          <li class="list-row">
+            <div class="list-row__body">
+              <span class="list-row__title">add a profile</span>
+              <span class="list-row__meta">step 2 · age and city, both optional</span>
+            </div>
+          </li>
+          <li class="list-row">
+            <div class="list-row__body">
+              <span class="list-row__title">sign the petition</span>
+              <span class="list-row__meta">step 3 · a signature drawn on the pad</span>
+            </div>
+          </li>
+          <li class="list-row">
+            <div class="list-row__body">
+              <span class="list-row__title">find yourself on the list</span>
+              <span class="list-row__meta">step 4 · the last page of the supporters</span>
+            </div>
+          </li>
+          <li class="list-row">
+            <div class="list-row__body">
+              <span class="list-row__title">edit the profile</span>
+              <span class="list-row__meta">step 5 · a new city</span>
+            </div>
+          </li>
+          <li class="list-row">
+            <div class="list-row__body">
+              <span class="list-row__title">delete the signature</span>
+              <span class="list-row__meta">step 6 · on its own confirmation page</span>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="page__section" id="screenshots" aria-labelledby="screenshots-title">
+        <h2 class="page__section-title" id="screenshots-title">screenshots</h2>
+        <div class="showcase">
+          <div class="showcase__grid showcase__grid--pair">
+            <figure class="showcase__figure">
+              <div class="browser-frame">
+                <div class="browser-frame__bar" aria-hidden="true">
+                  <span class="browser-frame__dot"></span><span class="browser-frame__dot"></span
+                  ><span class="browser-frame__dot"></span>
+                </div>
+                <img
+                  class="browser-frame__media"
+                  src="media/desktop-light.png"
+                  width="2880"
+                  height="1800"
+                  loading="lazy"
+                  alt="Supporters page in light mode: the wordmark nonsense petition top left, the links supporters, profile and log out top right, the heading Supporters with 64 supporters, and list rows with a name on the left and age, city link and signing date on the right, separated by thin grey rules"
+                />
+              </div>
+              <figcaption class="showcase__caption">
+                <span class="showcase__label">supporters list</span>
+                <span class="showcase__meta">light</span>
+              </figcaption>
+            </figure>
+            <figure class="showcase__figure">
+              <div class="browser-frame">
+                <div class="browser-frame__bar" aria-hidden="true">
+                  <span class="browser-frame__dot"></span><span class="browser-frame__dot"></span
+                  ><span class="browser-frame__dot"></span>
+                </div>
+                <img
+                  class="browser-frame__media"
+                  src="media/desktop-dark.png"
+                  width="2880"
+                  height="1800"
+                  loading="lazy"
+                  alt="The same supporters page in dark mode: white text and grey rules on black"
+                />
+              </div>
+              <figcaption class="showcase__caption">
+                <span class="showcase__label">supporters list</span>
+                <span class="showcase__meta">dark</span>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+        <div class="showcase">
+          <div class="showcase__grid showcase__grid--phones">
+            <figure class="showcase__figure">
+              <img
+                class="showcase__media"
+                src="media/mobile-light.png"
+                width="780"
+                height="1688"
+                loading="lazy"
+                alt="Sign page on a phone: Hey Mara, a short instruction, the vermilion signature pad with a drawn signature, a clear link and the sign the petition button"
+              />
+              <figcaption class="showcase__caption">
+                <span class="showcase__label">signing</span>
+                <span class="showcase__meta">phone</span>
+              </figcaption>
+            </figure>
+            <figure class="showcase__figure">
+              <img
+                class="showcase__media"
+                src="media/mobile-dark.png"
+                width="780"
+                height="1688"
+                loading="lazy"
+                alt="Thank-you page on a phone in dark mode: the signature on a vermilion field, the large number 65 with supporters, and the rows see all supporters and delete signature"
+              />
+              <figcaption class="showcase__caption">
+                <span class="showcase__label">thank you</span>
+                <span class="showcase__meta">phone, dark</span>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="page__section" aria-labelledby="run-title">
+        <h2 class="page__section-title" id="run-title">run it yourself</h2>
+        <p class="long-text__text">
+          With Node 26, pnpm and Docker, <code>pnpm demo</code> starts the production image with seeded supporters and
+          prints a demo login. The
+          <a class="long-text__link" href="https://github.com/Arnoldovna/petition#readme">README</a> explains the rest.
+        </p>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <nav class="site-footer__nav" aria-label="Footer">
+        <ul class="site-footer__list">
+          <li class="site-footer__item">
+            <a class="site-footer__link" href="https://github.com/Arnoldovna/petition">source</a>
+          </li>
+          <li class="site-footer__item">
+            <a class="site-footer__link" href="https://github.com/Arnoldovna">contact</a>
+          </li>
+        </ul>
+      </nav>
+      <p class="site-footer__credit">© {{YEAR}} Arnoldovna. Nonsense Petition is a portfolio project.</p>
+    </footer>
+  </body>
+</html>

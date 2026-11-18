@@ -1,0 +1,30 @@
+/*
+ * browser-frame: the maw frame for screenshots and videos (maw-design-system, components section 11): a surface bar
+ * with three rule-coloured dots, a 1px rule border and the 3px frame radius, the only rounded thing. No shadow.
+ * Part of site/site.css: no @reference.
+ */
+@layer components {
+  .browser-frame {
+    @apply m-0 overflow-hidden bg-paper;
+
+    border: var(--rule-width) solid var(--color-rule);
+    border-radius: var(--radius-frame);
+  }
+
+  .browser-frame__bar {
+    @apply flex gap-1 ps-3 pbs-2 pbe-2 bg-surface border-be border-rule;
+  }
+
+  .browser-frame__dot {
+    @apply block size-2 bg-rule;
+
+    border-radius: var(--radius-frame);
+  }
+
+  /* Video and image keep their own aspect ratio (width and height attributes in the markup), so nothing shifts. */
+  .browser-frame__media {
+    @apply block inline-full bg-surface;
+
+    block-size: auto;
+  }
+}
