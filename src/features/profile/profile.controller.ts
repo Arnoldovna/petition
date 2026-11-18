@@ -52,6 +52,22 @@ export interface ProfileControllerDeps {
   reauth: RequestHandler;
 }
 
+/** Which credentials a saved profile change touched; the onboarding form has neither field (F-34). */
+interface CredentialChanges {
+  emailChanged: boolean;
+  passwordChanged: boolean;
+}
+
+const NO_CREDENTIAL_CHANGES: CredentialChanges = { emailChanged: false, passwordChanged: false };
+
+/**
+ * The one `profile.updated` event of onboarding and edit (ADR 0011): ids and flags only, so an email or password
+ * change, the key step of an account takeover, is traceable without logging the address.
+ */
+function logProfileUpdated(req: Request, userId: number, { emailChanged, passwordChanged }: CredentialChanges): void {
+  req.log.info({ userId, emailChanged, passwordChanged }, 'profile.updated');
+}
+
 function renderOnboarding(req: Request, res: Response, form: FormView, status = 200): void {
   renderPage(req, res, ONBOARDING_VIEW, { title: ONBOARDING_TITLE, form }, status);
 }
@@ -65,8 +81,10 @@ function renderEdit(req: Request, res: Response, form: FormView, status = 200): 
 export function createProfileController({ service, sessionPolicy, reauth }: ProfileControllerDeps): ProfileController {
   /** Success of an edit: a new password gets a new session id with the new version (ADR 0002), then the flash. */
   async function finishEdit(req: Request, res: Response, outcome: Extract<UpdateAccountOutcome, { ok: true }>) {
+    const { userId } = viewerOf(res);
+    logProfileUpdated(req, userId, outcome);
     if (outcome.passwordChanged) {
-      await establishSession(req, { id: viewerOf(res).userId, sessionVersion: outcome.sessionVersion }, sessionPolicy);
+      await establishSession(req, { id: userId, sessionVersion: outcome.sessionVersion }, sessionPolicy);
     }
     // After establishSession: regenerating the session would drop a flash set before it.
     setFlash(req, 'Profile updated');
@@ -85,7 +103,9 @@ export function createProfileController({ service, sessionPolicy, reauth }: Prof
         renderOnboarding(req, res, formView(parsed.values, parsed.errors), 422);
         return;
       }
-      const saved = await service.saveOnboarding(viewerOf(res).userId, parsed.data);
+      const { userId } = viewerOf(res);
+      const saved = await service.saveOnboarding(userId, parsed.data);
+      if (saved.ok) logProfileUpdated(req, userId, NO_CREDENTIAL_CHANGES);
       // An account deleted while the request ran (F-31): the visitor is a guest now, so the login page comes next.
       res.redirect(303, saved.ok ? NEXT_AFTER_ONBOARDING : LOGIN_PATH);
     },

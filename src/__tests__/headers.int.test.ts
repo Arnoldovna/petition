@@ -217,7 +217,7 @@ describe('compression and third-party resources (NODE_ENV=production)', () => {
     expect(parse(pages[3]?.text ?? '').has('form[action="/logout"] input[name="_csrf"]')).toBe(true);
   });
 
-  it('ADR 0010, B-59: generated assets are compressed, carry the security headers and never set a cookie', async () => {
+  it('B-59, ADR 0010: generated assets are compressed, carry the security headers and never set a cookie', async () => {
     const response = await withEncoding(`/assets/${assetName}`).expect(200);
 
     expect(response.headers['content-type']).toMatch(/^text\/css/);

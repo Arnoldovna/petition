@@ -328,7 +328,7 @@ describe('POST /signature: typed', () => {
     expect(readForm(response.text, TYPED_FORM).values['typedName']).toBe(payload);
   });
 
-  it('ADR 0003, F-21: the token of the 422 re-render lets the corrected form through', async () => {
+  it('F-21, ADR 0003: the token of the 422 re-render lets the corrected form through', async () => {
     const signer = await signedInAgent();
     const rejected = await postTyped(signer, 'X');
     const { csrf } = readForm(rejected.text, TYPED_FORM);

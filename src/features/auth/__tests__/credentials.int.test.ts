@@ -157,7 +157,7 @@ describe('credentials.apply', () => {
     expect(stored.passwordHash).toBe(currentHash);
   });
 
-  it('ADR 0002 item 9, F-63: a new password hash is stored and increments session_version', async () => {
+  it('F-63, ADR 0002 item 9: a new password hash is stored and increments session_version', async () => {
     const user = await createUser();
     const newHash = await credentials.hashNewPassword('another passphrase');
 
@@ -251,7 +251,7 @@ describe('loadViewer with the real viewer repository', () => {
     return app;
   }
 
-  it('ADR 0002 item 9, F-31: a password change through credentials.apply signs out the other device', async () => {
+  it('F-31, ADR 0002 item 9: a password change through credentials.apply signs out the other device', async () => {
     const user = await createUser({ firstName: 'Katherine' });
     const app = createApp();
     const otherDevice = request.agent(app);

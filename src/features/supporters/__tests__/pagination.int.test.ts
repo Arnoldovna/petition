@@ -48,7 +48,7 @@ async function listPage(path: string): Promise<Html> {
 const items = (html: Html): string[] =>
   html.root.querySelectorAll('nav.pagination .pagination__item').map((item) => spoken(item));
 
-describe('GET /supporters: pagination with gaps (F-54)', () => {
+describe('F-54: GET /supporters: pagination with gaps', () => {
   it('F-54, B-67: the first page shows 1 2 3, a gap announced as "more pages", the last page and next', async () => {
     const html = await listPage('/supporters');
 

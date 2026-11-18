@@ -130,7 +130,7 @@ describe('GET /thank-you', () => {
 });
 
 describe('GET /signature/image.png', () => {
-  it("ADR 0004 item 6, F-71: serves exactly the viewer's own stored bytes as a private PNG", async () => {
+  it("F-71, ADR 0004 item 6: serves exactly the viewer's own stored bytes as a private PNG", async () => {
     const first = await signer();
     const second = await signer(400);
 

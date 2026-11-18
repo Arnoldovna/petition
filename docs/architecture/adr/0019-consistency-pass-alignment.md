@@ -165,8 +165,10 @@ the production limits on the real `POST /login` (11th failed attempt is the 429 
 ### 10. Requirement ids in test titles
 
 Conventions §11: every test title starts with the ids it covers (`F-24, B-09: unknown email and wrong password give the
-same 401 page`). Phase 5e greps all ids of FEATURES.md and BUGS.md against `src/`, `test/` and `e2e/` titles; ids
-verified by other means (lint, review, CI) are listed with that means in OVERVIEW.md section 21.
+same 401 page`). Phase 5e greps all ids of FEATURES.md and BUGS.md against `src/`, `test/`, `e2e/` and `scripts/`
+titles (`scripts/__tests__` is a unit-test location in `vitest.config.ts`); ids verified by other means (lint, review,
+CI) are listed with that means in OVERVIEW.md section 21. Since 5e, `src/__tests__/traceability.test.ts` runs this
+check on every `pnpm test`.
 
 ## Alternatives considered
 

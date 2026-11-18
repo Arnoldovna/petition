@@ -418,7 +418,7 @@ describe('seedDatabase', () => {
   });
 
   it.each(['someone@example.com', 'someone@sub.petition.test', 'someone@petition.test.example'])(
-    'ADR 0019 §7, B-60: skips, writes nothing and logs seed.skipped when %s exists',
+    'B-60, ADR 0019 §7: skips, writes nothing and logs seed.skipped when %s exists',
     async (email) => {
       const foreign = await createUser(db, { email });
       const before = await snapshot();

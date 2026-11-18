@@ -125,7 +125,7 @@ describe('edit: names and profile only', () => {
     const userId = repository.addUser({ email: 'ada@petition.test' });
     const form = await editForm(userId, { firstName: 'Augusta', age: '36', city: 'London' });
 
-    await expect(update(userId, form)).resolves.toEqual({ ok: true, passwordChanged: false });
+    await expect(update(userId, form)).resolves.toEqual({ ok: true, emailChanged: false, passwordChanged: false });
 
     expect(credentials.calls).toEqual([]);
     expect(reauthAttempts).toBe(0);
@@ -145,7 +145,7 @@ describe('edit: names and profile only', () => {
     // What a password manager submits when it fills the current-password field of a name or profile edit.
     const form = await editForm(userId, { currentPassword: 'not the password at all' });
 
-    await expect(update(userId, form)).resolves.toEqual({ ok: true, passwordChanged: false });
+    await expect(update(userId, form)).resolves.toEqual({ ok: true, emailChanged: false, passwordChanged: false });
     expect(credentials.calls).toEqual([]);
     // Nothing was checked, so nothing counts against the per-user re-authentication budget.
     expect(reauthAttempts).toBe(0);
@@ -164,12 +164,12 @@ describe('edit: names and profile only', () => {
     const userId = repository.addUser({ email: 'ada@petition.test' });
     const form = await editForm(userId, { email: '  ADA@Petition.TEST ' });
 
-    await expect(update(userId, form)).resolves.toEqual({ ok: true, passwordChanged: false });
+    await expect(update(userId, form)).resolves.toEqual({ ok: true, emailChanged: false, passwordChanged: false });
     expect(credentials.calls).toEqual([]);
   });
 });
 
-describe('edit: re-authentication (B-11, F-63, ADR 0009)', () => {
+describe('B-11, F-63, ADR 0009: edit: re-authentication', () => {
   it('B-11: an email change without the current password is refused and saves nothing', async () => {
     const userId = repository.addUser({ email: 'ada@petition.test' });
     const form = await editForm(userId, { email: 'new@petition.test', firstName: 'Changed' });
@@ -230,7 +230,7 @@ describe('edit: re-authentication (B-11, F-63, ADR 0009)', () => {
     const userId = repository.addUser({ email: 'ada@petition.test' });
     const form = await editForm(userId, { email: 'ada.new@petition.test', currentPassword: CURRENT_PASSWORD });
 
-    await expect(update(userId, form)).resolves.toEqual({ ok: true, passwordChanged: false });
+    await expect(update(userId, form)).resolves.toEqual({ ok: true, emailChanged: true, passwordChanged: false });
     expect(repository.updates[0]?.changes).toMatchObject({ email: 'ada.new@petition.test' });
     expect(repository.updates[0]?.changes).not.toHaveProperty('passwordHash');
     expect(repository.user(userId)).toMatchObject({ email: 'ada.new@petition.test', sessionVersion: 0 });
@@ -242,6 +242,7 @@ describe('edit: re-authentication (B-11, F-63, ADR 0009)', () => {
 
     await expect(update(userId, form)).resolves.toEqual({
       ok: true,
+      emailChanged: false,
       passwordChanged: true,
       sessionVersion: 1,
     });
@@ -253,7 +254,7 @@ describe('edit: re-authentication (B-11, F-63, ADR 0009)', () => {
   });
 });
 
-describe('edit: all or nothing (F-62, F-64, B-29)', () => {
+describe('F-62, F-64, B-29: edit: all or nothing', () => {
   it('F-64: an email another account has (any case) is refused and nothing changes, password included', async () => {
     repository.addUser({ email: 'taken@petition.test' });
     const userId = repository.addUser({ email: 'ada@petition.test' }, { age: 20, city: null, homepageUrl: null });

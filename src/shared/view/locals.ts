@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { ErrorRequestHandler, Request, RequestHandler, Response } from 'express';
 
 import type { Env } from '../../config/env.js';
 
@@ -29,6 +29,18 @@ function canonicalPath(path: string): string {
   return path.slice(0, end);
 }
 
+/** Sets the layout data and `Cache-Control: no-store` on `res`; synchronous, so both middlewares below call it. */
+function layoutLocals(env: ViewLocalsEnv, now: () => number): (req: Request, res: Response) => void {
+  const yearFormat = new Intl.DateTimeFormat('en-GB', { timeZone: env.APP_TIME_ZONE, year: 'numeric' });
+  return (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.locals.year = Number(yearFormat.format(now()));
+    res.locals.contactUrl = env.CONTACT_URL;
+    if (env.IMPRINT_URL !== undefined) res.locals.imprintUrl = env.IMPRINT_URL;
+    res.locals.currentPath = canonicalPath(req.path);
+  };
+}
+
 /**
  * Layout data for every dynamic response (OVERVIEW.md section 5.1, step 6: after the static routers, before the
  * session), so the error handler's pages have it too: `year`, `contactUrl`, `imprintUrl` and `currentPath` in
@@ -39,13 +51,26 @@ function canonicalPath(path: string): string {
  * (the signature image keeps `private, no-store`).
  */
 export function viewLocals(env: ViewLocalsEnv, now: () => number = Date.now): RequestHandler {
-  const yearFormat = new Intl.DateTimeFormat('en-GB', { timeZone: env.APP_TIME_ZONE, year: 'numeric' });
+  const apply = layoutLocals(env, now);
   return (req, res, next) => {
-    res.setHeader('Cache-Control', 'no-store');
-    res.locals.year = Number(yearFormat.format(now()));
-    res.locals.contactUrl = env.CONTACT_URL;
-    if (env.IMPRINT_URL !== undefined) res.locals.imprintUrl = env.IMPRINT_URL;
-    res.locals.currentPath = canonicalPath(req.path);
+    apply(req, res);
     next();
+  };
+}
+
+/**
+ * The same layout data for an error raised before step 6 (OVERVIEW.md section 5.1, step 6a). The static routers answer
+ * a missing `/assets` or `/fonts` file with a 404 themselves (`fallthrough: false`, so the request never reaches the
+ * session), and Express skips ordinary middleware once an error is pending. Without this the error page would have
+ * no `Cache-Control: no-store`, an empty footer contact link and no year (F-15, ROUTES.md section 1).
+ *
+ * An error raised after the response started (a read error while a static file streams) passes on untouched: setting
+ * a header then would throw `ERR_HTTP_HEADERS_SENT` and replace the real error before it reaches the error handler.
+ */
+export function viewLocalsOnError(env: ViewLocalsEnv, now: () => number = Date.now): ErrorRequestHandler {
+  const apply = layoutLocals(env, now);
+  return (error: unknown, req, res, next) => {
+    if (!res.headersSent) apply(req, res);
+    next(error);
   };
 }

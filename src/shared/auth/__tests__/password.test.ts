@@ -117,7 +117,7 @@ describe('createHasher (bounded concurrency)', () => {
     expect(control.maxRunning).toBe(2);
   });
 
-  it('ADR 0009, F-26: with two running and 64 queued, the 65th queued call is rejected with a 429', async () => {
+  it('F-26, ADR 0009: with two running and 64 queued, the 65th queued call is rejected with a 429', async () => {
     const control = createControlledBackend();
     const hasher = createHasher({ maxConcurrent: 2, maxQueue: 64 }, control.backend);
 

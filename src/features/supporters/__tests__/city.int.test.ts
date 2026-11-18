@@ -131,7 +131,7 @@ describe('GET /supporters/city/:city: matching (ADR 0007)', () => {
   });
 });
 
-describe('GET /supporters/city/:city: awkward names (F-57, B-32)', () => {
+describe('F-57, B-32: GET /supporters/city/:city: awkward names', () => {
   it.each(AWKWARD_CITIES.map((city, index) => [city, index] as const))(
     'F-57, B-32: the list links %j with encodeURIComponent, and the link finds its supporter',
     async (city, index) => {
@@ -206,7 +206,7 @@ describe('GET /supporters/city/:city: empty and invalid cities', () => {
   });
 });
 
-describe('GET /supporters/city/:city: pagination (F-59)', () => {
+describe('F-59: GET /supporters/city/:city: pagination', () => {
   it('F-59, F-54: 51 supporters of one city make two pages with encoded links', async () => {
     const first = await cityPage(cityPath('köln'));
 

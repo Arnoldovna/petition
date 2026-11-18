@@ -37,10 +37,13 @@ rewrite `/assets` and `/fonts` to `https://127.0.0.1:3000` and a reviewer would 
 - Redaction paths: `req.headers.cookie`, `req.headers.authorization`, `res.headers["set-cookie"]`, `*.password`,
   `*.currentPassword`, `*.newPassword`, `*.passwordHash`, `*.email`, `*._csrf`, `*.signature`, `*.image`,
   `*.typedName`. Request bodies are never logged.
-- Domain events log ids only: `user.registered {userId}`, `user.logged_in {userId}`, `signature.created {userId,
-method}`, `signature.deleted {userId}`, `profile.updated {userId}`, `account.deleted {userId}`, `auth.login_failed`
-  (no email), `rate_limit.hit {limiter}`, `rate_limit.relaxed {limiter, max}` (startup, ADR 0012),
-  `account.erased {userId}` (manual erasure, ADR 0016).
+- Domain events log ids only: `user.registered {userId}`, `user.logged_in {userId}`, `user.logged_out {userId}`,
+  `signature.created {userId, method}`, `signature.rejected {userId, reason}`, `signature.deleted {userId}`,
+  `profile.updated {userId, emailChanged, passwordChanged}` (onboarding and edit; the flags make an email or password
+  change, the key step of an account takeover, visible without logging the address), `account.deleted {userId}`,
+  `auth.login_failed` (no email), `rate_limit.hit {limiter}`, `rate_limit.relaxed {limiter, max}` (startup, ADR 0012),
+  `account.erased {userId}` (manual erasure, ADR 0016). Phase 5e aligned the code to these names (security review
+  L1); `user.logged_out` and `signature.rejected` were added to this list from the code.
 - 5xx at `error` with the error object; 4xx at `warn` without stack; health checks not logged.
 - `no-console` is an ESLint error (B-58). Development uses `pino-pretty` as a transport.
 

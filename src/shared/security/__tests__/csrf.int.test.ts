@@ -127,7 +127,7 @@ describe('CSRF protection', () => {
 });
 
 describe('resubmit round trip', () => {
-  it('ADR 0003, F-21: the token from a 422 re-render lets the corrected form through (303)', async () => {
+  it('F-21, ADR 0003: the token from a 422 re-render lets the corrected form through (303)', async () => {
     const agent = await signedInAgent();
     const token = await tokenOf(agent);
 
@@ -138,7 +138,7 @@ describe('resubmit round trip', () => {
     await postForm(agent, '/__test/form', { _csrf: csrf, outcome: 'valid' }).expect(303).expect('location', '/');
   });
 
-  it('ADR 0003, F-09: the 403 page of a signed-in visitor carries a fresh token, so the form can be sent again', async () => {
+  it('F-09, ADR 0003: the 403 page of a signed-in visitor carries a fresh token, so the form can be sent again', async () => {
     const agent = await signedInAgent();
 
     const rejected = await postForm(agent, '/__test/form', { outcome: 'valid' });

@@ -53,7 +53,7 @@ describe('createStaticRouter compression', () => {
     expect(response.headers['content-encoding']).toBe('gzip');
   });
 
-  it('ADR 0010, B-59: the HTML 404 page of a missing asset is never compressed (BREACH)', async () => {
+  it('B-59, ADR 0010: the HTML 404 page of a missing asset is never compressed (BREACH)', async () => {
     const response = await request(app).get('/assets/missing.css').set('Accept-Encoding', 'gzip');
 
     expect(response.status).toBe(404);

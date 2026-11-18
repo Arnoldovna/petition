@@ -73,7 +73,7 @@ jobs:
   # Enable: Settings -> Variables -> DEPLOY_ENABLED=true, create the "production" environment (required reviewers),
   # add its secrets, then replace the placeholder step. Checklist for the target (ADR 0015): IMPRINT_URL set
   # (ADR 0016), at least 384 MiB memory for the app container (ADR 0009), no text/html compression at the proxy
-  # (ADR 0010).
+  # (ADR 0010), TRUST_PROXY = number of reverse-proxy hops and COOKIE_SECURE unset or true (ADR 0011, ADR 0012).
   deploy:
     needs: images
     if: github.event.repository.private == false && vars.DEPLOY_ENABLED == 'true'

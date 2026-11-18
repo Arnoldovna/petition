@@ -7,6 +7,7 @@ import { createSignature, createUser, type TestUser } from '../../../../test/fac
 import { createFakeHasher } from '../../../../test/fakes.js';
 import { getForm, postForm, readForm, type Agent } from '../../../../test/forms.js';
 import { parse } from '../../../../test/html.js';
+import { captureLog } from '../../../../test/logs.js';
 import { createTestApp, type TestApp } from '../../../../test/test-app.js';
 import { profiles, users } from '../../../db/schema/index.js';
 
@@ -307,7 +308,7 @@ describe('POST /profile/edit: names and profile', () => {
   });
 });
 
-describe('POST /profile/edit: email and password (F-63, B-11, ADR 0009)', () => {
+describe('F-63, B-11, ADR 0009: POST /profile/edit: email and password', () => {
   it('B-11: an email change without the current password gives 422 and saves nothing, names included', async () => {
     const { agent, user } = await signedInAgent();
 
@@ -518,5 +519,57 @@ describe('POST /profile/edit: the reauth limiter (ADR 0012)', () => {
     expect((await submitTo(other.agent, { email: 'y@petition.test', currentPassword: 'guess guess' })).status).toBe(
       422,
     );
+  });
+});
+
+describe('ADR 0011: the profile.updated event', () => {
+  const log = captureLog();
+  let loggedApp: TestApp;
+
+  beforeAll(async () => {
+    loggedApp = await createTestApp({ logger: log.logger });
+  });
+
+  afterAll(async () => {
+    await loggedApp.close();
+  });
+
+  it('F-63, B-12: an email and password change logs one profile.updated line with ids and flags, never an address', async () => {
+    const { agent, user } = await signedInAgent(loggedApp, { email: 'logged.before@petition.test' });
+    const { csrf, values } = await getForm(agent, '/profile/edit', FORM);
+    log.clear();
+
+    const response = await postForm(agent, '/profile/edit', {
+      ...values,
+      _csrf: csrf,
+      email: 'logged.after@petition.test',
+      newPassword: NEW_PASSWORD,
+      currentPassword: user.password,
+    });
+
+    expectRedirect(response, 303, '/profile/edit');
+    expect(log.events('profile.updated')).toEqual([
+      expect.objectContaining({ userId: user.id, emailChanged: true, passwordChanged: true }),
+    ]);
+    const raw = log.raw();
+    expect(raw).not.toContain('logged.before@petition.test');
+    expect(raw).not.toContain('logged.after@petition.test');
+    expect(raw).not.toContain(NEW_PASSWORD);
+  });
+
+  it('F-60: a name change logs profile.updated without the email and password flags set', async () => {
+    const { agent, user } = await signedInAgent(loggedApp);
+    const { csrf, values } = await getForm(agent, '/profile/edit', FORM);
+    log.clear();
+
+    expectRedirect(
+      await postForm(agent, '/profile/edit', { ...values, _csrf: csrf, firstName: 'Edith' }),
+      303,
+      '/profile/edit',
+    );
+
+    expect(log.events('profile.updated')).toEqual([
+      expect.objectContaining({ userId: user.id, emailChanged: false, passwordChanged: false }),
+    ]);
   });
 });

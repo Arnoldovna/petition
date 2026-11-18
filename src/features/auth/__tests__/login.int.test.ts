@@ -9,6 +9,7 @@ import { createSignature, createUser, type TestUser } from '../../../../test/fac
 import { createFakeHasher, fakePasswordHash, type FakeHasher } from '../../../../test/fakes.js';
 import { getForm, postForm, readForm, type Agent } from '../../../../test/forms.js';
 import { parse } from '../../../../test/html.js';
+import { captureLog } from '../../../../test/logs.js';
 import { createTestApp, type TestApp } from '../../../../test/test-app.js';
 import { users } from '../../../db/schema/index.js';
 import { sessionIdOf } from './fakes.js';
@@ -365,5 +366,33 @@ describe('POST /login', () => {
       expect(parse(response.text).text('h1')).toBe('This form has expired');
     }
     await agent.get('/login').expect(200);
+  });
+});
+
+describe('ADR 0011: login events', () => {
+  it('B-12, F-23: a login logs user.logged_in with the user id, a failed one auth.login_failed, never the email', async () => {
+    const log = captureLog();
+    const loggedApp = await createTestApp({ hasher, logger: log.logger });
+    try {
+      const user = await createUser(loggedApp.db, { email: `logged-${randomUUID()}@example.com` });
+      const agent = request.agent(loggedApp.app);
+      const { csrf } = await getForm(agent, '/login', FORM);
+      log.clear();
+
+      await postForm(agent, '/login', { _csrf: csrf, email: user.email, password: `${user.password}-wrong` });
+      const retry = await getForm(agent, '/login', FORM);
+      const response = await postForm(agent, '/login', {
+        _csrf: retry.csrf,
+        email: user.email,
+        password: user.password,
+      });
+
+      expect(response.status).toBe(303);
+      expect(log.events('auth.login_failed')).toHaveLength(1);
+      expect(log.events('user.logged_in')).toEqual([expect.objectContaining({ userId: user.id })]);
+      expect(log.raw()).not.toContain(user.email);
+    } finally {
+      await loggedApp.close();
+    }
   });
 });

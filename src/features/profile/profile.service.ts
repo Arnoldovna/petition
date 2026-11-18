@@ -20,8 +20,8 @@ import type {
  * the request ran. Every failure saves nothing.
  */
 export type UpdateAccountOutcome =
-  | { ok: true; passwordChanged: false }
-  | { ok: true; passwordChanged: true; sessionVersion: number }
+  | { ok: true; emailChanged: boolean; passwordChanged: false }
+  | { ok: true; emailChanged: boolean; passwordChanged: true; sessionVersion: number }
   | { ok: false; reason: 'current-password-required' | 'wrong-password' | 'email-taken' | 'not-found' };
 
 /** What the caller of `updateAccount` adds around the password check. */
@@ -131,8 +131,8 @@ export function createProfileService({ repository, credentials }: ProfileService
       const result = await repository.updateAccount(userId, changes);
       if (!result.ok) return result;
       return passwordHash === undefined
-        ? { ok: true, passwordChanged: false }
-        : { ok: true, passwordChanged: true, sessionVersion: result.sessionVersion };
+        ? { ok: true, emailChanged, passwordChanged: false }
+        : { ok: true, emailChanged, passwordChanged: true, sessionVersion: result.sessionVersion };
     },
   };
 }

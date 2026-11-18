@@ -68,6 +68,15 @@ describe('loadEnv', () => {
     expect(failure({ ...REQUIRED, CSRF_SECRET: 'x'.repeat(31) })).toContain('CSRF_SECRET');
   });
 
+  it('B-03: rejects a CSRF_SECRET that is also a SESSION_SECRET entry, naming the key but never the value', () => {
+    for (const sessionSecret of [CSRF_SECRET, `${SESSION_SECRET},${CSRF_SECRET}`]) {
+      const message = failure({ ...REQUIRED, SESSION_SECRET: sessionSecret });
+
+      expect(message).toContain('CSRF_SECRET: must differ from every SESSION_SECRET entry');
+      expect(message).not.toContain(CSRF_SECRET);
+    }
+  });
+
   it('B-03: reads SESSION_SECRET as a trimmed, comma-separated rotation list whose first entry signs', () => {
     const previous = 'previous-session-secret-still-valid-123';
 

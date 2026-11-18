@@ -97,8 +97,10 @@ that claimed PLAN.md pins the 10 line (it does not). Test data isolation and par
   and builds and pushes `ghcr.io/arnoldovna/petition` with tags `sha-<RELEASE_SHA>` and `latest`, the matching
   revision label, provenance and SBOM. Deploy job present but gated by the same visibility rule and
   `vars.DEPLOY_ENABLED == 'true'`; its checklist requires `IMPRINT_URL` (ADR 0016), at least 384 MiB memory
-  (ADR 0009) and no `text/html` compression at the proxy (ADR 0010). While the repository is private, both jobs show as
-  skipped.
+  (ADR 0009), no `text/html` compression at the proxy (ADR 0010), `TRUST_PROXY` set to the number of reverse-proxy
+  hops and `COOKIE_SECURE` unset or `true` (ADR 0012, ADR 0011: with `TRUST_PROXY=0` behind a TLS proxy the secure
+  session cookie is never set, so every form POST fails, and all clients share the proxy's rate-limit budget). While
+  the repository is private, both jobs show as skipped.
 - **Dependabot:** `npm` (grouped prod/dev, 3-day cooldown), `github-actions`, `docker` for `/` (Dockerfile) and
   `/docker` (Nu validator), `docker-compose` for `/` (`postgres:18-alpine`, `redis:8-alpine`). Every image is pinned
   by digest (compose, Dockerfile, `test/images.ts`, the Nu validator), conventions §9.

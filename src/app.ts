@@ -21,7 +21,7 @@ import { securityHeaders, type RateLimiters } from './shared/security/security.j
 import { enforceAbsoluteLifetime, type SessionPolicy } from './shared/security/session.js';
 import type { AssetResolver } from './shared/view/assets.js';
 import { configureViewEngine } from './shared/view/engine.js';
-import { viewLocals } from './shared/view/locals.js';
+import { viewLocals, viewLocalsOnError } from './shared/view/locals.js';
 
 /** Rows per supporters page (ADR 0006, F-54). */
 const SUPPORTERS_PAGE_SIZE = 50;
@@ -109,7 +109,9 @@ export function createApp(deps: AppDeps): Express {
   app.use(securityHeaders({ https: isHttps(env) }));
   // 5. static files, before sessions and CSRF, so they never create a session (B-59, ADR 0010)
   app.use(createStaticRouter({ mode: paths.mode, builtPublicDir: paths.builtPublicDir, publicDir: paths.publicDir }));
-  // 6. layout data and Cache-Control: no-store for every dynamic response (F-15, F-89)
+  // 6. layout data and Cache-Control: no-store for every dynamic response (F-15, F-89); 6a. the same for the 404 page
+  // of a missing asset or font, an error raised in step 5 that skips step 6
+  app.use(viewLocalsOnError(env));
   app.use(viewLocals(env));
   // 7. Redis session (ADR 0002)
   app.use(deps.session);

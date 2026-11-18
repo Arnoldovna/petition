@@ -143,7 +143,7 @@ export function createAuthController({ service, sessionPolicy }: AuthControllerD
       }
 
       await establishSession(req, result.user, sessionPolicy);
-      req.log.info({ userId: result.user.id }, 'account.registered');
+      req.log.info({ userId: result.user.id }, 'user.registered');
       res.redirect(303, AFTER_REGISTER);
     },
 
@@ -178,7 +178,7 @@ export function createAuthController({ service, sessionPolicy }: AuthControllerD
 
       // F-23: a new session id against fixation; the old CSRF token dies with the old id (ADR 0002, ADR 0003).
       await establishSession(req, result.session, sessionPolicy);
-      req.log.info({ userId: result.session.id }, 'auth.login');
+      req.log.info({ userId: result.session.id }, 'user.logged_in');
       res.redirect(303, returnTo ?? homeOf(result.viewer));
     },
 
@@ -186,7 +186,7 @@ export function createAuthController({ service, sessionPolicy }: AuthControllerD
     logout: async (req, res) => {
       const { userId } = viewerOf(res);
       await endSession(req, 'You are logged out');
-      req.log.info({ userId }, 'auth.logout');
+      req.log.info({ userId }, 'user.logged_out');
       res.redirect(303, AFTER_SESSION_END);
     },
 

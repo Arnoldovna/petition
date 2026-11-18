@@ -315,6 +315,24 @@ describe('navigation through the shared header and footer', () => {
     }
   });
 
+  it('F-15, F-88: the 404 page of a missing asset or font has the full footer and is never stored', async () => {
+    for (const path of ['/assets/no-such-file-0000000000.css', '/fonts/no-such-font.woff2']) {
+      const before = yearNow();
+      const response = await request(testApp.app).get(path).set('Accept', 'text/html').expect(404);
+      const after = yearNow();
+      const page = parse(response.text);
+
+      // The static routers answer this 404 themselves, before step 6 of the middleware order (OVERVIEW.md 5.1, 6a).
+      expect(response.headers['cache-control'], path).toBe('no-store');
+      expect(response.headers['set-cookie'], path).toBeUndefined();
+      expect(page.texts('h1'), path).toEqual(['Page not found']);
+      expect(page.has('.site-footer a[href="/privacy"]'), path).toBe(true);
+      expect(page.has(`.site-footer a[href="${CONTACT_URL}"]`), path).toBe(true);
+      const year = /^© (\d{4}) Arnoldovna\./.exec(page.text('footer .site-footer__credit') ?? '')?.[1];
+      expect([before, after], path).toContain(Number(year));
+    }
+  });
+
   it('F-14: the main navigation never has more than three entries, for guests and signed-in viewers', async () => {
     const guest = await getPage(undefined, '/');
     const member = await getPage(await signedInAgent(), '/');
@@ -474,7 +492,7 @@ describe('robots.txt (ROUTES.md section 7)', () => {
   });
 });
 
-describe('imprint link (F-89)', () => {
+describe('F-89: imprint link', () => {
   it('F-89: without IMPRINT_URL no page renders an imprint link', async () => {
     for (const path of PUBLIC_PAGES) {
       const page = await getPage(undefined, path);

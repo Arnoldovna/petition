@@ -192,7 +192,7 @@ describe('optionalCity', () => {
     expect(valueOf(optionalCity, 'A#B&C')).toBe('A#B&C');
   });
 
-  it('ADR 0007, B-56: a zero-width or bidi character never creates a second city that looks like an existing one', () => {
+  it('B-56, ADR 0007: a zero-width or bidi character never creates a second city that looks like an existing one', () => {
     expect(valueOf(optionalCity, 'Berl\u200Bin')).toBe('Berlin');
     expect(valueOf(optionalCity, '\u202DBerlin\u202C')).toBe('Berlin');
     expect(valueOf(cityParam, 'Berl\u2060in')).toBe('Berlin');

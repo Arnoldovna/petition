@@ -14,18 +14,18 @@ const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0
 const withoutEnd = (png: Buffer): Buffer => png.subarray(0, png.length - 12);
 
 describe('inspectPngHeader', () => {
-  it('ADR 0004, F-42: reads width and height from the IHDR of a canvas PNG', async () => {
+  it('F-42, ADR 0004: reads width and height from the IHDR of a canvas PNG', async () => {
     expect(inspectPngHeader(await drawnSignature())).toEqual({ width: 720, height: 240 });
     expect(inspectPngHeader(await drawnSignature({ width: 700, height: 241 }))).toEqual({ width: 700, height: 241 });
   });
 
-  it('ADR 0004, B-19: JPEG bytes behind a PNG data-URL prefix have no PNG header', async () => {
+  it('B-19, ADR 0004: JPEG bytes behind a PNG data-URL prefix have no PNG header', async () => {
     const jpeg = await createCanvas(720, 240).encode('jpeg');
 
     expect(inspectPngHeader(jpeg)).toBeNull();
   });
 
-  it('ADR 0004, B-19: rejects data that is too short, has another signature, or does not start with IHDR', async () => {
+  it('B-19, ADR 0004: rejects data that is too short, has another signature, or does not start with IHDR', async () => {
     const png = await drawnSignature();
     const otherFirstChunk = Buffer.concat([PNG_SIGNATURE, pngChunk('tEXt', Buffer.alloc(13)), png.subarray(8)]);
     const wrongIhdrLength = Buffer.concat([PNG_SIGNATURE, pngChunk('IHDR', Buffer.alloc(14)), png.subarray(33)]);
@@ -51,7 +51,7 @@ describe('isCompletePng', () => {
     ).toBe(true);
   });
 
-  it('ADR 0004, B-19: rejects a truncated file, which the decoder would accept partly drawn', async () => {
+  it('B-19, ADR 0004: rejects a truncated file, which the decoder would accept partly drawn', async () => {
     const png = await drawnSignature();
 
     expect(isCompletePng(png.subarray(0, Math.floor(png.length / 2)))).toBe(false);
@@ -59,7 +59,7 @@ describe('isCompletePng', () => {
     expect(isCompletePng(withoutEnd(png))).toBe(false);
   });
 
-  it('ADR 0004, B-19: rejects a damaged chunk (CRC mismatch) and an unknown chunk-type shape', async () => {
+  it('B-19, ADR 0004: rejects a damaged chunk (CRC mismatch) and an unknown chunk-type shape', async () => {
     const png = await drawnSignature();
     const damaged = Buffer.from(png);
     damaged[png.length - 20] = (damaged[png.length - 20] ?? 0) ^ 0xff;
@@ -82,7 +82,7 @@ describe('isCompletePng', () => {
     expect(isCompletePng(Buffer.concat([header, pngChunk('IEND')]))).toBe(false);
   });
 
-  it('ADR 0004, B-19: rejects image data whose zlib stream is cut off, even with valid CRCs', () => {
+  it('B-19, ADR 0004: rejects image data whose zlib stream is cut off, even with valid CRCs', () => {
     const compressed = deflateSync(Buffer.alloc(240 * scanlineLength(720)));
     const header = buildPng({ width: 720, height: 240 }).subarray(0, 33);
     const cut = Buffer.concat([

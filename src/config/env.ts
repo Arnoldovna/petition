@@ -28,32 +28,38 @@ const integer = (min: number, max: number, fallback: number) =>
   z.coerce.number().int().min(min).max(max).default(fallback);
 
 /** OVERVIEW.md section 16. Secrets have no defaults. */
-const EnvSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: integer(1, 65_535, 3000),
-  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
-  // Number of reverse proxies in front of the app (0 = none); decides the client IP for rate limits.
-  TRUST_PROXY: integer(0, 5, 0),
+const EnvSchema = z
+  .object({
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    PORT: integer(1, 65_535, 3000),
+    LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+    // Number of reverse proxies in front of the app (0 = none); decides the client IP for rate limits.
+    TRUST_PROXY: integer(0, 5, 0),
 
-  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/, error: 'must be a postgres:// or postgresql:// URL' }),
-  REDIS_URL: z.url({ protocol: /^rediss?$/, error: 'must be a redis:// or rediss:// URL' }),
+    DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/, error: 'must be a postgres:// or postgresql:// URL' }),
+    REDIS_URL: z.url({ protocol: /^rediss?$/, error: 'must be a redis:// or rediss:// URL' }),
 
-  // "Served over https": secure __Host- cookies, HSTS and upgrade-insecure-requests (ADR 0011). See isHttps().
-  COOKIE_SECURE: z.stringbool().optional(),
-  SESSION_SECRET: secretList,
-  CSRF_SECRET: z.string().min(32, 'must be at least 32 characters'),
-  SESSION_IDLE_MINUTES: integer(5, 1440, 120),
-  SESSION_ABSOLUTE_HOURS: integer(1, 720, 168),
+    // "Served over https": secure __Host- cookies, HSTS and upgrade-insecure-requests (ADR 0011). See isHttps().
+    COOKIE_SECURE: z.stringbool().optional(),
+    SESSION_SECRET: secretList,
+    CSRF_SECRET: z.string().min(32, 'must be at least 32 characters'),
+    SESSION_IDLE_MINUTES: integer(5, 1440, 120),
+    SESSION_ABSOLUTE_HOURS: integer(1, 720, 168),
 
-  RATE_LIMIT_GLOBAL_MAX: integer(1, 100_000, 300),
-  RATE_LIMIT_AUTH_MAX: integer(1, 100_000, 10),
+    RATE_LIMIT_GLOBAL_MAX: integer(1, 100_000, 300),
+    RATE_LIMIT_AUTH_MAX: integer(1, 100_000, 10),
 
-  CONTACT_URL: z
-    .url({ protocol: /^https$/, error: 'must be an https:// URL' })
-    .default('https://github.com/Arnoldovna'),
-  IMPRINT_URL: z.url({ protocol: /^https$/, error: 'must be an https:// URL' }).optional(),
-  APP_TIME_ZONE: z.string().refine(isTimeZone, 'must be an IANA time zone').default('Europe/Berlin'),
-});
+    CONTACT_URL: z
+      .url({ protocol: /^https$/, error: 'must be an https:// URL' })
+      .default('https://github.com/Arnoldovna'),
+    IMPRINT_URL: z.url({ protocol: /^https$/, error: 'must be an https:// URL' }).optional(),
+    APP_TIME_ZONE: z.string().refine(isTimeZone, 'must be an IANA time zone').default('Europe/Berlin'),
+  })
+  .refine((env) => !env.SESSION_SECRET.includes(env.CSRF_SECRET), {
+    // Key separation: one key must not serve both HMACs (session cookie signature and CSRF token). Keys only, no value.
+    path: ['CSRF_SECRET'],
+    message: 'must differ from every SESSION_SECRET entry',
+  });
 
 export type Env = z.infer<typeof EnvSchema>;
 

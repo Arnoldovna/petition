@@ -403,7 +403,8 @@ seed-readonly first) proves it again.
 
 **5e. Close-out (sequential, orchestrator):** `pnpm e2e:down`; apply queued helper changes; run `pnpm verify` twice in
 a row (flake check; each run starts from a fresh E2E stack); check traceability: every id of FEATURES.md and BUGS.md
-appears in a test title (`grep -rhoE '\b[FB]-[0-9]{2}\b' src test e2e | sort -u`) or is listed in OVERVIEW.md
+appears in a test title (`grep -rhoE '\b[FB]-[0-9]{2}\b' src test e2e scripts | sort -u`; enforced on every
+`pnpm test` by `src/__tests__/traceability.test.ts`) or is listed in OVERVIEW.md
 section 21 with the non-test means that verifies it (rule 9); walk the Definition of Done from PLAN.md: CI green, every
 FEATURES id has a passing test (table in OVERVIEW.md section 17), every BUGS id resolved (OVERVIEW.md section 21), no
 utility classes, only maw tokens, gitleaks clean, axe without serious or critical violations. Phase 5 quality gate
