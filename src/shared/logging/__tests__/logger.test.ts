@@ -68,7 +68,7 @@ describe('createLogger redaction', () => {
     expect(nested?.['user']).toEqual({ [key]: '[redacted]' });
   });
 
-  it('F-73, B-12: redacts the cookie and authorization request headers and the set-cookie response header', () => {
+  it('F-73, B-12: redacts the cookie, authorization and x-csrf-token request headers and the set-cookie response header', () => {
     const capture = captureLogger();
 
     capture.logger.info(
@@ -76,7 +76,11 @@ describe('createLogger redaction', () => {
         req: {
           method: 'GET',
           url: '/',
-          headers: { cookie: 'petition.sid=s%3Asecret', authorization: 'Basic c2VjcmV0' },
+          headers: {
+            cookie: 'petition.sid=s%3Asecret',
+            authorization: 'Basic c2VjcmV0',
+            'x-csrf-token': 'csrf-secret-token',
+          },
         },
         res: { statusCode: 303, headers: { 'set-cookie': 'petition.sid=s%3Anew-secret' } },
       },
@@ -86,7 +90,11 @@ describe('createLogger redaction', () => {
     expect(capture.raw()).not.toMatch(/secret|c2VjcmV0/);
     const [entry] = capture.entries();
     expect(entry).toMatchObject({
-      req: { method: 'GET', url: '/', headers: { cookie: '[redacted]', authorization: '[redacted]' } },
+      req: {
+        method: 'GET',
+        url: '/',
+        headers: { cookie: '[redacted]', authorization: '[redacted]', 'x-csrf-token': '[redacted]' },
+      },
       res: { statusCode: 303, headers: { 'set-cookie': '[redacted]' } },
     });
   });

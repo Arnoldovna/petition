@@ -34,6 +34,7 @@
     "test:e2e": "node scripts/run-e2e.mjs",
     "e2e:up": "node scripts/run-e2e.mjs --up",
     "e2e:down": "node scripts/run-e2e.mjs --down",
+    "media:readme": "node --env-file=.env node_modules/@playwright/test/cli.js test -c playwright.media.config.ts",
     "secrets:scan": "gitleaks git --redact --no-banner && gitleaks dir . --config .gitleaks.dir.toml --redact --no-banner",
     "verify": "pnpm format:check && pnpm lint && pnpm lint:css && pnpm check:utilities && pnpm typecheck && pnpm test && pnpm test:integration && pnpm build && pnpm test:e2e && pnpm secrets:scan",
     "infra:up": "docker compose up -d --wait",

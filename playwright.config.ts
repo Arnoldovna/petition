@@ -13,9 +13,15 @@ if (!baseURL) {
 /** Asserts the pristine seed (totals, page 2, city counts), so it runs first and alone (ADR 0015, 0017). */
 const SEED_READONLY_SPECS = ['**/supporters.spec.ts'];
 
+/**
+ * README media has its own config, playwright.media.config.ts (portfolio-readme skill). A project's `testIgnore`
+ * replaces the top-level one instead of adding to it, so every project that sets its own must list this too.
+ */
+const MEDIA_SPECS = ['**/readme-media.spec.ts'];
+
 export default defineConfig({
   testDir: './e2e',
-  testIgnore: ['**/readme-media.spec.ts'], // README media has its own config (portfolio-readme skill)
+  testIgnore: MEDIA_SPECS,
   fullyParallel: true,
   forbidOnly: Boolean(process.env['CI']),
   retries: 0, // a flaky test is a failing test: fix the cause (quality-gate), never retry it green
@@ -36,13 +42,13 @@ export default defineConfig({
     },
     {
       name: 'desktop',
-      testIgnore: SEED_READONLY_SPECS,
+      testIgnore: [...SEED_READONLY_SPECS, ...MEDIA_SPECS],
       dependencies: ['seed-readonly'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
       name: 'mobile',
-      testIgnore: SEED_READONLY_SPECS,
+      testIgnore: [...SEED_READONLY_SPECS, ...MEDIA_SPECS],
       dependencies: ['seed-readonly'],
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
     },

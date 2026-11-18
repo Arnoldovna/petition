@@ -141,7 +141,8 @@ scripts/check-views.mjs`), `lint:css`, `check:utilities`, `format`, `format:chec
 (`docker compose --profile app --profile demo down`, no `-v`), `db:generate`, `db:migrate`, `db:seed`
 (`pnpm assets:fonts .dev && SEED_ALLOW=true tsx --env-file-if-exists=.env src/tools/seed.ts`; the first seed renders
 signatures, so the fonts must exist on a clean clone before any `pnpm dev`), `admin:erase` (added in 1b with
-`src/tools/erase-user.ts`), `prepare`.
+`src/tools/erase-user.ts`), `prepare`. Etappe 3 adds `media:readme` (`node --env-file=.env
+node_modules/@playwright/test/cli.js test -c playwright.media.config.ts`, needs `E2E_BASE_URL` set to the demo URL).
 
 **Gate 1a** (branch `feat/scaffold-tooling`):
 

@@ -32,10 +32,13 @@ x-app-env: &app-env
   IMPRINT_URL: ${IMPRINT_URL:-} # empty: no imprint link (F-89)
   APP_TIME_ZONE: ${APP_TIME_ZONE:-Europe/Berlin}
 
-# The image runs as uid 65532 and binds port 3000: it needs no Linux capabilities.
+# The image runs as uid 65532 and binds port 3000: it needs no Linux capabilities. Nothing in it writes files (the
+# canvas rendering included), so the root filesystem is read-only; /tmp is the only writable path.
 x-hardening: &hardening
   cap_drop: [ALL]
   security_opt: ['no-new-privileges:true']
+  read_only: true
+  tmpfs: ['/tmp']
 
 services:
   postgres:

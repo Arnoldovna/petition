@@ -34,9 +34,11 @@ rewrite `/assets` and `/fonts` to `https://127.0.0.1:3000` and a reviewer would 
 **Logging (pino 10, pino-http 11)**
 
 - Request id: a well-formed incoming `x-request-id` (`/^[\w-]{8,128}$/`) or a UUID, echoed in the response.
-- Redaction paths: `req.headers.cookie`, `req.headers.authorization`, `res.headers["set-cookie"]`, `*.password`,
-  `*.currentPassword`, `*.newPassword`, `*.passwordHash`, `*.email`, `*._csrf`, `*.signature`, `*.image`,
-  `*.typedName`. Request bodies are never logged.
+- Redaction paths: `req.headers.cookie`, `req.headers.authorization`, `req.headers["x-csrf-token"]`,
+  `res.headers["set-cookie"]`, `*.password`, `*.currentPassword`, `*.newPassword`, `*.passwordHash`, `*.email`,
+  `*._csrf`, `*.signature`, `*.image`, `*.typedName`. Request bodies are never logged. The app reads the CSRF token
+  only from the `_csrf` form field (ADR 0003), but a client may still send it as a header, so that header is redacted
+  too (Etappe 3 security review).
 - Domain events log ids only: `user.registered {userId}`, `user.logged_in {userId}`, `user.logged_out {userId}`,
   `signature.created {userId, method}`, `signature.rejected {userId, reason}`, `signature.deleted {userId}`,
   `profile.updated {userId, emailChanged, passwordChanged}` (onboarding and edit; the flags make an email or password

@@ -35,6 +35,22 @@ describe('container images', () => {
     expect(override).toContain("tmpfs: ['/var/lib/postgresql']");
   });
 
+  it('the migrate, seed and app containers drop every capability and run on a read-only root filesystem', () => {
+    const compose = read('docker-compose.yml');
+    const anchor = /^x-hardening: &hardening\n((?: {2}.+\n)+)/m.exec(compose)?.[1] ?? '';
+
+    expect(anchor.split('\n').filter(Boolean)).toEqual([
+      '  cap_drop: [ALL]',
+      "  security_opt: ['no-new-privileges:true']",
+      '  read_only: true',
+      "  tmpfs: ['/tmp']",
+    ]);
+    // Service names may contain hyphens (`nu-validator`), so `\w` alone would silently miss one.
+    const services = [...compose.matchAll(/^ {2}([\w-]+):\n((?: {4}.*\n|\n)+)/gm)];
+    const hardened = services.filter(([, , body]) => body?.includes('<<: *hardening')).map(([, name]) => name);
+    expect(hardened).toEqual(['migrate', 'seed', 'app']);
+  });
+
   it('B-59: every published port of the base stack binds to 127.0.0.1', () => {
     const ports = [...read('docker-compose.yml').matchAll(/^\s*ports:\s*(.+)$/gm)].map((match) => match[1] ?? '');
 

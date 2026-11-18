@@ -26,6 +26,8 @@ const SENSITIVE_KEYS = [
 const REDACT_PATHS = [
   'req.headers.cookie',
   'req.headers.authorization',
+  // The app reads the token only from the `_csrf` field (ADR 0003), but a client may still send it as a header.
+  'req.headers["x-csrf-token"]',
   'res.headers["set-cookie"]',
   ...SENSITIVE_KEYS,
   ...SENSITIVE_KEYS.map((key) => `*.${key}`),
