@@ -14,10 +14,11 @@ if (!baseURL) {
 const SEED_READONLY_SPECS = ['**/supporters.spec.ts'];
 
 /**
- * README media has its own config, playwright.media.config.ts (portfolio-readme skill). A project's `testIgnore`
- * replaces the top-level one instead of adding to it, so every project that sets its own must list this too.
+ * README media and the social preview have their own config, playwright.media.config.ts (portfolio-readme skill). A
+ * project's `testIgnore` replaces the top-level one instead of adding to it, so every project that sets its own must
+ * list these too.
  */
-const MEDIA_SPECS = ['**/readme-media.spec.ts'];
+const MEDIA_SPECS = ['**/readme-media.spec.ts', '**/social-preview.spec.ts'];
 
 export default defineConfig({
   testDir: './e2e',

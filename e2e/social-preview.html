@@ -1,0 +1,202 @@
+<!doctype html>
+<!--
+  Source of docs/media/social-preview.png, the GitHub social preview (1280 x 640), explained in
+  docs/media/social-preview.md. e2e/social-preview.spec.ts renders it (`pnpm media:readme`) and fails when a character
+  has no glyph in the shipped Schibsted Grotesk files or when the count differs from the seed. Open this file in a
+  browser from the repository to preview it; the fonts load from node_modules. Colours are the maw tokens of
+  src/styles/tokens.css (paper, ink, ink-muted, rule, and vermilion, petition's accent).
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>petition social preview</title>
+    <link rel="stylesheet" href="../node_modules/@fontsource/schibsted-grotesk/400.css" />
+    <link rel="stylesheet" href="../node_modules/@fontsource/schibsted-grotesk/500.css" />
+    <style>
+      :root {
+        --paper: #fff;
+        --ink: #000;
+        --ink-muted: #606060;
+        --rule: #a8a8a8;
+        --accent: #f85d33;
+        --on-accent: #000;
+        /* Safe area: 96px left and right, 64px top and bottom; the accent field starts at 832px. */
+        --inset-x: 96px;
+        --inset-y: 64px;
+        --field-x: 832px;
+        --column-width: calc(var(--field-x) - var(--inset-x) - 48px);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      .preview {
+        width: 1280px;
+        height: 640px;
+        overflow: hidden;
+      }
+
+      .preview {
+        position: relative;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+        font-kerning: normal;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Paper: header, repository name, pitch and two list rows. */
+      .preview__header,
+      .preview__row-meta {
+        font-size: 15px;
+        line-height: 1;
+        letter-spacing: 0.05em;
+      }
+
+      .preview__header {
+        position: absolute;
+        top: var(--inset-y);
+        left: var(--inset-x);
+        width: var(--column-width);
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--ink);
+      }
+
+      .preview__years {
+        color: var(--ink-muted);
+      }
+
+      .preview__name {
+        position: absolute;
+        top: 136px;
+        left: calc(var(--inset-x) - 7px); /* optical: the bowl of the "p" sits on the column edge */
+        font-size: 168px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: -0.025em;
+      }
+
+      .preview__pitch,
+      .preview__count-label {
+        position: absolute;
+        top: 336px;
+        font-size: 31px;
+        line-height: 1.15;
+        letter-spacing: 0.01em;
+      }
+
+      .preview__pitch {
+        left: var(--inset-x);
+      }
+
+      .preview__rows {
+        position: absolute;
+        bottom: var(--inset-y);
+        left: var(--inset-x);
+        width: var(--column-width);
+        list-style: none;
+      }
+
+      .preview__row,
+      .preview__sign-row {
+        padding-top: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid transparent;
+      }
+
+      .preview__row {
+        display: grid;
+        grid-template-columns: 1fr 232px;
+        align-items: baseline;
+        border-bottom-color: var(--rule);
+      }
+
+      .preview__row-title,
+      .preview__sign-text {
+        font-size: 21px;
+        line-height: 1.1;
+      }
+
+      .preview__row-meta {
+        color: var(--ink-muted);
+        text-align: end;
+      }
+
+      /* Accent field: the supporter count and a signature line that continues the row geometry. */
+      .preview__field {
+        position: absolute;
+        inset: 0 0 0 var(--field-x);
+        background: var(--accent);
+        color: var(--on-accent);
+      }
+
+      .preview__count {
+        position: absolute;
+        top: 136px;
+        left: 44px;
+        font-size: 168px;
+        font-weight: 400;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .preview__count-label {
+        left: 48px;
+      }
+
+      .preview__sign {
+        position: absolute;
+        right: var(--inset-x);
+        bottom: var(--inset-y);
+        left: 48px;
+        list-style: none;
+      }
+
+      .preview__sign-row:first-child {
+        border-bottom-color: var(--on-accent);
+      }
+
+      .preview__sign-label {
+        font-size: 15px;
+        letter-spacing: 0.1em;
+      }
+    </style>
+  </head>
+  <body class="preview">
+    <div class="preview__header">
+      <span>Arnoldovna/petition</span><span class="preview__years">2018, rebuilt in 2026</span>
+    </div>
+
+    <div class="preview__name">petition</div>
+    <div class="preview__pitch">A petition for absolutely nothing.</div>
+
+    <ul class="preview__rows">
+      <li class="preview__row">
+        <span class="preview__row-title">sign by hand or by name</span
+        ><span class="preview__row-meta">PNG, checked byte by byte</span>
+      </li>
+      <li class="preview__row">
+        <span class="preview__row-title">every form works without JavaScript</span
+        ><span class="preview__row-meta">Express 5, server-rendered</span>
+      </li>
+    </ul>
+
+    <div class="preview__field">
+      <div class="preview__count">64</div>
+      <div class="preview__count-label">supporters</div>
+      <ul class="preview__sign">
+        <li class="preview__sign-row"><span class="preview__sign-text">×</span></li>
+        <li class="preview__sign-row">
+          <span class="preview__sign-text"><span class="preview__sign-label">signature</span></span>
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>

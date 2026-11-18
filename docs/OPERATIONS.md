@@ -176,10 +176,42 @@ target, so nothing is lost.
       nothing.
 - [ ] The audit run by hand is green (section 1).
 - [ ] No commercial typeface is referenced anywhere in the repository (conventions §10).
+- [ ] The social preview is uploaded in Settings → General → Social preview: `docs/media/social-preview.png`
+      (1280 × 640). GitHub has no API for it, so it is a manual step. How the image is built and regenerated is in
+      [docs/media/social-preview.md](media/social-preview.md).
+- [ ] The email addresses in the commit metadata are acceptable in public. gitleaks does not look at them, and they
+      become public with the code: author and committer of every commit, the tagger of every annotated tag, every
+      `Co-authored-by` trailer, and the commits of merged pull requests, which GitHub keeps under
+      `refs/pull/<n>/head` after their branch is deleted.
+
+      Settle the address for new commits first, because every commit made with another address adds to what has to
+      be checked or rewritten: `git config user.email 42670470+Arnoldovna@users.noreply.github.com` in the
+      repository, and in GitHub Settings → Emails "Keep my email addresses private" (merges made on GitHub then use
+      the noreply address) and "Block command line pushes that expose my email". Once the branch commits and the
+      squash merge have the same author, GitHub also stops adding a `Co-authored-by` line to the merge.
+
+      Then list the addresses (the fetch adds the pull-request commits as local refs):
+
+      ```bash
+      git fetch origin '+refs/pull/*/head:refs/remotes/origin/pr/*'
+      git log --all --format='%ae%n%ce' | sort -u
+      git log --all --format='%(trailers:key=Co-authored-by,valueonly)' | sed '/^$/d' | sort -u
+      git for-each-ref refs/tags --format='%(taggeremail)' | sed '/^$/d' | sort -u
+      ```
+
+      Only the GitHub noreply address (`42670470+Arnoldovna@users.noreply.github.com`), `noreply@github.com` (the
+      committer of every merge made on GitHub), bots and `noreply@anthropic.com` belong there. Any other address is
+      decided before the switch: keep it, or publish a new repository with a rewritten history instead. In that
+      rewrite, `git filter-repo --mailmap <file>` changes authors, committers and taggers, but a `Co-authored-by`
+      trailer is part of the commit message: the same run needs `--replace-message <file>` with one line
+      `<old address>==>42670470+Arnoldovna@users.noreply.github.com` per address. Run the listing again on the
+      rewritten clone before pushing it. Rewriting `main` here is not enough, because a push cannot rewrite or delete
+      the pull-request refs (only GitHub Support can).
+
 - [ ] The repository is switched to public in Settings → General → Danger Zone.
 - [ ] Right after: a branch ruleset for `main` (pull request required, required status checks from `ci.yml`, no force
-      push) and CodeQL default setup in Settings → Code security (PLAN.md "Wartung": both become available on the
-      free plan once the repository is public).
+      push), CodeQL default setup and secret scanning with push protection in Settings → Code security (PLAN.md
+      "Wartung": rulesets and CodeQL become available on the free plan once the repository is public).
 
 ### Publish (Marina)
 
